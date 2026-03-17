@@ -16,8 +16,21 @@
   --text:#1A1A2E;--white:#fff;--r:10px;--rl2:14px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--gray);color:var(--text);font-size:14px;}
+html {
+  background-color: var(--gray); /* 양옆 빈 공간의 배경색 */
+}
 
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text);
+  background-color: var(--white); /* 실제 콘텐츠 영역의 배경색 */
+  
+  /* 중앙 정렬 핵심 설정 */
+  max-width: 900px;  /* PC 화면에서 너무 넓게 퍼지지 않도록 최대 너비 고정 (필요시 조절 가능) */
+  margin: 0 auto;    /* 양쪽 여백을 자동으로 동일하게 주어 중앙 배치 */
+  min-height: 100vh; /* 세로 길이를 화면 끝까지 채움 */
+  box-shadow: 0 0 20px rgba(0,0,0,0.05); /* 양옆에 부드러운 그림자를 넣어 입체감 부여 */
+}
 /* ── 헤더/네비 ── */
 .hdr{background:var(--white);border-bottom:1px solid var(--bdr);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
 .logo h1{font-size:16px;font-weight:700;}.logo h1 span{color:var(--blue);}
