@@ -115,7 +115,8 @@ nav button.active{border-bottom:3px solid #fff;background:rgba(255,255,255,.1);}
 .grade-box .gh{font-size:20px;font-weight:700;}
 .grade-box .gd{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.7;}
 .duty-tbl{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
-.duty-tbl th{background:var(--gray);padding:8px 11px;text-align:left;font-weight:500;border-bottom:1px solid var(--bdr);color:var(--muted);}
+.duty-tbl th{background:var(--gray);padding:8px 11px;text-align:center;font-weight:600;border-bottom:1px solid var(--bdr);color:var(--muted);white-space:nowrap;}
+.duty-tbl th:nth-child(3){text-align:left;}
 .duty-tbl td{padding:8px 11px;border-bottom:1px solid var(--bdr);vertical-align:middle;line-height:1.6;word-break:keep-all;}
 .duty-tbl tr:last-child td{border-bottom:none;}
 .duty-tbl tr:hover td{background:#FAFBFC;}
@@ -141,11 +142,11 @@ nav button.active{border-bottom:3px solid #fff;background:rgba(255,255,255,.1);}
 .tbl-wrap{background:var(--white);border:1px solid var(--bdr);border-radius:var(--rl2);overflow:hidden;}
 table{width:100%;border-collapse:collapse;table-layout:fixed;}
 thead{background:#F8F9FB;}
-thead th{font-size:12px;font-weight:700;color:var(--muted);padding:9px 12px;text-align:left;border-bottom:1px solid var(--bdr);}
+thead th{font-size:12px;font-weight:700;color:var(--muted);padding:10px 14px;text-align:left;border-bottom:1px solid var(--bdr);}
 tbody tr{border-bottom:1px solid var(--bdr);transition:background .1s;}
 tbody tr:last-child{border-bottom:none;}
 tbody tr:hover{background:#FAFBFC;}
-tbody td{font-size:14px;padding:9px 12px;vertical-align:middle;}
+tbody td{font-size:14px;padding:11px 14px;vertical-align:middle;}
 .chk{accent-color:var(--blue);width:13px;height:13px;cursor:pointer;}
 
 /* ── 관리자 레이아웃 ── */
@@ -261,10 +262,7 @@ const DEPTS = ['사장','상임이사','안전감사팀','기획조정실','전�
   <div class="logo" style="cursor:pointer;" onclick="goPage('home',document.querySelector('#user-nav button'))"><h1>대전관광공사 <span>2026년도 교육훈련 운영시스템</span></h1></div>
   <div style="display:flex;align-items:center;gap:9px;">
     <span class="yr">2026</span>
-    <div style="display:flex;align-items:center;gap:7px;">
-      <button class="btn btn-gh" style="font-size:12px;" onclick="openLogin()">관리자</button>
-      <span style="font-size:10px;color:var(--muted);background:var(--gray);border:1px solid var(--bdr);padding:3px 9px;border-radius:20px;white-space:nowrap;">담당자에 한함</span>
-    </div>
+    <button class="btn btn-gh" style="font-size:12px;" onclick="openLogin()">관리자</button>
   </div>
 </div>
 <nav id="user-nav">
@@ -311,7 +309,7 @@ const DEPTS = ['사장','상임이사','안전감사팀','기획조정실','전�
       <div class="cat-card" style="background:#EEEDFE;border-color:#AFA9EC;">
         <span class="cat-tag" style="background:#AFA9EC;color:#26215C;">공통필수</span>
         <div class="cn" style="color:#26215C;">전 직원 연 2시간 이상</div>
-        <div class="cd" style="color:#3C3489;">공직윤리(청렴)<br>재난·산업안전<br>디지털역량(AI·DX)<br>인사교육 / 예산·회계</div>
+        <div class="cd" style="color:#3C3489;">공직윤리(청렴)<br>재난·산업안전<br>디지털역량(AI·DX)<br>인사교육 / 예산·회계 <span style="display:inline-block;font-size:10px;background:#534AB7;color:#fff;padding:1px 6px;border-radius:20px;vertical-align:middle;margin-left:2px;white-space:nowrap;">담당자에 한함</span></div>
       </div>
       <div class="cat-card" style="background:var(--gray);border-color:var(--bdr);">
         <span class="cat-tag" style="background:var(--bdr);color:var(--muted);">기타</span>
@@ -339,7 +337,16 @@ const DEPTS = ['사장','상임이사','안전감사팀','기획조정실','전�
     <div class="card-title">2026년 의무교육 이수 목록 <span style="font-size:11px;font-weight:400;color:var(--muted);">전 임직원 필수 이수</span></div>
     <div style="overflow-x:auto;">
     <table class="duty-tbl">
-      <thead><tr><th style="width:26px;">#</th><th style="width:76px;">구분</th><th>교육명</th><th style="width:52px;">시간</th><th style="width:110px;">대상</th><th style="width:140px;">방법</th><th style="width:76px;">주관</th><th style="width:38px;">필수</th></tr></thead>
+      <thead><tr>
+        <th style="width:26px;text-align:center;">#</th>
+        <th style="width:82px;text-align:center;">구분</th>
+        <th>교육명</th>
+        <th style="width:56px;text-align:center;">시간</th>
+        <th style="width:110px;text-align:center;">대상</th>
+        <th style="width:140px;text-align:center;">방법</th>
+        <th style="width:76px;text-align:center;">주관</th>
+        <th style="width:52px;text-align:center;white-space:nowrap;">필수</th>
+      </tr></thead>
       <tbody>
         <tr><td style="color:var(--muted);">1</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">4대 폭력 예방 교육</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 강사초청(관리자)</td><td style="font-size:11px;color:var(--muted);">안전감사팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
         <tr><td style="color:var(--muted);">2</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">직장 내 괴롭힘 예방</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 강사초청(관리자)</td><td style="font-size:11px;color:var(--muted);">안전감사팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
@@ -527,9 +534,9 @@ const DEPTS = ['사장','상임이사','안전감사팀','기획조정실','전�
       <div style="font-size:13px;font-weight:700;margin-bottom:10px;">이수 내역</div>
       <table>
         <thead><tr>
-          <th style="width:76px;">이수일</th><th>과정명</th>
-          <th style="width:56px;">방법</th><th style="width:60px;">구분</th>
-          <th style="width:44px;">시간</th><th style="width:76px;">상태</th>
+          <th style="width:80px;">이수일</th><th>과정명</th>
+          <th style="width:66px;">방법</th><th style="width:72px;">구분</th>
+          <th style="width:58px;">시간</th><th style="width:84px;">상태</th>
         </tr></thead>
         <tbody id="lu-tbody"></tbody>
       </table>
@@ -603,11 +610,11 @@ const DEPTS = ['사장','상임이사','안전감사팀','기획조정실','전�
           <table>
             <thead><tr>
               <th style="width:32px;"><input type="checkbox" class="chk" id="chk-all" onchange="toggleAll(this)"></th>
-              <th style="width:68px;">이수일</th><th style="width:80px;">사번</th>
-              <th style="width:56px;">이름</th><th style="width:82px;">부서</th>
-              <th>과정명</th><th style="width:58px;">방법</th>
-              <th style="width:62px;">구분</th><th style="width:44px;">시간</th>
-              <th style="width:72px;">상태</th><th style="width:180px;">처리</th>
+              <th style="width:72px;">이수일</th><th style="width:82px;">사번</th>
+              <th style="width:60px;">이름</th><th style="width:90px;">부서</th>
+              <th>과정명</th><th style="width:66px;">방법</th>
+              <th style="width:72px;">구분</th><th style="width:58px;">시간</th>
+              <th style="width:80px;">상태</th><th style="width:190px;">처리</th>
             </tr></thead>
             <tbody id="a-tbody"></tbody>
           </table>
@@ -628,11 +635,11 @@ const DEPTS = ['사장','상임이사','안전감사팀','기획조정실','전�
         <div class="tbl-wrap">
           <table>
             <thead><tr>
-              <th style="width:76px;">이수일</th><th style="width:80px;">사번</th>
-              <th style="width:56px;">이름</th><th style="width:84px;">부서</th>
-              <th>과정명</th><th style="width:58px;">방법</th>
-              <th style="width:62px;">구분</th><th style="width:44px;">시간</th>
-              <th style="width:66px;">상태</th>
+              <th style="width:80px;">이수일</th><th style="width:84px;">사번</th>
+              <th style="width:60px;">이름</th><th style="width:90px;">부서</th>
+              <th>과정명</th><th style="width:66px;">방법</th>
+              <th style="width:72px;">구분</th><th style="width:58px;">시간</th>
+              <th style="width:80px;">상태</th>
             </tr></thead>
             <tbody id="h-tbody"></tbody>
           </table>
@@ -1034,8 +1041,42 @@ async function submitApply() {
   const trainCost=parseInt(document.getElementById('f-train-cost').value)||0;
   const travelCost=parseInt(document.getElementById('f-travel-cost').value)||0;
   const costDetail=document.getElementById('f-cost-detail').value.trim();
-  if(!empno||!name||!dept||!course||!hours||!fdate){ showToast('필수 항목을 모두 입력해주세요.','amber'); return; }
-  if(!selFile){ showToast('수료증을 첨부해주세요.','amber'); return; }
+
+  // 필수 필드 하이라이트 헬퍼
+  function markField(id, bad) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (bad) {
+      el.style.borderColor = '#A32D2D';
+      el.style.boxShadow = '0 0 0 3px #FCEBEB';
+    } else {
+      el.style.borderColor = '';
+      el.style.boxShadow = '';
+    }
+  }
+
+  const missing = [];
+  markField('f-dept',   !dept);   if(!dept)   missing.push('부서');
+  markField('f-course', !course); if(!course) missing.push('과정명');
+  markField('f-hours',  !hours);  if(!hours)  missing.push('이수 시간');
+  markField('f-date',   !fdate);  if(!fdate)  missing.push('이수 일자');
+
+  if(missing.length){
+    showToast('미입력 항목: ' + missing.join(', '), 'amber');
+    // 첫 번째 오류 필드로 스크롤
+    const firstId = !dept?'f-dept':!course?'f-course':!hours?'f-hours':'f-date';
+    document.getElementById(firstId).scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+
+  if(!selFile){
+    document.getElementById('file-drop').style.borderColor='#A32D2D';
+    showToast('수료증을 첨부해주세요.','amber');
+    document.getElementById('file-drop').scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  } else {
+    document.getElementById('file-drop').style.borderColor='';
+  }
 
   let legalTypes=[],commonType='',cdpYn=false,jobTrack='';
   if(cat==='법정의무'){ legalTypes=[...document.querySelectorAll('.lc:checked')].map(c=>c.value); if(!legalTypes.length){showToast('법정의무 유형을 선택해주세요.','amber');return;} }
