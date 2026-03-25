@@ -143,18 +143,18 @@ nav button.active{border-bottom:3px solid #fff;background:rgba(255,255,255,.1);}
 
 /* ── 테이블 ── */
 .tbl-wrap{background:var(--white);border:1px solid var(--bdr);border-radius:var(--rl2);overflow:hidden;}
-table{width:100%;border-collapse:collapse;table-layout:fixed;}
+table{width:100%;border-collapse:collapse;table-layout:auto;}
 thead{background:#F8F9FB;}
-thead th{font-size:12px;font-weight:700;color:var(--muted);padding:10px 14px;text-align:left;border-bottom:1px solid var(--bdr);}
+thead th{font-size:12px;font-weight:700;color:var(--muted);padding:10px 14px;text-align:left;border-bottom:1px solid var(--bdr);white-space:nowrap;}
 tbody tr{border-bottom:1px solid var(--bdr);transition:background .1s;}
 tbody tr:last-child{border-bottom:none;}
 tbody tr:hover{background:#FAFBFC;}
-tbody td{font-size:14px;padding:11px 14px;vertical-align:middle;}
+tbody td{font-size:14px;padding:11px 14px;vertical-align:middle;white-space:nowrap;}
 .chk{accent-color:var(--blue);width:13px;height:13px;cursor:pointer;}
 
 /* ── 관리자 레이아웃 ── */
 .adm-wrap{display:flex;min-height:calc(100vh - 102px);}
-.sb{width:205px;background:var(--white);border-right:1px solid var(--bdr);padding:12px 0;flex-shrink:0;position:sticky;top:58px;height:calc(100vh - 58px);overflow-y:auto;}
+.sb{width:205px;background:var(--white);border-right:1px solid var(--bdr);padding:12px 0;flex-shrink:0;position:sticky;top:102px;height:calc(100vh - 102px);overflow-y:auto;}
 .sb-sec{padding:8px 15px 4px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-top:5px;}
 .sb-btn{display:flex;align-items:center;gap:8px;width:100%;padding:9px 17px;border:none;background:none;font-size:14px;font-family:inherit;color:var(--muted);cursor:pointer;text-align:left;transition:all .12s;border-left:3px solid transparent;}
 .sb-btn:hover{background:var(--gray);color:var(--text);}
@@ -795,10 +795,10 @@ const DEPTS = ['사장','상임이사','안전감사팀','기획조정실','전�
           <table>
             <thead><tr>
               <th style="width:32px;"><input type="checkbox" class="chk" id="chk-all" onchange="toggleAll(this)"></th>
-              <th style="width:72px;">이수일</th><th style="width:82px;">사번</th>
-              <th style="width:72px;">이름</th><th style="width:90px;">부서</th>
-              <th>과정명</th><th style="width:66px;">방법</th>
-              <th style="width:72px;">구분</th><th style="width:58px;">시간</th>
+              <th style="width:72px;">이수일</th><th style="width:90px;">사번</th>
+              <th style="width:80px;">이름</th><th style="width:100px;">부서</th>
+              <th>과정명</th><th style="width:60px;">방법</th>
+              <th style="width:72px;">구분</th><th style="width:52px;">시간</th>
               <th style="width:80px;">상태</th><th style="width:190px;">처리</th>
             </tr></thead>
             <tbody id="a-tbody"></tbody>
@@ -820,10 +820,10 @@ const DEPTS = ['사장','상임이사','안전감사팀','기획조정실','전�
         <div class="tbl-wrap">
           <table>
             <thead><tr>
-              <th style="width:80px;">이수일</th><th style="width:84px;">사번</th>
-              <th style="width:60px;">이름</th><th style="width:90px;">부서</th>
-              <th>과정명</th><th style="width:66px;">방법</th>
-              <th style="width:72px;">구분</th><th style="width:58px;">시간</th>
+              <th style="width:80px;">이수일</th><th style="width:90px;">사번</th>
+              <th style="width:80px;">이름</th><th style="width:100px;">부서</th>
+              <th>과정명</th><th style="width:60px;">방법</th>
+              <th style="width:72px;">구분</th><th style="width:52px;">시간</th>
               <th style="width:80px;">상태</th>
             </tr></thead>
             <tbody id="h-tbody"></tbody>
@@ -1627,8 +1627,8 @@ function hRender(){
   const rows=DB.filter(r=>{if(dp!=='all'&&r.dept!==dp)return false;if(st!=='all'&&r.status!==st)return false;if(ct!=='all'&&r.edu_category!==ct)return false;if(q&&!r.name.includes(q)&&!(r.course_name||'').toLowerCase().includes(q))return false;return true;});
   document.getElementById('h-tbody').innerHTML=rows.map(r=>`<tr>
     <td style="color:var(--muted);font-size:12px;">${fmtDate(r.apply_date,true)}</td>
-    <td style="color:var(--muted);font-size:12px;">${r.empno}</td>
-    <td style="font-weight:500;">${r.name}</td><td style="font-size:12px;color:var(--muted);">${r.dept}</td>
+    <td style="color:var(--muted);font-size:12px;white-space:nowrap;">${r.empno}</td>
+    <td style="font-weight:500;white-space:nowrap;">${r.name}</td><td style="font-size:12px;color:var(--muted);white-space:nowrap;">${r.dept}</td>
     <td style="font-size:12px;">${r.course_name||''}</td>
     <td>${mBadge(r.edu_method)}</td><td>${cBadge(r.edu_category)}</td>
     <td style="text-align:center;">${r.hours}h</td><td>${sBadge(r.status)}</td>
