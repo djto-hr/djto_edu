@@ -1137,7 +1137,15 @@ async function apiGet(p) {
 }
 async function apiPost(d) {
   if(IS_DEMO) return null;
-  try{ const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(d)}); return await r.json(); }catch(e){ return null; }
+  try{
+    const r=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify(d)});
+    const json=await r.json();
+    if(!json?.success) console.warn("[apiPost] 실패:", d.action, json);
+    return json;
+  }catch(e){
+    console.error("[apiPost] 네트워크 오류:", d.action, e);
+    return {success:false, error:"네트워크 오류: "+e.message};
+  }
 }
 
 // ════════════════════════════════════════════════
@@ -1762,10 +1770,15 @@ async function saveEditApply() {
   const r = DB.find(d => d.id === id);
   if (!r) return;
   if (!IS_DEMO) {
-    showLoad('수정 저장 중...');
-    const res = await apiPost({ action:'editApply', id, dept, course_name:course, org, hours, apply_date:date, edu_method:method, edu_category:cat, legal_types:legalTypes, common_type:commonType, cdp_yn:cdpYn, job_track:jobTrack, reason });
+    showLoad("수정 저장 중...");
+    const res = await apiPost({ action:"editApply", id, dept, course_name:course, org, hours, apply_date:date, edu_method:method, edu_category:cat, legal_types:legalTypes, common_type:commonType, cdp_yn:cdpYn, job_track:jobTrack, reason });
     hideLoad();
-    if (!res?.success) { showToast('저장 실패: ' + (res?.error||'오류'), 'red'); return; }
+    if (!res?.success) {
+      const errMsg = res?.error || "Apps Script 오류 — 브라우저 콘솔(F12)에서 상세 확인";
+      showToast("서버 저장 실패: " + errMsg, "red");
+      // 서버 실패해도 로컬 반영은 계속 진행
+    }
+  }
   }
   r.dept = dept; r.course_name = course; r.org = org; r.hours = hours;
   r.apply_date = date; r.edu_method = method; r.edu_category = cat;
@@ -1858,9 +1871,14 @@ async function saveCatEdit(){
   if(nc==='기관지정'&&ncdp&&!ntrk){showToast('CDP 연계 시 직무트랙을 선택해주세요.','amber');return;}
   const before={edu_method:r.edu_method,edu_category:r.edu_category,legal_types:r.legal_types,common_type:r.common_type,cdp_yn:r.cdp_yn,job_track:r.job_track};
   if(!IS_DEMO){
-    showLoad('수정 저장 중...');
-    const res=await apiPost({action:'editCategory',apply_id:openId,edu_method:nm,edu_category:nc,legal_types:nl,common_type:ncom,cdp_yn:ncdp,job_track:ntrk,reason});
-    hideLoad(); if(!res?.success){showToast('저장 실패: '+(res?.error||''),'red');return;}
+    showLoad("수정 저장 중...");
+    const res=await apiPost({action:"editCategory",apply_id:openId,edu_method:nm,edu_category:nc,legal_types:nl,common_type:ncom,cdp_yn:ncdp,job_track:ntrk,reason});
+    hideLoad();
+    if(!res?.success){
+      const errMsg=res?.error||"Apps Script 오류 — 브라우저 콘솔(F12)에서 상세 확인";
+      showToast("서버 저장 실패: "+errMsg,"red");
+      // 서버 실패해도 로컬 반영은 계속
+    }
   }
   r.edu_method=nm; r.edu_category=nc; r.legal_types=nc==='법정의무'?nl:[];
   r.common_type=nc==='공통필수'?ncom:''; r.cdp_yn=nc==='기관지정'?ncdp:false;
