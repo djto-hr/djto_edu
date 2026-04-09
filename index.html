@@ -16,2378 +16,368 @@
   --text:#1A1A2E;--white:#fff;--r:10px;--rl2:14px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-html {
-  background-color: var(--gray); /* 양옆 빈 공간의 배경색 */
-}
+html { background-color: var(--gray); }
+body { font-family:'Noto Sans KR',sans-serif; color:var(--text); line-height:1.5; background-color:var(--gray); display:flex; justify-content:center; }
+.app-container { width:100%; max-width:500px; background:#fff; min-height:100vh; position:relative; box-shadow:0 0 20px rgba(0,0,0,0.05); }
 
-body {
-  font-family: 'Noto Sans KR', sans-serif;
-  color: var(--text);
-  background-color: var(--white);
-  font-size: 15px;
-  
-  max-width: 1400px;
-  margin: 0 auto;
-  min-height: 100vh;
-  box-shadow: 0 0 20px rgba(0,0,0,0.05);
-}
-/* ── 헤더/네비 ── */
-.hdr{background:var(--white);border-bottom:1px solid var(--bdr);padding:0 28px;height:70px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
-.logo h1{font-size:23px;font-weight:700;}.logo h1 span{color:var(--blue);}
-.logo p{font-size:12px;color:var(--muted);margin-top:1px;}
-.yr{background:var(--bl);color:var(--bd);font-size:11px;font-weight:700;padding:3px 11px;border-radius:20px;border:1px solid var(--bm);}
-nav{background:var(--blue);padding:0 28px;display:flex;}
-nav button{background:none;border:none;color:rgba(255,255,255,.72);font-size:14px;font-weight:500;font-family:inherit;padding:12px 18px;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;}
-nav button.active,nav button:hover{color:#fff;}
-nav button.active{border-bottom:3px solid #fff;background:rgba(255,255,255,.1);}
-.page{display:none;padding:22px 28px;max-width:100%;}.page.active{display:block;}
+/* Header & Nav */
+header { padding:24px 20px; background:var(--white); border-bottom:1px solid var(--bdr); position:sticky; top:0; z-index:100; }
+.logo-area { display:flex; align-items:center; gap:10px; margin-bottom:20px; }
+.logo-area h1 { font-size:18px; font-weight:700; color:var(--blue); letter-spacing:-0.5px; }
+nav { display:flex; gap:8px; }
+nav button { flex:1; padding:12px; border-radius:var(--r); border:1px solid var(--bdr); background:var(--white); font-size:14px; font-weight:500; color:var(--muted); cursor:pointer; transition:0.2s; }
+nav button.active { background:var(--blue); color:var(--white); border-color:var(--blue); }
 
-/* ── 공통 컴포넌트 ── */
-.card{background:var(--white);border:1px solid var(--bdr);border-radius:var(--rl2);padding:18px 22px;}
-.card-title{font-size:15px;font-weight:700;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;}
-.badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;letter-spacing:-0.03em;}
-.bd-wait{background:var(--al);color:var(--ad);border:1px solid var(--am);}
-.bd-done{background:var(--gl);color:var(--gd);border:1px solid var(--gm);}
-.bd-rej{background:var(--rl);color:var(--rd);border:1px solid var(--rm);}
-.bd-inst{background:var(--al);color:var(--ad);}
-.bd-legal{background:var(--rl);color:var(--rd);}
-.bd-common{background:var(--pl);color:var(--pd);}
-.bd-etc{background:var(--gray);color:var(--muted);}
-.bd-gb{background:var(--bl);color:var(--bd);}
-.bd-ol{background:var(--gl);color:var(--gd);}
-.btn{font-size:12px;font-weight:700;font-family:inherit;padding:7px 15px;border-radius:var(--r);cursor:pointer;border:1px solid;transition:all .1s;}
-.btn-pri{background:var(--blue);color:#fff;border-color:var(--blue);}.btn-pri:hover{background:var(--bd);}
-.btn-gn{background:var(--gl);color:var(--gd);border-color:var(--gm);}.btn-gn:hover{background:var(--gm);}
-.btn-rd{background:var(--rl);color:var(--rd);border-color:var(--rm);}.btn-rd:hover{background:var(--rm);}
-.btn-gh{background:var(--white);color:var(--text);border-color:var(--bdr);}.btn-gh:hover{background:var(--gray);}
-.act{font-size:12px;font-weight:700;font-family:inherit;padding:4px 8px;border-radius:var(--r);cursor:pointer;border:1px solid;transition:all .1s;margin-right:3px;}
-.act-v{background:var(--bl);color:var(--bd);border-color:var(--bm);}
-.act-ap{background:var(--gl);color:var(--gd);border-color:var(--gm);}.act-ap:hover{background:var(--gm);}
-.act-rj{background:var(--rl);color:var(--rd);border-color:var(--rm);}.act-rj:hover{background:var(--rm);}
-.act-cat{background:var(--al);color:var(--ad);border-color:var(--am);}.act-cat:hover{background:var(--am);}
-.act-del{background:var(--rl);color:var(--rd);border-color:var(--rm);}.act-del:hover{background:var(--rm);}
+/* Page Control */
+.page { display:none; padding:20px; animation:fadeIn 0.3s ease; }
+.page.active { display:block; }
+@keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
 
-/* ── 폼 ── */
-.fc{background:var(--white);border:1px solid var(--bdr);border-radius:var(--rl2);padding:24px 28px;max-width:660px;}
-.fg{margin-bottom:13px;}
-.fg label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;}
-.req{color:#A32D2D;margin-left:1px;}
-.fg input,.fg select,.fg textarea{width:100%;padding:9px 13px;border:1px solid var(--bdr);border-radius:var(--r);font-size:14px;font-family:inherit;color:var(--text);outline:none;transition:border .15s;}
-.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--bl);}
-.fg textarea{resize:vertical;min-height:66px;}
-.fg2{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
-.cat-sec{background:var(--gray);border-radius:var(--r);padding:13px 15px;margin-bottom:13px;}
-.cat-sec-title{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:12px;}
-.cat-sub{background:var(--white);border:1px solid var(--bdr);border-radius:var(--r);padding:11px 13px;margin-top:9px;display:none;}
-.cat-sub.show{display:block;}
-.chk-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
-.chk-item{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--gray);border-radius:var(--r);cursor:pointer;font-size:12px;transition:background .1s;}
-.chk-item:hover{background:var(--bl);}
-.chk-item input{accent-color:var(--blue);width:13px;height:13px;flex-shrink:0;cursor:pointer;}
-.file-box{border:2px dashed var(--bdr);border-radius:var(--r);padding:18px;text-align:center;cursor:pointer;transition:all .15s;}
-.file-box:hover,.file-box.drag{border-color:var(--blue);background:var(--bl);}
-.file-box input{display:none;}
-.file-prog{height:4px;background:var(--bdr);border-radius:20px;margin-top:8px;overflow:hidden;display:none;}
-.file-prog-bar{height:100%;background:var(--blue);border-radius:20px;transition:width .4s;}
-.sub-btn{width:100%;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s;margin-top:4px;}
-.sub-btn:hover{background:var(--bd);}.sub-btn:disabled{background:#B5D4F4;cursor:not-allowed;}
-.success-box{background:var(--white);border:1px solid var(--bdr);border-radius:var(--rl2);padding:46px 30px;text-align:center;max-width:420px;}
-.succ-icon{width:58px;height:58px;background:var(--gl);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+/* Common UI */
+.card { background:var(--white); border:1px solid var(--bdr); border-radius:var(--rl2); padding:20px; margin-bottom:20px; }
+.card-title { font-size:16px; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.fg { margin-bottom:16px; }
+.fg label { display:block; font-size:13px; font-weight:500; color:var(--muted); margin-bottom:6px; }
+.fg label .req { color:var(--rd); }
+.fg input, .fg select, .fg textarea { width:100%; padding:12px; border-radius:var(--r); border:1px solid var(--bdr); font-size:14px; outline:none; transition:0.2s; }
+.fg input:focus { border-color:var(--blue); box-shadow:0 0 0 3px var(--bl); }
 
-/* ── 홈 ── */
-.hero{background:var(--white);border:1px solid var(--bdr);border-radius:var(--rl2);padding:18px 24px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
-.hero-msg{font-size:16px;font-weight:500;}.hero-sub{font-size:13px;color:var(--muted);margin-top:3px;}.hero-sub strong{color:#A32D2D;}
-.dl{background:var(--al);color:var(--ad);font-size:12px;font-weight:700;padding:5px 14px;border-radius:20px;border:1px solid var(--am);min-width:80px;text-align:center;}
-.h-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
-.h-card{border-radius:var(--rl2);padding:32px 28px;text-align:center;cursor:pointer;transition:all .18s;border:2px solid transparent;position:relative;overflow:hidden;}
-.h-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.10);}
-.h-card .icon{width:56px;height:56px;border-radius:16px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;}
-.h-card h3{font-size:18px;font-weight:700;margin-bottom:8px;}
-.h-card p{font-size:13px;line-height:1.75;margin-bottom:16px;}
-.h-card .cta{display:inline-block;font-size:13px;font-weight:700;padding:8px 22px;border-radius:20px;transition:all .15s;}
-.cat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
-.cat-card{border-radius:var(--rl2);padding:13px 15px;border:1px solid;}
-.cat-card .cn{font-size:14px;font-weight:700;margin-bottom:5px;}
-.cat-card .cd{font-size:12px;line-height:1.85;}
-.cat-tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-bottom:7px;}
-.grade-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
-.grade-box{border-radius:var(--rl2);padding:20px 16px;text-align:center;border:2px solid transparent;transition:all .15s;}
-.grade-box:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,0.08);}
-.grade-box .gn{font-size:12px;font-weight:700;margin-bottom:10px;padding:3px 10px;border-radius:20px;display:inline-block;}
-.grade-box .gh{font-size:36px;font-weight:800;margin-bottom:8px;line-height:1;}
-.grade-box .gh span{font-size:16px;font-weight:600;}
-.grade-box .gd{font-size:12px;margin-top:6px;line-height:1.8;}
-.duty-tbl{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
-.duty-tbl th{background:var(--gray);padding:8px 11px;text-align:center;font-weight:600;border-bottom:1px solid var(--bdr);color:var(--muted);white-space:nowrap;}
-.duty-tbl th:nth-child(3){text-align:left;}
-.duty-tbl td{padding:8px 11px;border-bottom:1px solid var(--bdr);vertical-align:middle;line-height:1.6;word-break:keep-all;}
-.duty-tbl tr:last-child td{border-bottom:none;}
-.duty-tbl tr:hover td{background:#FAFBFC;}
-.rq-y{font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;background:#FCEBEB;color:#791F1F;display:inline-block;white-space:nowrap;}
-.rq-c{font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;background:#EEEDFE;color:#3C3489;display:inline-block;white-space:nowrap;}
-.rq-i{font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;background:#FAEEDA;color:#633806;display:inline-block;white-space:nowrap;}
-.hc{font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;background:#EEEDFE;color:#3C3489;display:inline-block;white-space:nowrap;}
+/* Time Wrap */
+.time-wrap { display:flex; align-items:center; gap:6px; }
+.time-unit { font-size:13px; color:var(--muted); margin-right:4px; }
 
-/* ── 조회 ── */
-.lu-card{background:var(--white);border:1px solid var(--bdr);border-radius:var(--rl2);padding:20px 24px;max-width:500px;margin-bottom:16px;}
-.lu-g{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;}
-.lu-btn{padding:9px 18px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;}
-.lu-btn:hover{background:var(--bd);}
-.rc{background:var(--white);border:1px solid var(--bdr);border-radius:var(--rl2);padding:20px 24px;max-width:820px;}
-.srow{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px;}
-.sbox{background:var(--gray);border-radius:var(--r);padding:12px 14px;text-align:center;}
-.sbox .sl{font-size:11px;color:var(--muted);margin-bottom:3px;}
-.sbox .sv{font-size:20px;font-weight:700;}
-.pw{background:var(--gray);border-radius:20px;height:7px;overflow:hidden;margin:7px 0 3px;}
-.pb{height:100%;border-radius:20px;background:var(--blue);transition:width .5s;}
+.btn-primary { width:100%; padding:14px; background:var(--blue); color:#fff; border:none; border-radius:var(--r); font-size:15px; font-weight:700; cursor:pointer; margin-top:10px; }
+.btn-primary:disabled { background:var(--bdr); cursor:not-allowed; }
 
-/* ── 테이블 ── */
-.tbl-wrap{background:var(--white);border:1px solid var(--bdr);border-radius:var(--rl2);overflow:hidden;}
-table{width:100%;border-collapse:collapse;table-layout:auto;}
-thead{background:#F8F9FB;}
-thead th{font-size:12px;font-weight:700;color:var(--muted);padding:10px 14px;text-align:left;border-bottom:1px solid var(--bdr);white-space:nowrap;}
-tbody tr{border-bottom:1px solid var(--bdr);transition:background .1s;}
-tbody tr:last-child{border-bottom:none;}
-tbody tr:hover{background:#FAFBFC;}
-tbody td{font-size:14px;padding:11px 14px;vertical-align:middle;white-space:nowrap;}
-.chk{accent-color:var(--blue);width:13px;height:13px;cursor:pointer;}
+/* Dashboard & Stats */
+.stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+.stat-box { padding:16px; border-radius:var(--r); border:1px solid var(--bdr); }
+.prog-bar-bg { width:100%; height:10px; background:var(--gray); border-radius:5px; overflow:hidden; margin-top:10px; }
+.prog-bar-fill { height:100%; background:var(--blue); width:0%; transition:1s ease-out; }
 
-/* ── 관리자 레이아웃 ── */
-.adm-wrap{display:flex;min-height:calc(100vh - 102px);}
-.sb{width:205px;background:var(--white);border-right:1px solid var(--bdr);padding:12px 0;flex-shrink:0;position:sticky;top:102px;height:calc(100vh - 102px);overflow-y:auto;}
-.sb-sec{padding:8px 15px 4px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-top:5px;}
-.sb-btn{display:flex;align-items:center;gap:8px;width:100%;padding:9px 17px;border:none;background:none;font-size:14px;font-family:inherit;color:var(--muted);cursor:pointer;text-align:left;transition:all .12s;border-left:3px solid transparent;}
-.sb-btn:hover{background:var(--gray);color:var(--text);}
-.sb-btn.active{background:var(--bl);color:var(--bd);font-weight:700;border-left:3px solid var(--blue);}
-.adm-main{flex:1;padding:22px 26px;overflow-x:hidden;}
-.apage{display:none;}.apage.active{display:block;}
-.toolbar{background:var(--white);border:1px solid var(--bdr);border-radius:var(--r);padding:11px 14px;margin-bottom:11px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
-.toolbar select,.toolbar input[type=text]{font-size:14px;padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r);font-family:inherit;color:var(--text);background:var(--white);outline:none;}
-.toolbar input[type=text]{width:170px;}
-.spacer{flex:1;}
-.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:16px;}
-.sc{background:var(--white);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 17px;}
-.sc .sl{font-size:12px;color:var(--muted);margin-bottom:4px;}
-.sc .sv{font-size:23px;font-weight:700;}
-.sv.blue{color:var(--blue);}.sv.green{color:#3B6D11;}.sv.amber{color:#854F0B;}.sv.red{color:#A32D2D;}
-.br{display:flex;align-items:center;gap:9px;margin-bottom:8px;}
-.bl2{font-size:12px;color:var(--muted);width:85px;flex-shrink:0;text-align:right;}
-.bt{flex:1;background:var(--gray);border-radius:20px;height:17px;overflow:hidden;}
-.bf{height:100%;border-radius:20px;background:var(--blue);display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:700;color:#fff;}
-.bc{font-size:12px;font-weight:700;width:34px;text-align:right;}
+/* Table */
+.table-wrap { overflow-x:auto; margin-top:10px; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { background:var(--gray); padding:10px; text-align:left; color:var(--muted); font-weight:500; border-bottom:1px solid var(--bdr); }
+td { padding:12px 10px; border-bottom:1px solid var(--bdr); }
+.tag { padding:2px 6px; border-radius:4px; font-size:11px; font-weight:500; }
 
-/* ── 모달 ── */
-.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;}
-.mo.open{display:flex;}
-.mb{background:var(--white);border-radius:var(--rl2);padding:24px;width:100%;max-width:510px;margin:18px;max-height:90vh;overflow-y:auto;}
-.mb.wide{max-width:610px;}
-.mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;padding-bottom:11px;border-bottom:1px solid var(--bdr);}
-.mh h3{font-size:16px;font-weight:700;}
-.mcl{width:27px;height:27px;border-radius:50%;background:var(--gray);border:none;cursor:pointer;font-size:14px;color:var(--muted);}
-.mr2{display:flex;gap:9px;margin-bottom:7px;}
-.ml2{font-size:12px;color:var(--muted);width:76px;flex-shrink:0;padding-top:1px;font-weight:500;}
-.mv2{font-size:14px;}.mv2.link{color:var(--blue);cursor:pointer;text-decoration:underline;}
-.ri{width:100%;padding:8px 11px;border:1px solid var(--bdr);border-radius:var(--r);font-size:13px;font-family:inherit;resize:none;outline:none;margin-top:3px;}
-.ri:focus{border-color:var(--blue);}
-.ma{display:flex;gap:7px;margin-top:15px;padding-top:13px;border-top:1px solid var(--bdr);}
-.ma button{flex:1;padding:9px;border-radius:var(--r);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;border:1px solid;transition:all .15s;}
-.m-ap{background:var(--gl);color:var(--gd);border-color:var(--gm)!important;}.m-ap:hover{background:var(--gm)!important;}
-.m-rj{background:var(--rl);color:var(--rd);border-color:var(--rm)!important;}.m-rj:hover{background:var(--rm)!important;}
-.m-cl{background:var(--gray);color:var(--muted);border-color:var(--bdr)!important;}
-.m-sv{background:var(--blue);color:#fff;border-color:var(--blue)!important;}.m-sv:hover{background:var(--bd)!important;}
-.cat-warn{background:var(--al);color:var(--ad);border-radius:var(--r);padding:8px 12px;font-size:12px;margin-bottom:11px;border:1px solid var(--am);}
-.cat-sub2{display:none;background:var(--gray);border-radius:var(--r);padding:11px 13px;margin-top:8px;}
-.cat-sub2.show{display:block;}
-.log-item{padding:10px 0;border-bottom:1px solid var(--bdr);font-size:12px;}
-.log-item:last-child{border-bottom:none;}
-.log-b{background:var(--rl);color:var(--rd);padding:2px 8px;border-radius:20px;font-size:11px;}
-.log-a{background:var(--gl);color:var(--gd);padding:2px 8px;border-radius:20px;font-size:11px;}
-
-/* ── 공지 배너 ── */
-.n-banner{border-radius:var(--rl2);padding:10px 18px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
-
-/* ── 공지게시판 (직원용) ── */
-.nb-list{}
-.nb-item{background:var(--white);border:1px solid var(--bdr);border-radius:var(--rl2);padding:14px 18px;margin-bottom:8px;cursor:pointer;transition:all .13s;display:flex;align-items:center;gap:12px;}
-.nb-item:hover{border-color:var(--blue);box-shadow:0 0 0 2px var(--bl);}
-.nb-lv{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0;}
-.nb-lv.긴급{background:var(--rl);color:var(--rd);border:1px solid var(--rm);}
-.nb-lv.중요{background:var(--al);color:var(--ad);border:1px solid var(--am);}
-.nb-lv.일반{background:var(--bl);color:var(--bd);border:1px solid var(--bm);}
-.nb-title{font-size:14px;font-weight:500;flex:1;}
-.nb-date{font-size:12px;color:var(--muted);flex-shrink:0;}
-
-/* ── 관리자 로그인 ── */
-.adm-login{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:100;}
-.adm-login.open{display:flex;}
-.lb{background:var(--white);border-radius:18px;padding:34px;width:310px;text-align:center;}
-.lb h2{font-size:16px;font-weight:700;margin-bottom:5px;}
-.lb p{font-size:12px;color:var(--muted);margin-bottom:18px;}
-.lb input{width:100%;padding:9px 13px;border:1px solid var(--bdr);border-radius:var(--r);font-size:13px;font-family:inherit;margin-bottom:9px;outline:none;}
-.lb input:focus{border-color:var(--blue);}
-.login-err{font-size:12px;color:#A32D2D;margin-bottom:7px;display:none;}
-
-/* ── 로딩/토스트 ── */
-.lov{position:fixed;inset:0;background:rgba(255,255,255,.85);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;}
-.lov.show{display:flex;}
-.spin{width:30px;height:30px;border:3px solid var(--bdr);border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite;}
-@keyframes sp{to{transform:rotate(360deg)}}
-.lmsg{font-size:13px;color:var(--muted);}
-.toast{position:fixed;bottom:26px;right:26px;font-size:13px;font-weight:700;padding:11px 17px;border-radius:var(--r);opacity:0;transform:translateY(10px);transition:all .25s;z-index:999;pointer-events:none;}
-.toast.show{opacity:1;transform:translateY(0);}
-.toast.green{background:var(--gl);color:var(--gd);border:1px solid var(--gm);}
-.toast.amber{background:var(--al);color:var(--ad);border:1px solid var(--am);}
-.toast.red{background:var(--rl);color:var(--rd);border:1px solid var(--rm);}
-.note{font-size:11px;color:var(--muted);background:var(--gray);border-radius:var(--r);padding:7px 11px;margin-top:8px;line-height:1.8;}
+#toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); padding:12px 24px; border-radius:30px; background:rgba(0,0,0,0.8); color:#fff; font-size:14px; z-index:1000; display:none; }
 </style>
 </head>
 <body>
 
-<script>
-// ================================================================
-// ★ Apps Script 배포 후 URL을 여기에 붙여넣으세요 ★
-// ================================================================
-const SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbzybmAQWXWeT1AwY6BxMoeiXwVrJ0YsrULxJH5KNfvd2AXVvRq-kue_ZabjNqtyCNsmsg/exec';
-const IS_DEMO     = SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL';
-const MAX_FILE_MB = 10;
+<div class="app-container">
+  <header>
+    <div class="logo-area">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" color="#1D6FA4"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+      <h1>대전관광공사 교육훈련 이수 관리</h1>
+    </div>
+    <nav>
+      <button id="nav-f" class="active" onclick="showPage('f')">교육 신청</button>
+      <button id="nav-lu" onclick="showPage('lu')">현황 조회</button>
+      <button id="nav-bk" onclick="showPage('bk')">관리자(Bulk)</button>
+    </nav>
+  </header>
 
-const LEGAL_TYPES  = ['4대폭력예방','직장내괴롭힘예방','소방안전화재예방','장애인인식개선교육','자살예방교육','퇴직연금교육','아동학대예방교육','개인정보보호교육','정보공개교육'];
-const COMMON_DUTY_TYPES = ['재난안전','디지털역량','공직윤리'];
-const COMMON_TYPES = ['공직윤리(청렴)','재난·산업안전','디지털역량','인사교육','예산·회계'];
-const JOB_TRACKS   = ['기획감사','경영관리','관광','MICE','시설관리'];
-const DEPTS = ['사장','상임이사','안전감사팀','기획조정실','전략기획팀','인사노무팀','총무회계팀','관광사업단','관광사업팀','융합사업팀','홍보마케팅팀','축제행사팀','관광개발사업단','관광개발팀','시설운영팀','시민광장팀','MICE사업단','운영지원팀','센터마케팅팀','전시기획팀','MICE뷰로팀'];
-</script>
-
-<!-- 로딩 -->
-<div class="lov" id="lov"><div class="spin"></div><div class="lmsg" id="lmsg">처리 중...</div></div>
-
-<!-- 헤더 -->
-<div class="hdr">
-  <div class="logo" style="cursor:pointer;" onclick="goPage('home',document.querySelector('#user-nav button'))"><h1>대전관광공사 <span>2026년도 교육훈련 운영시스템</span></h1></div>
-  <div style="display:flex;align-items:center;gap:9px;">
-    <span class="yr">2026</span>
-    <button class="btn btn-gh" style="font-size:12px;" onclick="openLogin()">관리자</button>
-  </div>
-</div>
-<nav id="user-nav">
-  <button class="active" onclick="goPage('home',this)">🏠 홈</button>
-  <button onclick="goPage('apply',this)">📋 교육 신청</button>
-  <button onclick="goPage('lookup',this)">🔍 이수 현황 조회</button>
-  <button onclick="goPage('notices',this)">📢 공지사항</button>
-</nav>
-
-<!-- ════════════ 홈 ════════════ -->
-<div class="page active" id="page-home">
-  <div id="notice-banner"></div>
-  <div class="hero">
-    <div>
-      <div class="hero-msg">교육을 신청하고 내 이수 현황을 확인하세요.</div>
-      <div class="hero-sub">2026년 법정의무교육 마감일 <strong>2026.12.31</strong> &nbsp;|&nbsp; 미이수 시 인사고과 <strong>12점</strong> (이수 시 20점)</div>
-    </div>
-    <span class="dl">마감 D-<span id="dday">—</span></span>
-  </div>
-  <div class="h-cards">
-    <div class="h-card" style="background:linear-gradient(135deg,#E6F1FB 0%,#dbeeff 100%);border-color:#B5D4F4;" onclick="goPage('apply',document.querySelectorAll('#user-nav button')[1])">
-      <div class="icon" style="background:#1D6FA4;box-shadow:0 4px 12px rgba(29,111,164,0.3);">
-        <svg width="26" height="26" fill="none" viewBox="0 0 24 24"><rect x="4" y="3" width="14" height="18" rx="2" fill="rgba(255,255,255,0.3)"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
-      </div>
-      <h3 style="color:#0C447C;">📋 교육 신청</h3>
-      <p style="color:#1D5A8A;">사번·이름으로 본인 확인 후<br>수료증을 첨부해 신청하세요.</p>
-      <span class="cta" style="background:#1D6FA4;color:#fff;box-shadow:0 2px 8px rgba(29,111,164,0.35);">신청하기 →</span>
-    </div>
-    <div class="h-card" style="background:linear-gradient(135deg,#EAF3DE 0%,#d9f0c8 100%);border-color:#C0DD97;" onclick="goPage('lookup',document.querySelectorAll('#user-nav button')[2])">
-      <div class="icon" style="background:#3B6D11;box-shadow:0 4px 12px rgba(59,109,17,0.3);">
-        <svg width="26" height="26" fill="none" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="rgba(255,255,255,0.25)" stroke="#fff" stroke-width="2"/><path d="M17 17l3 3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
-      </div>
-      <h3 style="color:#27500A;">🔍 이수 현황 조회</h3>
-      <p style="color:#3B6D11;">사번·이름을 입력하면<br>총 이수시간과 이수 내역을 확인할 수 있어요.</p>
-      <span class="cta" style="background:#3B6D11;color:#fff;box-shadow:0 2px 8px rgba(59,109,17,0.35);">조회하기 →</span>
-    </div>
-  </div>
-  <!-- 교육구분 안내 -->
-  <div class="card" style="margin-bottom:13px;">
-    <div class="card-title">교육구분 안내 <span style="font-size:11px;font-weight:400;color:var(--muted);">신청 시 해당 구분을 선택하세요</span></div>
-    <div class="cat-cards">
-      <div class="cat-card" style="background:#FAEEDA;border-color:#FAC775;">
-        <span class="cat-tag" style="background:#FAC775;color:#412402;">기관지정</span>
-        <div class="cn" style="color:#412402;">의무시간의 40% 이상</div>
-        <div class="cd" style="color:#633806;">관광·마케팅·MICE 과정<br>직무 실무 역량 강화<br>공통직무·성과관리·예산<br><b>CDP 직무교육 연 1회↑ 필수</b></div>
-      </div>
-      <div class="cat-card" style="background:#FCEBEB;border-color:#F7C1C1;">
-        <span class="cat-tag" style="background:#F7C1C1;color:#501313;">법정의무</span>
-        <div class="cn" style="color:#501313;">법으로 정해진 필수 교육</div>
-        <div class="cd" style="color:#791F1F;">4대 폭력 예방<br>개인정보보호·정보공개<br>재난안전·산업안전보건<br>소방·청렴윤리 등 12종</div>
-      </div>
-      <div class="cat-card" style="background:#EEEDFE;border-color:#AFA9EC;">
-        <span class="cat-tag" style="background:#AFA9EC;color:#26215C;">공통필수</span>
-        <div class="cn" style="color:#26215C;">전 직원 연 2시간 이상</div>
-        <div class="cd" style="color:#3C3489;">공직윤리(청렴)<br>재난·산업안전<br>디지털역량(AI·DX)<br>인사교육 / 예산·회계 <span style="display:inline-block;font-size:10px;background:#534AB7;color:#fff;padding:1px 6px;border-radius:20px;vertical-align:middle;margin-left:2px;white-space:nowrap;">담당자에 한함</span></div>
-      </div>
-      <div class="cat-card" style="background:var(--gray);border-color:var(--bdr);">
-        <span class="cat-tag" style="background:var(--bdr);color:var(--muted);">기타</span>
-        <div class="cn">선택·자율 이수</div>
-        <div class="cd" style="color:var(--muted);">외국어 화상교육<br>사설학원 수강<br>기타 소양교육 등</div>
-      </div>
-    </div>
-  </div>
-  <!-- 직급별 의무시간 -->
-  <div class="card" style="margin-bottom:13px;">
-    <div class="card-title">2026년 직급별 의무이수시간</div>
-    <div class="grade-grid">
-      <!-- 임원 — 청록(teal) -->
-      <div class="grade-box" style="background:linear-gradient(145deg,#E0F7F4,#c2ede8);border-color:#7DD4CB;">
-        <div class="gn" style="background:#7DD4CB;color:#0D4F49;">임원</div>
-        <div class="gh" style="color:#0D6B62;">21<span>h</span></div>
-        <div class="gd" style="color:#0D6B62;">전부 집합교육<br>CEO포럼 포함</div>
-      </div>
-      <!-- 중간관리자 — 인디고 딥 -->
-      <div class="grade-box" style="background:linear-gradient(145deg,#E8EAF6,#d0d4f0);border-color:#9FA8DA;">
-        <div class="gn" style="background:#9FA8DA;color:#1A237E;">중간관리자 (4급↑ 보직)</div>
-        <div class="gh" style="color:#283593;">50<span>h</span></div>
-        <div class="gd" style="color:#283593;">집합 <b>35h</b> 이상<br>기관지정 <b>20h</b> 이상<br><span style="font-size:10px;color:#5C6BC0;margin-top:3px;display:inline-block;">승진자: 중간관리자 과정 35h 이수 필요</span></div>
-      </div>
-      <!-- 실무자 — 로즈골드/코랄 -->
-      <div class="grade-box" style="background:linear-gradient(145deg,#FCE4EC,#f8c8d8);border-color:#F48FB1;">
-        <div class="gn" style="background:#F48FB1;color:#560027;">실무자 (4~7급)</div>
-        <div class="gh" style="color:#880E4F;">50<span>h</span></div>
-        <div class="gd" style="color:#880E4F;">집합 <b>35h</b> 이상<br>기관지정 <b>20h</b> 이상</div>
-      </div>
-      <!-- 임금피크제 — 슬레이트/스틸블루 -->
-      <div class="grade-box" style="background:linear-gradient(145deg,#ECEFF1,#d8dfe3);border-color:#90A4AE;">
-        <div class="gn" style="background:#90A4AE;color:#1C2E35;">임금피크제</div>
-        <div class="gh" style="color:#37474F;">25<span>h</span></div>
-        <div class="gd" style="color:#455A64;">집합 <b>18h</b> 이상<br>기관지정 <b>10h</b> 이상</div>
-      </div>
-    </div>
-    <div class="note" style="font-size:13px;line-height:1.9;">
-      <div>집합교육 = 의무시간의 <b>70%↑</b> &nbsp;|&nbsp; 기관지정 = 의무시간의 <b>40%↑</b> (CDP 직무교육 1회↑ 포함)</div>
-      <div style="margin-top:5px;">공무직·기간제: 법정의무교육 필수 이수 + 직장 자체교육 참석</div>
-    </div>
-    </div>
-  <!-- 의무교육 목록 -->
-  <div class="card">
-    <div class="card-title">2026년 의무교육 이수 목록 <span style="font-size:11px;font-weight:400;color:var(--muted);">전 임직원 필수 이수</span></div>
-    <div style="overflow-x:auto;">
-    <table class="duty-tbl">
-      <thead><tr>
-        <th style="width:26px;text-align:center;">#</th>
-        <th style="width:82px;text-align:center;">구분</th>
-        <th>교육명</th>
-        <th style="width:56px;text-align:center;">시간</th>
-        <th style="width:110px;text-align:center;">대상</th>
-        <th style="width:140px;text-align:center;">방법</th>
-        <th style="width:76px;text-align:center;">주관</th>
-        <th style="width:52px;text-align:center;white-space:nowrap;">필수</th>
-      </tr></thead>
-      <tbody>
-        <tr><td style="color:var(--muted);">1</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">4대 폭력 예방 교육</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 강사초청(관리자)</td><td style="font-size:11px;color:var(--muted);">안전감사팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">2</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">직장 내 괴롭힘 예방</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 강사초청(관리자)</td><td style="font-size:11px;color:var(--muted);">안전감사팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">3</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">소방안전 · 화재예방 교육</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">자체교육 / 전문기관</td><td style="font-size:11px;color:var(--muted);">시설운영팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">4</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">청렴 · 윤리교육</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 청렴연수원</td><td style="font-size:11px;color:var(--muted);">안전감사팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">5</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">개인정보보호 · 정보공개</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 행안부</td><td style="font-size:11px;color:var(--muted);">총무회계팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">6</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">장애인인식개선 · 자살예방 · 아동학대예방</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">7</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">퇴직연금 교육</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">8</td><td><span class="rq-c">공통필수</span></td><td style="font-weight:500;">재난안전 · 산업안전보건교육</td><td style="text-align:center;"><span class="hc">2h↑</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 전문교육기관</td><td style="font-size:11px;color:var(--muted);">안전감사팀</td><td style="text-align:center;color:#3C3489;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">9</td><td><span class="rq-c">공통필수</span></td><td style="font-weight:500;">공직윤리(청렴) 역량강화</td><td style="text-align:center;"><span class="hc">2h↑</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 집합</td><td style="font-size:11px;color:var(--muted);">안전감사팀</td><td style="text-align:center;color:#3C3489;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">10</td><td><span class="rq-c">공통필수</span></td><td style="font-weight:500;">디지털역량 강화 (AI · DX)</td><td style="text-align:center;"><span class="hc">2h↑</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">집합 / 온라인</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#3C3489;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">11</td><td><span class="rq-c">공통필수</span></td><td style="font-weight:500;">인사교육 (직무중심인사관리)</td><td style="text-align:center;"><span class="hc">2h↑</span></td><td style="font-size:11px;"><span style="background:#FAEEDA;color:#633806;padding:2px 6px;border-radius:20px;">인사담당자</span></td><td style="font-size:11px;color:var(--muted);">집합 / 위탁</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#3C3489;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">12</td><td><span class="rq-c">공통필수</span></td><td style="font-weight:500;">예산 · 회계교육 (재무건전성)</td><td style="text-align:center;"><span class="hc">2h↑</span></td><td style="font-size:11px;"><span style="background:#FAEEDA;color:#633806;padding:2px 6px;border-radius:20px;">예·회계담당자</span></td><td style="font-size:11px;color:var(--muted);">집합 / 위탁</td><td style="font-size:11px;color:var(--muted);">총무회계팀</td><td style="text-align:center;color:#3C3489;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">13</td><td><span class="rq-i">기관지정</span></td><td style="font-weight:500;">CDP 기반 직무교육 (5대 트랙)</td><td style="text-align:center;"><span class="hc">1회↑</span></td><td style="font-size:11px;">일반직</td><td style="font-size:11px;color:var(--muted);">집합 / 온라인</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#854F0B;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">14</td><td><span class="rq-i">기관지정</span></td><td style="font-weight:500;">신입직원과정 (입사 1년 이내)</td><td style="text-align:center;"><span class="hc">1주</span></td><td style="font-size:11px;">신규입사자</td><td style="font-size:11px;color:var(--muted);">집합 (인재개발원)</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#854F0B;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">15</td><td><span class="rq-i">기관지정</span></td><td style="font-weight:500;">중간관리자과정 (승진 1년 이내)</td><td style="text-align:center;"><span class="hc">1주</span></td><td style="font-size:11px;">신규보직자</td><td style="font-size:11px;color:var(--muted);">집합 (인재개발원)</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#854F0B;font-weight:700;">●</td></tr>
-      </tbody>
-    </table>
-    </div>
-    <div class="note" style="margin-top:9px;">이수시간 <b>—h</b> 항목은 수료증 기재 시간 기준 &nbsp;|&nbsp; 미이수 → 인사고과 <b>12점</b> (이수 20점) &nbsp;|&nbsp; 평가일: 6월 말 / 12월 말</div>
-  </div>
-</div>
-
-<!-- ════════════ 교육 신청 ════════════ -->
-<div class="page" id="page-apply">
-
-  <!-- STEP 1: 본인 확인 -->
-  <div id="verify-area">
-    <div class="fc" style="max-width:460px;">
-      <div style="font-size:16px;font-weight:700;margin-bottom:6px;">본인 확인</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--bdr);">사번과 이름을 입력해 본인 확인 후 신청할 수 있습니다.</div>
-      <div class="fg2">
-        <div class="fg"><label>사번 <span class="req">*</span></label><input type="text" id="v-empno" placeholder="예: 30116" onkeydown="if(event.key==='Enter')verifyStaff()"></div>
-        <div class="fg"><label>이름 <span class="req">*</span></label><input type="text" id="v-name" placeholder="홍길동" onkeydown="if(event.key==='Enter')verifyStaff()"></div>
-      </div>
-      <div id="verify-err" style="display:none;background:var(--rl);color:var(--rd);border:1px solid var(--rm);border-radius:var(--r);padding:10px 14px;font-size:13px;margin-bottom:12px;line-height:1.7;"></div>
-      <button class="sub-btn" id="verify-btn" onclick="verifyStaff()">본인 확인</button>
-    </div>
-  </div>
-
-  <!-- STEP 2: 신청 폼 (본인 확인 후 표시) -->
-  <div id="apply-form-area" style="display:none;">
-    <div style="background:var(--gl);color:var(--gd);border:1px solid var(--gm);border-radius:var(--rl2);padding:10px 18px;margin-bottom:14px;max-width:660px;display:flex;align-items:center;justify-content:space-between;">
-      <div style="font-size:13px;font-weight:500;" id="verified-name-display"></div>
-      <button onclick="resetVerify()" style="font-size:11px;background:none;border:none;color:var(--gd);cursor:pointer;text-decoration:underline;">다시 확인</button>
-    </div>
-    <div class="fc">
-      <div style="font-size:16px;font-weight:700;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--bdr);">교육훈련 이수 신청</div>
-      <div class="fg2">
-        <div class="fg"><label>사번</label><input type="text" id="f-empno" readonly style="background:var(--gray);color:var(--muted);cursor:not-allowed;"></div>
-        <div class="fg"><label>이름</label><input type="text" id="f-name" readonly style="background:var(--gray);color:var(--muted);cursor:not-allowed;"></div>
-      </div>
-      <div class="fg"><label>부서 <span class="req">*</span></label>
-        <select id="f-dept"><option value="">부서 선택</option></select>
-      </div>
-      <div class="fg"><label>과정명 <span class="req">*</span></label><input type="text" id="f-course" placeholder="예: 개인정보보호 법정의무교육 2026"></div>
-      <div class="fg2">
-        <div class="fg"><label>이수 시간(h) <span class="req">*</span></label><input type="number" id="f-hours" placeholder="예: 4" min="1" max="200"></div>
-        <div class="fg"><label>이수 일자 <span class="req">*</span></label><input type="date" id="f-date" max="" onchange="checkDate(this)"></div>
-      </div>
-      <div class="fg"><label>교육기관</label><input type="text" id="f-org" placeholder="예: 행정안전부 / 사내교육"></div>
-      <!-- 교육 분류 -->
-      <div class="cat-sec">
-        <div class="cat-sec-title">📋 교육 분류 <span style="font-weight:400;color:var(--muted);">— 아래 구분에 맞게 선택해 주세요</span></div>
-        <div class="fg2">
-          <div class="fg" style="margin-bottom:0;"><label>교육방법 <span class="req">*</span></label>
-            <select id="f-method"><option value="집합">집합 (실시간 온라인 포함)</option><option value="온라인">온라인 (이러닝)</option></select>
-          </div>
-          <div class="fg" style="margin-bottom:0;"><label>교육구분 <span class="req">*</span></label>
-            <select id="f-cat" onchange="onCatChange()"><option value="기관지정">기관지정</option><option value="법정의무">법정의무</option><option value="공통필수">공통필수</option><option value="기타">기타</option></select>
-          </div>
-        </div>
-        <div class="cat-sub" id="sub-legal">
-          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">법정의무 유형 <span class="req">*</span> <span style="font-weight:400;">(해당 항목 모두 체크)</span></div>
-          <div class="chk-grid" id="legal-grid"></div>
-        </div>
-        <div class="cat-sub" id="sub-common">
-          <div class="fg" style="margin-bottom:0;"><label>공통필수 유형 <span class="req">*</span></label>
-            <select id="f-common"><option value="">선택하세요</option><option>공직윤리(청렴)</option><option>재난·산업안전</option><option>디지털역량</option><option>인사교육</option><option>예산·회계</option></select>
-          </div>
-        </div>
-        <div class="cat-sub" id="sub-inst">
-          <div class="fg" style="margin-bottom:8px;"><label>CDP 연계 여부 <span class="req">*</span></label>
-            <select id="f-cdp" onchange="document.getElementById('sub-track').style.display=this.value==='true'?'block':'none'"><option value="false">아니오</option><option value="true">예 — 직무트랙 선택</option></select>
-          </div>
-          <div id="sub-track" style="display:none;">
-            <div class="fg" style="margin-bottom:0;"><label>직무트랙 <span class="req">*</span></label>
-              <select id="f-track"><option value="">선택하세요</option><option>기획감사</option><option>경영관리</option><option>관광</option><option>MICE</option><option>시설관리</option></select>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- 교육훈련비 / 출장비 -->
-      <div class="cat-sec" style="margin-bottom:13px;">
-        <div class="cat-sec-title">💰 교육비용 내역 <span style="font-weight:400;color:var(--muted);">— 해당 항목만 입력하세요</span></div>
-        <div class="fg2">
-          <div class="fg" style="margin-bottom:0;">
-            <label>교육훈련비 (원)</label>
-            <input type="number" id="f-train-cost" placeholder="예: 150000" min="0">
-          </div>
-          <div class="fg" style="margin-bottom:0;">
-            <label>출장비 (원)</label>
-            <input type="number" id="f-travel-cost" placeholder="예: 50000" min="0">
-          </div>
-        </div>
-        <div class="fg" style="margin-top:10px;margin-bottom:0;">
-          <label>비용 상세 내역</label>
-          <input type="text" id="f-cost-detail" placeholder="예: 교재비 30,000원 + 수강료 120,000원">
-        </div>
-      </div>
-
-      <div class="fg"><label>비고</label><textarea id="f-note" placeholder="추가 내용을 입력하세요..."></textarea></div>
+  <div id="page-f" class="page active">
+    <div class="card">
+      <div class="card-title">🚀 교육 이수 신청</div>
       <div class="fg">
-        <label>수료증빙 첨부 <span class="req">*</span> <span style="font-weight:400;color:var(--muted);">(모든 파일 형식, 10MB 이하)</span></label>
-        <div class="file-box" id="file-drop" onclick="document.getElementById('f-file').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="onDrop(event)">
-          <input type="file" id="f-file" accept="*" onchange="onFileSelect(this)">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" style="margin:0 auto 6px;display:block;opacity:.4;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <div style="font-size:13px;color:var(--muted);">클릭 또는 파일을 여기로 드래그 (PDF, ZIP, HWP 등 모든 형식)</div>
-          <div style="font-size:12px;color:var(--blue);margin-top:4px;font-weight:500;" id="file-name"></div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;" id="file-sz"></div>
-        </div>
-        <div class="file-prog" id="file-prog"><div class="file-prog-bar" id="file-bar" style="width:0%"></div></div>
+        <label>사번 <span class="req">*</span></label>
+        <input type="text" id="f-id" placeholder="사번 8자리 입력">
       </div>
-      <!-- 유효성 안내 배너 -->
-      <div id="apply-err-banner" style="display:none;background:#FCEBEB;color:#791F1F;border:1px solid #F7C1C1;border-radius:10px;padding:13px 16px;margin-bottom:12px;font-size:13px;line-height:1.75;"><div style="font-weight:700;margin-bottom:5px;">⚠ 아래 항목을 확인해 주세요</div><ul id="apply-err-list" style="margin:0;padding-left:18px;"></ul></div>
-      <button class="sub-btn" id="sub-btn" onclick="submitApply()">신청 제출</button>
+      <div class="fg">
+        <label>성명 <span class="req">*</span></label>
+        <input type="text" id="f-name" placeholder="이름 입력">
+      </div>
+      <div class="fg">
+        <label>과정명 <span class="req">*</span></label>
+        <input type="text" id="f-course" placeholder="정확한 과정명 입력">
+      </div>
+      
+      <div class="fg">
+        <label>이수 시간 <span class="req">*</span></label>
+        <div class="time-wrap">
+          <input type="number" id="f-hours-h" placeholder="0" min="0" style="width:70px;text-align:center;">
+          <span class="time-unit">시간</span>
+          <input type="number" id="f-hours-m" placeholder="0" min="0" max="59" step="5" style="width:70px;text-align:center;" oninput="clampMinutes(this)">
+          <span class="time-unit">분</span>
+          <span id="f-hours-preview" style="font-size:12px;color:var(--blue);font-weight:700;margin-left:5px;"></span>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>교육 구분</label>
+        <select id="f-cat">
+          <option value="공통필수">공통필수 (법정의무 등)</option>
+          <option value="직무역량">직무역량</option>
+          <option value="리더십">리더십</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      
+      <div class="fg">
+        <label>수료증 첨부 <span class="req">*</span></label>
+        <input type="file" id="f-file" accept="image/*,application/pdf">
+      </div>
+      <button id="f-btn" class="btn-primary" onclick="onFSubmit()">제출하기</button>
     </div>
   </div>
-  <div id="apply-ok" style="display:none;">
-    <div class="success-box">
-      <div class="succ-icon"><svg width="26" height="26" fill="none" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#3B6D11" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <h3 style="font-size:16px;font-weight:700;margin-bottom:8px;">신청이 완료되었습니다!</h3>
-      <p style="font-size:13px;color:var(--muted);line-height:1.7;">관리자 검토 후 승인 처리됩니다.<br>이수 현황 조회에서 상태를 확인하세요.</p>
-      <button style="margin-top:20px;padding:10px 24px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;" onclick="resetApply()">홈으로 돌아가기</button>
+
+  <div id="page-lu" class="page">
+    <div class="card">
+      <div class="card-title">🔍 개인 이수 현황 조회</div>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="lu-id" placeholder="사번 입력" style="flex:1;">
+        <button class="btn-primary" style="width:80px; margin-top:0;" onclick="onLuSearch()">조회</button>
+      </div>
+    </div>
+    <div id="lu-result" style="display:none;">
+      <div class="stat-grid">
+        <div class="stat-box" style="background:var(--bl);">
+          <div style="font-size:12px; color:var(--muted);">누적 이수 시간</div>
+          <div id="lu-total-hours" style="font-size:18px; font-weight:700; color:var(--blue);">0분</div>
+        </div>
+        <div class="stat-box" style="background:var(--gl);">
+          <div style="font-size:12px; color:var(--muted);">승인 건수</div>
+          <div id="lu-count" style="font-size:18px; font-weight:700; color:var(--gd);">0건</div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700;">
+          <span>목표 달성도 (50시간)</span>
+          <span id="lu-total-prog">0%</span>
+        </div>
+        <div class="prog-bar-bg"><div id="lu-total-bar" class="prog-bar-fill"></div></div>
+      </div>
+      <div class="table-wrap"><table id="lu-table"><thead><tr><th>과정명</th><th>시간</th><th>상태</th></tr></thead><tbody></tbody></table></div>
     </div>
   </div>
+
+  <div id="page-bk" class="page">
+    <div class="card">
+      <div class="card-title">⚙️ 관리자 일괄 등록 및 수정</div>
+      <div class="fg">
+        <label>CSV 파일 업로드</label>
+        <input type="file" id="bk-file" accept=".csv" onchange="onBkFileChange(event)">
+      </div>
+      <button class="btn-primary" style="background:var(--muted);" onclick="downloadSampleCSV()">샘플 양식 다운로드</button>
+    </div>
+
+    <div id="bk-edit-area" class="card" style="display:none; border:2px solid var(--blue);">
+      <div class="card-title">✏️ 선택 항목 수정</div>
+      <input type="hidden" id="bk-row-idx">
+      <div class="fg">
+        <label>과정명</label>
+        <input type="text" id="bk-course">
+      </div>
+      <div class="fg">
+        <label>시간 수정</label>
+        <div class="time-wrap">
+          <input type="number" id="bk-hours-h" style="width:60px; text-align:center;">
+          <span class="time-unit">시간</span>
+          <input type="number" id="bk-hours-m" style="width:60px; text-align:center;">
+          <span class="time-unit">분</span>
+        </div>
+      </div>
+      <div class="fg">
+        <label>승인 상태</label>
+        <select id="bk-status">
+          <option value="승인">승인</option>
+          <option value="대기">대기</option>
+          <option value="반려">반려</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="onBkUpdate()">정보 업데이트</button>
+    </div>
+
+    <div id="bk-list-wrap" class="card" style="display:none; padding:10px;">
+      <div class="table-wrap"><table id="bk-table"><thead><tr><th>이름</th><th>과정명</th><th>시간</th><th>관리</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
 </div>
-
-<!-- ════════════ 이수 현황 조회 ════════════ -->
-<div class="page" id="page-lookup">
-  <div class="lu-card" style="margin-left:auto;margin-right:auto;">
-    <div style="font-size:15px;font-weight:700;margin-bottom:4px;">이수 현황 조회</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">사번과 이름을 입력하면 본인의 교육이수 내역을 확인할 수 있습니다.</div>
-    <div class="lu-g">
-      <div class="fg" style="margin:0;"><label>사번</label><input type="text" id="lu-no" placeholder="예: 30116" onkeydown="if(event.key==='Enter')doLookup()"></div>
-      <div class="fg" style="margin:0;"><label>이름</label><input type="text" id="lu-nm" placeholder="홍길동" onkeydown="if(event.key==='Enter')doLookup()"></div>
-      <button class="lu-btn" onclick="doLookup()">조회</button>
-    </div>
-  </div>
-  <div id="lookup-result" style="display:none;">
-    <div class="rc" style="max-width:820px;margin-left:auto;margin-right:auto;">
-      <div style="font-size:15px;font-weight:700;margin-bottom:3px;" id="lu-head"></div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;" id="lu-dept"></div>
-      <div style="font-size:13px;font-weight:700;margin-bottom:10px;">2026년 의무이수 현황</div>
-      <div id="lu-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:16px;">
-        <div class="sbox" style="background:#E6F1FB;">
-          <div style="font-size:11px;font-weight:700;color:#0C447C;margin-bottom:5px;">전체 의무시간</div>
-          <div style="font-size:18px;font-weight:700;color:#1D6FA4;" id="lu-total-prog">—</div>
-          <div style="font-size:10px;color:#185FA5;margin-top:2px;">목표 50시간</div>
-          <div class="pw" style="margin-top:6px;"><div class="pb" id="lu-total-bar" style="width:0%"></div></div>
-        </div>
-        <div class="sbox" style="background:#FAEEDA;">
-          <div style="font-size:11px;font-weight:700;color:#633806;margin-bottom:5px;">기관지정 학습</div>
-          <div style="font-size:18px;font-weight:700;color:#854F0B;" id="lu-inst-prog">—</div>
-          <div style="font-size:10px;color:#854F0B;margin-top:2px;">목표 20시간</div>
-          <div class="pw" style="margin-top:6px;"><div class="pb" id="lu-inst-bar" style="width:0%;background:#BA7517;"></div></div>
-        </div>
-        <div class="sbox" style="background:#EEEDFE;">
-          <div style="font-size:11px;font-weight:700;color:#3C3489;margin-bottom:5px;">집합교육</div>
-          <div style="font-size:18px;font-weight:700;color:#3C3489;" id="lu-group-prog">—</div>
-          <div style="font-size:10px;color:#534AB7;margin-top:2px;">목표 35시간</div>
-          <div class="pw" style="margin-top:6px;"><div class="pb" id="lu-group-bar" style="width:0%;background:#534AB7;"></div></div>
-        </div>
-        <div class="sbox" style="background:#EAF3DE;">
-          <div style="font-size:11px;font-weight:700;color:#27500A;margin-bottom:5px;">CDP 직무교육</div>
-          <div style="font-size:18px;font-weight:700;" id="lu-cdp-yn">—</div>
-          <div style="font-size:10px;color:#3B6D11;margin-top:2px;">연 1회 이상</div>
-        </div>
-      </div>
-      <div id="lu-gongmu-section" style="display:none;margin-bottom:18px;">
-        <div style="background:#E6F1FB;border:1px solid #B5D4F4;border-radius:var(--rl2);padding:18px 22px;display:flex;align-items:center;gap:18px;">
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#0C447C;margin-bottom:6px;">전체 이수시간</div>
-            <div style="font-size:32px;font-weight:700;color:#1D6FA4;line-height:1;" id="lu-gongmu-hrs">—</div>
-            <div style="font-size:11px;color:#185FA5;margin-top:5px;">승인 완료 기준</div>
-          </div>
-          <div style="flex:1;border-left:1px solid #B5D4F4;padding-left:18px;font-size:12px;color:#0C447C;line-height:1.9;">
-            법정의무교육 이수 후 수료증 첨부 제출<br>공통의무교육 각 2시간 이상 이수
-          </div>
-        </div>
-      </div>
-      <div style="font-size:13px;font-weight:700;margin-bottom:10px;">법정의무교육 이수 체크리스트</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:18px;" id="lu-legal-checklist"></div>
-      <div style="font-size:13px;font-weight:700;margin-bottom:6px;margin-top:4px;">공통의무교육 이수 체크리스트 <span style="font-size:11px;font-weight:400;color:var(--muted);">각 2시간 이상</span></div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:18px;" id="lu-common-duty-checklist"></div>
-      <div id="lu-summary-row" class="srow" style="margin-bottom:18px;">
-        <div class="sbox"><div class="sl">이수 완료</div><div class="sv" style="color:#3B6D11;" id="lu-done">—</div></div>
-        <div class="sbox"><div class="sl">승인 대기</div><div class="sv" style="color:#854F0B;" id="lu-wait">—</div></div>
-        <div class="sbox"><div class="sl">총 이수시간</div><div class="sv" style="color:var(--blue);font-size:18px;" id="lu-hrs">—</div></div>
-      </div>
-      <div style="font-size:13px;font-weight:700;margin-bottom:10px;">이수 내역</div>
-      <table>
-        <thead><tr>
-          <th style="width:80px;">이수일</th><th>과정명</th>
-          <th style="width:66px;">방법</th><th style="width:72px;">구분</th>
-          <th style="width:58px;">시간</th><th style="width:84px;">상태</th>
-        </tr></thead>
-        <tbody id="lu-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- ════════════ 공지사항 (직원용) ════════════ -->
-<div class="page" id="page-notices">
-  <!-- 필터 툴바 -->
-  <div style="background:var(--white);border:1px solid var(--bdr);border-radius:var(--r);padding:11px 14px;margin-bottom:13px;display:flex;align-items:center;gap:8px;max-width:860px;">
-    <select id="nb-lv-filter" onchange="renderNoticeBoard()" style="font-size:13px;padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r);font-family:inherit;outline:none;">
-      <option value="all">전체 중요도</option>
-      <option value="긴급">긴급</option>
-      <option value="중요">중요</option>
-      <option value="일반">일반</option>
-    </select>
-    <input type="text" id="nb-search" placeholder="제목 검색..." oninput="renderNoticeBoard()"
-      style="font-size:13px;padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r);font-family:inherit;outline:none;width:200px;">
-    <div style="flex:1;"></div>
-    <span style="font-size:12px;color:var(--muted);" id="nb-count"></span>
-  </div>
-  <!-- 목록 -->
-  <div id="nb-list" style="max-width:860px;"></div>
-  <!-- 빈 상태 -->
-  <div id="nb-empty" style="display:none;max-width:860px;background:var(--white);border:1px solid var(--bdr);border-radius:var(--rl2);padding:44px;text-align:center;">
-    <div style="font-size:32px;margin-bottom:10px;">📭</div>
-    <div style="font-size:14px;color:var(--muted);">등록된 공지사항이 없습니다.</div>
-  </div>
-</div>
-
-<!-- ════════════ 관리자 ════════════ -->
-<div id="admin-area" style="display:none;">
-  <div class="adm-wrap">
-    <aside class="sb">
-      <div class="sb-sec">신청 관리</div>
-      <button class="sb-btn active" onclick="goAdmin('approval',this)"><svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> 신청 승인 처리</button>
-      <button class="sb-btn" onclick="goAdmin('bulk',this)" style="position:relative;"><svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> 단체 이수처리 <span style="font-size:9px;font-weight:700;background:#534AB7;color:#fff;padding:1px 5px;border-radius:20px;margin-left:2px;">NEW</span></button>
-      <button class="sb-btn" onclick="goAdmin('history',this)"><svg width="13" height="13" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> 전체 이수 이력</button>
-      <button class="sb-btn" onclick="goAdmin('catlog',this)"><svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> 카테고리 수정 이력</button>
-      <div class="sb-sec">현황</div>
-      <button class="sb-btn" onclick="goAdmin('stats',this)"><svg width="13" height="13" fill="none" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/></svg> 통계 대시보드</button>
-      <div class="sb-sec">공지 관리</div>
-      <button class="sb-btn" onclick="goAdmin('notice',this)"><svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> 공지사항 관리</button>
-      <hr style="border:none;border-top:1px solid var(--bdr);margin:10px 13px;">
-      <button class="sb-btn" onclick="exitAdmin()"><svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 직원 화면으로</button>
-    </aside>
-    <main class="adm-main">
-
-      <!-- 단체 이수처리 -->
-      <div class="apage" id="apage-bulk">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <div>
-            <h2 style="font-size:17px;font-weight:700;">단체 이수처리</h2>
-            <p style="font-size:12px;color:var(--muted);margin-top:2px;">공통교육 등 단체교육 실시 후 Excel/CSV 명단을 업로드해 일괄 이수처리합니다.</p>
-          </div>
-        </div>
-
-        <!-- STEP 1: 교육 기본정보 입력 -->
-        <div class="card" style="margin-bottom:14px;">
-          <div class="card-title">
-            <span>① 교육 기본정보 입력</span>
-            <span class="badge bd-common">공통</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;">
-            <div class="fg" style="margin:0;">
-              <label>과정명 <span class="req">*</span></label>
-              <input type="text" id="bk-course" placeholder="예: 2026년 상반기 안전교육">
-            </div>
-            <div class="fg" style="margin:0;">
-              <label>교육 구분 <span class="req">*</span></label>
-              <select id="bk-cat" onchange="onBkCatChange()">
-                <option value="공통필수">공통필수</option>
-                <option value="법정의무">법정의무</option>
-                <option value="기관지정">기관지정</option>
-                <option value="기타">기타</option>
-              </select>
-            </div>
-            <div class="fg" style="margin:0;">
-              <label>이수 일자 <span class="req">*</span></label>
-              <input type="date" id="bk-date" min="2026-01-01" max="2026-12-31">
-            </div>
-            <div class="fg" style="margin:0;">
-              <label>교육 방법 <span class="req">*</span></label>
-              <select id="bk-method">
-                <option value="집합">집합</option>
-                <option value="온라인">온라인</option>
-                <option value="혼합">혼합</option>
-              </select>
-            </div>
-            <div class="fg" style="margin:0;">
-              <label>이수 시간(h) <span class="req">*</span></label>
-              <input type="number" id="bk-hours" min="1" max="200" placeholder="예: 4">
-            </div>
-            <div class="fg" style="margin:0;">
-              <label>교육기관/주관</label>
-              <input type="text" id="bk-org" placeholder="예: 인사노무팀">
-            </div>
-          </div>
-          <!-- 법정의무 세부 -->
-          <div id="bk-sub-legal" style="display:none;margin-top:12px;background:var(--gray);border-radius:var(--r);padding:12px 14px;">
-            <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">법정의무 유형 선택 <span class="req">*</span></div>
-            <div class="chk-grid" id="bk-legal-grid"></div>
-          </div>
-          <!-- 공통필수 세부 -->
-          <div id="bk-sub-common" style="display:none;margin-top:12px;background:var(--gray);border-radius:var(--r);padding:12px 14px;">
-            <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">공통필수 유형 <span class="req">*</span></div>
-            <select id="bk-common" style="width:100%;padding:8px 11px;border:1px solid var(--bdr);border-radius:var(--r);font-size:13px;font-family:inherit;outline:none;">
-              <option value="">선택</option>
-              <option value="디지털역량">디지털역량</option>
-              <option value="리더십">리더십</option>
-              <option value="직무공통">직무공통</option>
-              <option value="소양">소양</option>
-            </select>
-          </div>
-          <!-- 처리 상태 -->
-          <div style="margin-top:13px;" class="fg">
-            <label>이수 처리 상태 <span class="req">*</span></label>
-            <select id="bk-status">
-              <option value="승인">승인 (즉시 이수 완료 처리)</option>
-              <option value="대기">대기 (승인 대기 상태로 등록)</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- STEP 2: 명단 업로드 -->
-        <div class="card" style="margin-bottom:14px;">
-          <div class="card-title">② 수강자 명단 파일 업로드 (Excel / CSV)</div>
-          <!-- 양식 다운로드 안내 -->
-          <div style="background:var(--bl);border:1px solid var(--bm);border-radius:var(--r);padding:10px 14px;margin-bottom:13px;font-size:12px;color:var(--bd);display:flex;align-items:center;gap:10px;">
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v4m0 4h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            <span>파일 첫 행은 헤더(사번, 이름)여야 합니다. <b>사번</b>과 <b>이름</b> 열이 필수입니다.</span>
-            <button onclick="downloadSampleCSV()" style="margin-left:auto;padding:4px 10px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📥 샘플 양식 다운로드</button>
-          </div>
-          <div class="file-box" id="bk-file-drop" onclick="document.getElementById('bk-file').click()"
-               ondragover="event.preventDefault();this.classList.add('drag')"
-               ondragleave="this.classList.remove('drag')"
-               ondrop="onBkDrop(event)">
-            <input type="file" id="bk-file" accept=".csv,.xlsx,.xls" onchange="onBkFileSelect(this)">
-            <svg width="24" height="24" fill="none" viewBox="0 0 24 24" style="margin:0 auto 8px;display:block;opacity:.4;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <div style="font-size:13px;color:var(--muted);">클릭 또는 파일을 드래그 (.csv, .xlsx, .xls)</div>
-            <div style="font-size:12px;color:var(--blue);margin-top:4px;font-weight:500;" id="bk-file-name"></div>
-          </div>
-
-          <!-- 미리보기 테이블 -->
-          <div id="bk-preview-wrap" style="display:none;margin-top:14px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-              <div style="font-size:13px;font-weight:700;">명단 미리보기</div>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span id="bk-preview-cnt" style="font-size:12px;color:var(--muted);"></span>
-                <span id="bk-err-cnt" style="font-size:12px;color:#A32D2D;font-weight:700;"></span>
-              </div>
-            </div>
-            <div style="max-height:320px;overflow-y:auto;border:1px solid var(--bdr);border-radius:var(--r);">
-              <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                <thead style="position:sticky;top:0;background:#F8F9FB;z-index:1;">
-                  <tr>
-                    <th style="padding:8px 12px;text-align:center;border-bottom:1px solid var(--bdr);width:36px;">#</th>
-                    <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--bdr);width:100px;">사번</th>
-                    <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--bdr);width:80px;">이름</th>
-                    <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--bdr);">상태</th>
-                  </tr>
-                </thead>
-                <tbody id="bk-preview-tbody"></tbody>
-              </table>
-            </div>
-            <!-- 오류 요약 -->
-            <div id="bk-err-box" style="display:none;margin-top:10px;background:var(--rl);border:1px solid var(--rm);border-radius:var(--r);padding:10px 14px;">
-              <div style="font-size:12px;font-weight:700;color:var(--rd);margin-bottom:6px;">⚠ 오류 행 안내</div>
-              <div id="bk-err-list" style="font-size:12px;color:var(--rd);line-height:2;"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- STEP 3: 증빙파일 업로드 -->
-        <div class="card" style="margin-bottom:14px;">
-          <div class="card-title">
-            <span>③ 증빙파일 첨부 <span style="font-size:12px;font-weight:400;color:var(--muted);">(출석부·서명부·수료증 등)</span></span>
-            <span class="badge bd-etc">선택</span>
-          </div>
-          <div style="background:var(--al);border:1px solid var(--am);border-radius:var(--r);padding:9px 13px;margin-bottom:12px;font-size:12px;color:var(--ad);display:flex;align-items:flex-start;gap:8px;">
-            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>출석부, 서명부, 수료증 등 <b>교육 실시 증빙자료를 기록용으로 보관</b>합니다. 향후 감사·조회 시 활용됩니다.</span>
-          </div>
-          <div class="file-box" id="bk-proof-drop"
-               onclick="document.getElementById('bk-proof-file').click()"
-               ondragover="event.preventDefault();this.classList.add('drag')"
-               ondragleave="this.classList.remove('drag')"
-               ondrop="onBkProofDrop(event)">
-            <input type="file" id="bk-proof-file" accept=".pdf,.jpg,.jpeg,.png,.hwp,.zip,.xlsx,.xls,.doc,.docx" onchange="onBkProofSelect(this)">
-            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" style="margin:0 auto 8px;display:block;opacity:.4;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round"/><polyline points="14 2 14 8 20 8" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round"/><line x1="12" y1="18" x2="12" y2="12" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round"/><polyline points="9 15 12 12 15 15" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round"/></svg>
-            <div style="font-size:13px;color:var(--muted);">클릭 또는 파일을 드래그 (PDF, JPG, PNG, HWP, ZIP 등)</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:4px;">최대 20MB</div>
-            <div id="bk-proof-name" style="font-size:12px;color:var(--blue);margin-top:6px;font-weight:500;"></div>
-            <div id="bk-proof-sz" style="font-size:11px;color:var(--muted);"></div>
-          </div>
-          <!-- 첨부 완료 표시 -->
-          <div id="bk-proof-ok" style="display:none;margin-top:10px;background:var(--gl);border:1px solid var(--gm);border-radius:var(--r);padding:9px 14px;display:none;align-items:center;gap:10px;">
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="#3B6D11" stroke-width="1.5" stroke-linecap="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="#3B6D11" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span id="bk-proof-ok-name" style="font-size:13px;font-weight:500;color:#3B6D11;flex:1;"></span>
-            <button onclick="clearBkProof()" style="font-size:11px;color:var(--rd);background:none;border:none;cursor:pointer;font-family:inherit;font-weight:700;">✕ 제거</button>
-          </div>
-        </div>
-
-        <!-- STEP 4: 처리 버튼 -->
-        <div style="display:flex;gap:10px;align-items:center;">
-          <button onclick="submitBulk()" id="bk-submit-btn"
-            style="padding:11px 28px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s;"
-            onmouseover="this.style.background='var(--bd)'" onmouseout="this.style.background='var(--blue)'">
-            일괄 이수처리 실행
-          </button>
-          <button onclick="resetBulk()"
-            style="padding:11px 18px;background:var(--white);color:var(--muted);border:1px solid var(--bdr);border-radius:var(--r);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">
-            초기화
-          </button>
-          <span id="bk-result-msg" style="font-size:13px;font-weight:700;"></span>
-        </div>
-
-        <!-- 처리 결과 -->
-        <div id="bk-result-wrap" style="display:none;margin-top:16px;">
-          <div class="card">
-            <div class="card-title">처리 결과</div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
-              <div class="sbox" style="background:var(--gl);"><div class="sl">성공</div><div class="sv" style="color:#3B6D11;" id="bk-res-ok">0</div></div>
-              <div class="sbox" style="background:var(--rl);"><div class="sl">실패/오류</div><div class="sv" style="color:#A32D2D;" id="bk-res-err">0</div></div>
-              <div class="sbox"><div class="sl">전체</div><div class="sv" id="bk-res-tot">0</div></div>
-            </div>
-            <div id="bk-res-detail" style="font-size:12px;color:var(--muted);max-height:200px;overflow-y:auto;line-height:2;"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 승인 처리 -->
-      <div class="apage active" id="apage-approval">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <div><h2 style="font-size:17px;font-weight:700;">신청 승인 처리</h2><p style="font-size:12px;color:var(--muted);margin-top:2px;">신청 검토, 승인/반려, 카테고리 수정.</p></div>
-          <div style="display:flex;gap:8px;">
-            <div class="sc" style="padding:9px 13px;min-width:62px;text-align:center;"><div class="sl">대기</div><div class="sv amber" style="font-size:17px;" id="ap-w">—</div></div>
-            <div class="sc" style="padding:9px 13px;min-width:62px;text-align:center;"><div class="sl">완료</div><div class="sv green" style="font-size:17px;" id="ap-d">—</div></div>
-            <div class="sc" style="padding:9px 13px;min-width:62px;text-align:center;"><div class="sl">반려</div><div class="sv red" style="font-size:17px;" id="ap-r">—</div></div>
-          </div>
-        </div>
-        <div class="toolbar">
-          <select id="a-st" onchange="aRender()"><option value="all">전체 상태</option><option value="대기">승인 대기</option><option value="승인">승인 완료</option><option value="반려">반려</option></select>
-          <select id="a-dp" onchange="aRender()"><option value="all">전체 부서</option></select>
-          <select id="a-ct" onchange="aRender()"><option value="all">전체 구분</option><option value="기관지정">기관지정</option><option value="법정의무">법정의무</option><option value="공통필수">공통필수</option><option value="기타">기타</option></select>
-          <input id="a-q" type="text" placeholder="이름 또는 과정명" oninput="aRender()">
-          <div class="spacer"></div>
-          <button class="btn btn-gn" onclick="bulkAct('승인')">선택 일괄 승인</button>
-          <button class="btn btn-rd" onclick="bulkAct('반려')">선택 일괄 반려</button>
-          <button class="btn btn-rd" onclick="bulkDel()">선택 일괄 삭제</button>
-          <button class="btn btn-gh" onclick="loadAll()">↻</button>
-        </div>
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr>
-              <th style="width:32px;"><input type="checkbox" class="chk" id="chk-all" onchange="toggleAll(this)"></th>
-              <th style="width:72px;">이수일</th><th style="width:90px;">사번</th>
-              <th style="width:80px;">이름</th><th style="width:100px;">부서</th>
-              <th>과정명</th><th style="width:60px;">방법</th>
-              <th style="width:72px;">구분</th><th style="width:52px;">시간</th>
-              <th style="width:80px;">상태</th><th style="width:220px;">처리</th>
-            </tr></thead>
-            <tbody id="a-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- 전체 이력 -->
-      <div class="apage" id="apage-history">
-        <div style="margin-bottom:14px;"><h2 style="font-size:17px;font-weight:700;">전체 이수 이력</h2></div>
-        <div class="toolbar">
-          <select id="h-dp" onchange="hRender()"><option value="all">전체 부서</option></select>
-          <select id="h-st" onchange="hRender()"><option value="all">전체 상태</option><option value="승인">승인 완료</option><option value="대기">대기</option><option value="반려">반려</option></select>
-          <select id="h-ct" onchange="hRender()"><option value="all">전체 구분</option><option value="기관지정">기관지정</option><option value="법정의무">법정의무</option><option value="공통필수">공통필수</option><option value="기타">기타</option></select>
-          <input type="text" id="h-q" placeholder="이름·과정명" oninput="hRender()">
-          <div class="spacer"></div>
-          <button class="btn btn-gh" onclick="exportCSV()">📥 CSV</button>
-        </div>
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr>
-              <th style="width:80px;">이수일</th><th style="width:90px;">사번</th>
-              <th style="width:80px;">이름</th><th style="width:100px;">부서</th>
-              <th>과정명</th><th style="width:60px;">방법</th>
-              <th style="width:72px;">구분</th><th style="width:52px;">시간</th>
-              <th style="width:80px;">상태</th>
-            </tr></thead>
-            <tbody id="h-tbody"></tbody>
-          </table>
-        </div>
-        <div style="font-size:12px;color:var(--muted);margin-top:7px;text-align:right;" id="h-cnt"></div>
-      </div>
-
-      <!-- 카테고리 수정 이력 -->
-      <div class="apage" id="apage-catlog">
-        <div style="margin-bottom:14px;"><h2 style="font-size:17px;font-weight:700;">카테고리 수정 이력</h2></div>
-        <div id="catlog-wrap" class="card"></div>
-      </div>
-
-      <!-- 통계 -->
-      <div class="apage" id="apage-stats">
-        <div style="margin-bottom:14px;"><h2 style="font-size:17px;font-weight:700;">통계 대시보드</h2></div>
-        <div class="sgrid">
-          <div class="sc"><div class="sl">전체 신청</div><div class="sv" id="s-tot">—</div></div>
-          <div class="sc"><div class="sl">승인 완료</div><div class="sv green" id="s-don">—</div></div>
-          <div class="sc"><div class="sl">총 이수시간</div><div class="sv blue" id="s-hrs">—</div></div>
-          <div class="sc"><div class="sl">전체 이수율</div><div class="sv green" id="s-rat">—</div></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;">
-          <div class="card"><div class="card-title">부서별 이수 현황</div><div id="dept-chart"></div></div>
-          <div class="card"><div class="card-title">교육구분별 현황</div><div id="cat-chart"></div></div>
-        </div>
-      </div>
-
-      <!-- 공지 관리 (관리자) -->
-      <div class="apage" id="apage-notice">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <div>
-            <h2 style="font-size:17px;font-weight:700;">공지사항 관리</h2>
-            <p style="font-size:12px;color:var(--muted);margin-top:2px;">숨김 공지 포함 전체 목록. 상태를 수정해 직원 게시판에 표시/숨김을 제어하세요.</p>
-          </div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <!-- 중요도 필터 -->
-            <select id="an-lv" onchange="renderAdminNotice()" style="font-size:13px;padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r);font-family:inherit;outline:none;">
-              <option value="all">전체 중요도</option>
-              <option value="긴급">긴급</option>
-              <option value="중요">중요</option>
-              <option value="일반">일반</option>
-            </select>
-            <!-- 상태 필터 -->
-            <select id="an-st" onchange="renderAdminNotice()" style="font-size:13px;padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r);font-family:inherit;outline:none;">
-              <option value="all">전체 상태</option>
-              <option value="게시">게시</option>
-              <option value="숨김">숨김</option>
-            </select>
-            <button class="btn btn-pri" onclick="openNoticeModal()">+ 공지 추가</button>
-          </div>
-        </div>
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr>
-              <th style="width:90px;">등록일</th>
-              <th>제목</th>
-              <th style="width:72px;">중요도</th>
-              <th style="width:72px;">상태</th>
-              <th style="width:110px;">관리</th>
-            </tr></thead>
-            <tbody id="n-tbody"></tbody>
-          </table>
-        </div>
-        <div style="font-size:12px;color:var(--muted);margin-top:7px;text-align:right;" id="n-cnt"></div>
-      </div>
-
-    </main>
-  </div>
-</div>
-
-<!-- 승인 상세 모달 -->
-<div class="mo" id="mo-detail">
-  <div class="mb">
-    <div class="mh"><h3>신청 상세</h3><button class="mcl" onclick="closeMo('mo-detail')">✕</button></div>
-    <div class="mr2"><span class="ml2">신청자</span><span class="mv2" id="m-name"></span></div>
-    <div class="mr2"><span class="ml2">부서</span><span class="mv2" id="m-dept"></span></div>
-    <div class="mr2"><span class="ml2">과정명</span><span class="mv2" id="m-course"></span></div>
-    <div class="mr2"><span class="ml2">교육방법</span><span class="mv2" id="m-method"></span></div>
-    <div class="mr2"><span class="ml2">교육구분</span><span class="mv2" id="m-cat"></span></div>
-    <div class="mr2"><span class="ml2">이수시간</span><span class="mv2" id="m-hours"></span></div>
-    <div class="mr2"><span class="ml2">이수일자</span><span class="mv2" id="m-date"></span></div>
-    <div class="mr2"><span class="ml2">교육기관</span><span class="mv2" id="m-org"></span></div>
-    <div class="mr2"><span class="ml2">수료증</span><span class="mv2 link" id="m-file" onclick="openFile()">📎 수료증빙 열람</span></div>
-    <div class="mr2" id="m-bulk-row" style="display:none;"><span class="ml2">증빙유형</span><span class="mv2"><span style="font-size:11px;font-weight:700;background:#EEEDFE;color:#3C3489;padding:2px 8px;border-radius:20px;">단체교육 증빙</span></span></div>
-    <div class="mr2"><span class="ml2">교육훈련비</span><span class="mv2" id="m-train-cost">—</span></div>
-    <div class="mr2"><span class="ml2">출장비</span><span class="mv2" id="m-travel-cost">—</span></div>
-    <div class="mr2" id="m-cost-detail-row" style="display:none;"><span class="ml2">비용내역</span><span class="mv2" id="m-cost-detail">—</span></div>
-    <div style="margin-top:9px;"><div style="font-size:12px;color:var(--muted);font-weight:500;margin-bottom:4px;">반려 사유 (반려 시 입력)</div>
-      <textarea class="ri" id="m-remark" rows="2" placeholder="반려 사유를 입력하세요..."></textarea>
-    </div>
-    <div class="ma">
-      <button class="m-ap" onclick="modalAct('승인')">승인</button>
-      <button class="m-rj" onclick="modalAct('반려')">반려</button>
-      <button style="flex:1;padding:9px;border-radius:var(--r);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;border:1px solid;background:#E6F1FB;color:#0C447C;border-color:#B5D4F4;" onclick="openEditApply(openId);closeMo('mo-detail')">내용 수정</button>
-      <button class="m-cl" onclick="closeMo('mo-detail')">닫기</button>
-    </div>
-  </div>
-</div>
-
-<!-- 카테고리 수정 모달 -->
-<div class="mo" id="mo-cat">
-  <div class="mb wide">
-    <div class="mh"><h3>카테고리 수정</h3><button class="mcl" onclick="closeMo('mo-cat')">✕</button></div>
-    <div class="cat-warn">⚠ 신청자가 잘못 분류한 경우 직접 수정하세요. 수정 이력은 자동 기록됩니다.</div>
-    <div style="font-size:12px;font-weight:500;color:var(--muted);margin-bottom:11px;" id="ce-tgt"></div>
-    <div class="fg2">
-      <div class="fg"><label>교육방법 <span class="req">*</span></label>
-        <select id="ce-method"><option value="집합">집합 (실시간 온라인 포함)</option><option value="온라인">온라인 (이러닝)</option></select>
-      </div>
-      <div class="fg"><label>교육구분 <span class="req">*</span></label>
-        <select id="ce-cat" onchange="onCeChange()"><option value="기관지정">기관지정</option><option value="법정의무">법정의무</option><option value="공통필수">공통필수</option><option value="기타">기타</option></select>
-      </div>
-    </div>
-    <div class="cat-sub2" id="ce-legal"><div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px;">법정의무 유형</div><div class="chk-grid" id="ce-lg"></div></div>
-    <div class="cat-sub2" id="ce-common">
-      <div class="fg" style="margin-bottom:0;"><label>공통필수 유형</label>
-        <select id="ce-com"><option value="">선택하세요</option><option>공직윤리(청렴)</option><option>재난·산업안전</option><option>디지털역량</option><option>인사교육</option><option>예산·회계</option></select>
-      </div>
-    </div>
-    <div class="cat-sub2" id="ce-inst">
-      <div class="fg" style="margin-bottom:8px;"><label>CDP 연계 여부</label>
-        <select id="ce-cdp" onchange="onCeCdpChange()"><option value="false">아니오</option><option value="true">예 — 직무트랙 선택</option></select>
-      </div>
-      <div id="ce-trk" style="display:none;">
-        <div class="fg" style="margin-bottom:0;"><label>직무트랙</label>
-          <select id="ce-track"><option value="">선택하세요</option><option>기획감사</option><option>경영관리</option><option>관광</option><option>MICE</option><option>시설관리</option></select>
-        </div>
-      </div>
-    </div>
-    <div class="fg" style="margin-top:11px;"><label>수정 사유 <span class="req">*</span></label>
-      <textarea class="ri" id="ce-reason" rows="2" placeholder="수정 사유를 반드시 입력하세요..."></textarea>
-    </div>
-    <div class="ma"><button class="m-sv" onclick="saveCatEdit()">수정 저장</button><button class="m-cl" onclick="closeMo('mo-cat')">취소</button></div>
-  </div>
-</div>
-
-<!-- 신청 내용 수정 모달 (관리자) -->
-<div class="mo" id="mo-edit-apply">
-  <div class="mb wide">
-    <div class="mh"><h3>신청 내용 수정</h3><button class="mcl" onclick="closeMo('mo-edit-apply')">✕</button></div>
-    <div style="background:var(--al);color:var(--ad);border:1px solid var(--am);border-radius:var(--r);padding:8px 13px;font-size:12px;margin-bottom:14px;">⚠ 승인 완료 건 포함 모든 항목을 수정할 수 있습니다. 수정 사유를 반드시 입력하세요.</div>
-    <input type="hidden" id="ea-id">
-    <div class="fg2">
-      <div class="fg"><label>이름</label><input type="text" id="ea-name" readonly style="background:var(--gray);color:var(--muted);cursor:not-allowed;"></div>
-      <div class="fg"><label>부서 <span class="req">*</span></label><select id="ea-dept"><option value="">부서 선택</option></select></div>
-    </div>
-    <div class="fg2">
-      <div class="fg"><label>과정명 <span class="req">*</span></label><input type="text" id="ea-course" placeholder="과정명"></div>
-      <div class="fg"><label>교육기관</label><input type="text" id="ea-org" placeholder="예: 행정안전부 / 사내교육"></div>
-    </div>
-    <div class="fg2">
-      <div class="fg"><label>이수 시간(h) <span class="req">*</span></label><input type="number" id="ea-hours" min="1" max="200" placeholder="예: 4"></div>
-      <div class="fg"><label>이수 일자 <span class="req">*</span></label><input type="date" id="ea-date" min="2026-01-01" max="2026-12-31"></div>
-    </div>
-    <div class="fg2">
-      <div class="fg"><label>교육방법</label>
-        <select id="ea-method"><option value="집합">집합 (실시간 온라인 포함)</option><option value="온라인">온라인 (이러닝)</option></select>
-      </div>
-      <div class="fg"><label>교육구분 <span class="req">*</span></label>
-        <select id="ea-cat" onchange="onEaChange()"><option value="기관지정">기관지정</option><option value="법정의무">법정의무</option><option value="공통필수">공통필수</option><option value="기타">기타</option></select>
-      </div>
-    </div>
-    <!-- 법정의무 하위 -->
-    <div class="cat-sub2" id="ea-legal">
-      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px;">법정의무 유형 <span class="req">*</span> <span style="font-weight:400;">(해당 항목 모두 체크)</span></div>
-      <div class="chk-grid" id="ea-lg"></div>
-    </div>
-    <!-- 공통필수 하위 -->
-    <div class="cat-sub2" id="ea-common">
-      <div class="fg" style="margin-bottom:0;"><label>공통필수 유형 <span class="req">*</span></label>
-        <select id="ea-com"><option value="">선택하세요</option><option>공직윤리(청렴)</option><option>재난·산업안전</option><option>디지털역량</option><option>인사교육</option><option>예산·회계</option></select>
-      </div>
-    </div>
-    <!-- 기관지정 하위 -->
-    <div class="cat-sub2" id="ea-inst">
-      <div class="fg" style="margin-bottom:8px;"><label>CDP 연계 여부 <span class="req">*</span></label>
-        <select id="ea-cdp" onchange="onEaCdpChange()"><option value="false">아니오</option><option value="true">예 — 직무트랙 선택</option></select>
-      </div>
-      <div id="ea-trk" style="display:none;">
-        <div class="fg" style="margin-bottom:0;"><label>직무트랙 <span class="req">*</span></label>
-          <select id="ea-track"><option value="">선택하세요</option><option>기획감사</option><option>경영관리</option><option>관광</option><option>MICE</option><option>시설관리</option></select>
-        </div>
-      </div>
-    </div>
-    <div class="fg" style="margin-top:4px;"><label>수정 사유 <span class="req">*</span></label>
-      <textarea class="ri" id="ea-reason" rows="2" placeholder="수정 사유를 반드시 입력하세요..."></textarea>
-    </div>
-    <div class="ma"><button class="m-sv" onclick="saveEditApply()">수정 저장</button><button class="m-cl" onclick="closeMo('mo-edit-apply')">취소</button></div>
-  </div>
-</div>
-
-<!-- 공지 편집 모달 (관리자) -->
-<div class="mo" id="mo-notice">
-  <div class="mb">
-    <div class="mh"><h3 id="nm-ttl">공지 추가</h3><button class="mcl" onclick="closeMo('mo-notice')">✕</button></div>
-    <input type="hidden" id="nm-id">
-    <div class="fg"><label>제목 <span class="req">*</span></label><input type="text" id="nm-title" placeholder="공지 제목"></div>
-    <div class="fg"><label>내용</label><textarea class="ri" id="nm-content" rows="4" placeholder="공지 내용..."></textarea></div>
-    <div class="fg2">
-      <div class="fg"><label>중요도</label><select id="nm-level"><option value="일반">일반</option><option value="중요">중요</option><option value="긴급">긴급</option></select></div>
-      <div class="fg"><label>상태</label><select id="nm-status"><option value="게시">게시</option><option value="숨김">숨김</option></select></div>
-    </div>
-    <div class="ma"><button class="m-sv" onclick="saveNotice()">저장</button><button class="m-cl" onclick="closeMo('mo-notice')">취소</button></div>
-  </div>
-</div>
-
-<!-- 공지 상세 보기 모달 (직원용) -->
-<div class="mo" id="mo-notice-view">
-  <div class="mb">
-    <div class="mh"><h3>공지사항</h3><button class="mcl" onclick="closeMo('mo-notice-view')">✕</button></div>
-    <div id="notice-popup-body"></div>
-    <div class="ma"><button class="m-cl" style="flex:none;padding:9px 24px;" onclick="closeMo('mo-notice-view')">닫기</button></div>
-  </div>
-</div>
-
-<!-- 관리자 로그인 -->
-<div class="adm-login" id="adm-login">
-  <div class="lb">
-    <h2>관리자 로그인</h2><p>관리자 비밀번호를 입력하세요.</p>
-    <input type="password" id="adm-pw" placeholder="비밀번호" onkeydown="if(event.key==='Enter')checkAdmin()">
-    <div class="login-err" id="login-err">비밀번호가 틀립니다.</div>
-    <button class="sub-btn" onclick="checkAdmin()">로그인</button>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
 
 <script>
-// ════════════════════════════════════════════════
-// 데모 데이터
-// ════════════════════════════════════════════════
-let DB = [
-  {id:'A001',apply_date:'2026-03-10',empno:'20210045',name:'김민준',dept:'경영기획팀',course_name:'개인정보보호 법정의무교육',hours:4,org:'행정안전부',edu_method:'온라인',edu_category:'법정의무',legal_types:['개인정보보호교육'],common_type:'',cdp_yn:false,job_track:'',file_url:'',file_name:'수료증.pdf',status:'대기',reject_reason:''},
-  {id:'A002',apply_date:'2026-03-11',empno:'20190022',name:'이수연',dept:'관광사업팀',course_name:'직장 내 괴롭힘 예방교육',hours:3,org:'고용노동부',edu_method:'온라인',edu_category:'법정의무',legal_types:['직장내괴롭힘예방','4대폭력예방'],common_type:'',cdp_yn:false,job_track:'',file_url:'',file_name:'수료증.pdf',status:'대기',reject_reason:''},
-  {id:'A003',apply_date:'2026-03-11',empno:'20220031',name:'박지훈',dept:'시설운영팀',course_name:'안전보건관리자 역량강화',hours:8,org:'안전보건공단',edu_method:'집합',edu_category:'기관지정',legal_types:[],common_type:'',cdp_yn:true,job_track:'시설관리',file_url:'',file_name:'수료증.pdf',status:'대기',reject_reason:''},
-  {id:'A004',apply_date:'2026-03-08',empno:'20170009',name:'강나래',dept:'관광사업팀',course_name:'관광해설사 역량 향상',hours:16,org:'대전관광공사',edu_method:'집합',edu_category:'기관지정',legal_types:[],common_type:'',cdp_yn:true,job_track:'관광',file_url:'',file_name:'수료증.pdf',status:'승인',reject_reason:''},
-  {id:'A005',apply_date:'2026-03-07',empno:'20200038',name:'윤도현',dept:'시설운영팀',course_name:'생성형 AI 활용 역량강화',hours:4,org:'외부기관',edu_method:'집합',edu_category:'공통필수',legal_types:[],common_type:'디지털역량',cdp_yn:false,job_track:'',file_url:'',file_name:'수료증.pdf',status:'승인',reject_reason:''},
-  {id:'A006',apply_date:'2026-03-06',empno:'20210045',name:'김민준',dept:'경영기획팀',course_name:'리더십 아카데미 과정',hours:24,org:'행정연수원',edu_method:'집합',edu_category:'기관지정',legal_types:[],common_type:'',cdp_yn:true,job_track:'기획감사',file_url:'',file_name:'수료증.pdf',status:'승인',reject_reason:''},
-  {id:'A007',apply_date:'2026-03-04',empno:'20220044',name:'오지민',dept:'관광사업팀',course_name:'소방안전관리 기초',hours:2,org:'시설운영팀',edu_method:'집합',edu_category:'법정의무',legal_types:['소방안전화재예방'],common_type:'',cdp_yn:false,job_track:'',file_url:'',file_name:'수료증.pdf',status:'반려',reject_reason:'증빙 불일치'},
-];
-let NOTICES = [
-  {id:'N000',reg_date:'2026-04-01',title:'교육훈련 이수 관리 시스템 오픈 안내',content:'안녕하세요, 인사노무팀입니다.\n\n2026년부터 교육훈련 이수 신청 및 현황 관리를 본 시스템을 통해 운영합니다.\n\n교육 이수 후 수료증빙 파일과 함께 신청서를 제출해 주시면 담당자 검토 후 승인 처리됩니다.\n기존에 서면으로 제출하시던 분들도 반드시 시스템을 통해 신청해 주시기 바랍니다.\n\n신청 전 본인 확인(사번 + 이름)이 필요하오니 참고하시기 바랍니다.\n\n■ 시스템 이용 방법\n1. 상단 메뉴 [교육 신청] 클릭\n2. 사번 · 이름으로 본인 확인\n3. 교육 정보 및 수료증빙 파일 첨부 후 제출\n4. 관리자 검토 후 승인 처리 (결과는 [이수 현황 조회]에서 확인)\n\n문의사항은 담당자에게 연락 주시기 바랍니다.\n인사노무팀 최두원 (내선 1207)',level:'일반',status:'게시'},
-  {id:'N001',reg_date:'2026-03-15',title:'2026년 법정의무교육 이수 안내',content:'모든 직원은 2026.12.31까지 법정의무교육을 반드시 이수하여야 합니다.\n\n미이수 시 인사고과에 반영됩니다.',level:'긴급',status:'게시'},
-  {id:'N002',reg_date:'2026-03-10',title:'교육훈련 이수 관리 시스템 오픈',content:'2026년도 교육훈련 이수 관리 시스템이 오픈되었습니다.\n사번과 이름으로 본인 확인 후 신청 가능합니다.',level:'중요',status:'게시'},
-  {id:'N003',reg_date:'2026-02-20',title:'1분기 집합교육 일정 안내',content:'1분기 집합교육 일정을 아래와 같이 안내드립니다.\n- 3월 22일: CDP 직무교육 (관광 트랙)\n- 3월 28일: 디지털역량 강화 교육',level:'일반',status:'게시'},
-  {id:'N004',reg_date:'2026-01-15',title:'(테스트) 숨김 공지',content:'이 공지는 숨김 상태로 직원 게시판에 노출되지 않습니다.',level:'일반',status:'숨김'},
-];
-let CATLOG = [];
-let openId = null;
-let selFile = null;
-let staffJobType = '일반직';
+const API_URL = "https://script.google.com/macros/s/AKfycbzQp9q5-N5mY8q-L9O8zI0S_qZ5R5R/exec"; 
 
-// ════════════════════════════════════════════════
-// API
-// ════════════════════════════════════════════════
-function showLoad(m){ document.getElementById('lmsg').textContent=m||'처리 중...'; document.getElementById('lov').classList.add('show'); }
-function hideLoad(){ document.getElementById('lov').classList.remove('show'); }
-async function apiGet(p) {
-  if(IS_DEMO) return null;
-  const q=Object.entries(p).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
-  try{ const r=await fetch(SCRIPT_URL+'?'+q); return await r.json(); }catch(e){ return null; }
-}
-async function apiPost(d) {
-  if(IS_DEMO) return null;
-  try{
-    const r=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify(d)});
-    const json=await r.json();
-    if(!json?.success) console.warn("[apiPost] 실패:", d.action, json);
-    return json;
-  }catch(e){
-    console.error("[apiPost] 네트워크 오류:", d.action, e);
-    return {success:false, error:"네트워크 오류: "+e.message};
-  }
+// ── 시간 헬퍼 함수 ──
+function toMins(val) {
+  const n = Number(val);
+  if (!n) return 0;
+  // 기존 데이터가 200 이하 정수이면 '시간'으로 보고 분으로 환산
+  if (Number.isInteger(n) && n <= 200) return n * 60;
+  return n; 
 }
 
-// ════════════════════════════════════════════════
-// 초기화
-// ════════════════════════════════════════════════
-function checkDate(input) {
-  const today  = new Date().toISOString().split('T')[0];
-  const maxDt  = today < '2026-12-31' ? today : '2026-12-31';
-  if (input.value > maxDt) { showToast('미래 날짜는 선택할 수 없습니다.', 'amber'); input.value = maxDt; }
-  if (input.value < '2026-01-01') { showToast('2026년 이수 내역만 신청 가능합니다.', 'amber'); input.value = '2026-01-01'; }
+function minsToStr(m) {
+  if (!m || m <= 0) return '0분';
+  const h = Math.floor(m / 60);
+  const min = Math.round(m % 60);
+  if (h === 0) return min + '분';
+  if (min === 0) return h + '시간';
+  return h + '시간 ' + min + '분';
 }
 
-function openNoticePopup(id) {
-  const n = NOTICES.find(x => x.id === id);
-  if (!n) return;
-  const lvColor = n.level==='긴급'?'background:#FCEBEB;color:#791F1F;border:1px solid #F7C1C1'
-                : n.level==='중요'?'background:#FAEEDA;color:#633806;border:1px solid #FAC775'
-                : 'background:#E6F1FB;color:#0C447C;border:1px solid #B5D4F4';
-  document.getElementById('notice-popup-body').innerHTML = `
-    <div style="${lvColor};padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;display:inline-block;margin-bottom:12px;">${n.level}</div>
-    <div style="font-size:16px;font-weight:700;margin-bottom:8px;">${n.title}</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--bdr);">등록일: ${fmtDate(n.reg_date, true)}</div>
-    <div style="font-size:13px;line-height:1.9;white-space:pre-wrap;color:var(--text);">${n.content||''}</div>`;
-  document.getElementById('mo-notice-view').classList.add('open');
+function clampMinutes(el) {
+  if (parseInt(el.value) > 59) el.value = 59;
+  if (parseInt(el.value) < 0) el.value = 0;
+  const h = parseInt(document.getElementById('f-hours-h').value) || 0;
+  const m = parseInt(document.getElementById('f-hours-m').value) || 0;
+  const preview = document.getElementById('f-hours-preview');
+  if (preview) preview.textContent = (h > 0 || m > 0) ? "총 " + minsToStr(h * 60 + m) : "";
 }
 
-async function init() {
-  const todayStr = new Date().toISOString().split('T')[0];
-  const maxDate  = todayStr < '2026-12-31' ? todayStr : '2026-12-31';
-  const dateInput = document.getElementById('f-date');
-  if (dateInput) { dateInput.min = '2026-01-01'; dateInput.max = maxDate; }
-
-  const diff = Math.ceil((new Date('2026-12-31')-new Date())/(86400000));
-  document.getElementById('dday').textContent = diff>0?diff:'마감';
-
-  ['f-dept','a-dp','h-dp'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(!el) return;
-    if(id!=='f-dept') el.innerHTML='<option value="all">전체 부서</option>';
-    DEPTS.forEach(d=>{ const o=document.createElement('option'); o.value=d; o.textContent=d; el.appendChild(o); });
-  });
-
-  buildChk('legal-grid','lc');
-  buildChk('ce-lg','ce-lc');
-
-  // 실서버: 공지를 먼저 로드해야 배너 클릭 시 openNoticePopup이 올바른 id로 찾을 수 있음
-  if (!IS_DEMO) {
-    const r = await apiGet({ action: 'getNotices' });
-    if (r?.success && r.data.length) NOTICES = r.data;
-  }
-  renderBanner();
+// UI 제어
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.getElementById('nav-'+p).classList.add('active');
 }
 
-function buildChk(gridId, cls) {
-  const g=document.getElementById(gridId);
-  if(!g) return;
-  g.innerHTML = LEGAL_TYPES.map(t=>`<label class="chk-item"><input type="checkbox" class="${cls}" value="${t}"><span>${t}</span></label>`).join('');
+function showToast(m, color='#1D6FA4') {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.style.background = color; t.style.display = 'block';
+  setTimeout(() => { t.style.display='none'; }, 2500);
 }
 
-function renderBanner() {
-  const top = NOTICES.filter(n=>n.status==='게시').sort((a,b)=>{
-    const lv={'긴급':0,'중요':1,'일반':2};
-    return (lv[a.level]??3)-(lv[b.level]??3);
-  })[0];
-  const el = document.getElementById('notice-banner');
-  if(!top){ el.innerHTML=''; return; }
-  const bg = top.level==='긴급'?'background:#FCEBEB;color:#791F1F;border:1px solid #F7C1C1'
-           : top.level==='중요'?'background:#FAEEDA;color:#633806;border:1px solid #FAC775'
-           : 'background:#E6F1FB;color:#0C447C;border:1px solid #B5D4F4';
-  el.innerHTML=`<div class="n-banner" style="${bg};cursor:pointer;" data-notice-id="${top.id}">
-    <div><b style="font-size:11px;">[${top.level}]</b> <span style="font-size:13px;font-weight:500;">${top.title}</span></div>
-    <span style="font-size:11px;">${fmtDate(top.reg_date, true)} ›</span>
-  </div>`;
-  // onclick 인라인 대신 addEventListener — id 값 깨짐 방지
-  el.querySelector('.n-banner').addEventListener('click', function() {
-    openNoticePopup(this.dataset.noticeId);
-  });
-}
+// 교육 신청 (f)
+async function onFSubmit() {
+  const id = document.getElementById('f-id').value.trim();
+  const name = document.getElementById('f-name').value.trim();
+  const course = document.getElementById('f-course').value.trim();
+  const hh = parseInt(document.getElementById('f-hours-h').value) || 0;
+  const hm = parseInt(document.getElementById('f-hours-m').value) || 0;
+  const fileEl = document.getElementById('f-file');
 
-// ════════════════════════════════════════════════
-// 네비게이션
-// ════════════════════════════════════════════════
-function goPage(n,b){
-  document.querySelectorAll('.page').forEach(p=>{ p.classList.remove('active'); p.style.display='none'; });
-  document.getElementById('admin-area').style.display='none';
-  document.querySelectorAll('#user-nav button').forEach(x=>x.classList.remove('active'));
-  const target = document.getElementById('page-'+n);
-  if(target){ target.classList.add('active'); target.style.display='block'; }
-  if(b) b.classList.add('active');
-  // 공지게시판 진입 시 최신 목록 렌더
-  if(n==='notices') loadAndRenderNoticeBoard();
-}
-
-async function goAdmin(n,b){
-  document.querySelectorAll('.apage').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.sb-btn').forEach(x=>x.classList.remove('active'));
-  document.getElementById('apage-'+n).classList.add('active');
-  if(b) b.classList.add('active');
-  if(n==='approval'){ await loadAll(); }
-  if(n==='bulk')      initBulkPage();
-  if(n==='history') { await loadAll(); hRender(); }
-  if(n==='catlog')    renderCatLog();
-  if(n==='stats')     renderStats();
-  if(n==='notice')    renderAdminNotice();
-}
-
-// ════════════════════════════════════════════════
-// 본인 확인 (STEP 1) — [v3] 폴백 제거, 오류 시 명확한 안내만
-// ════════════════════════════════════════════════
-async function verifyStaff() {
-  const empno = document.getElementById('v-empno').value.trim();
-  const name  = document.getElementById('v-name').value.trim();
-  const errEl = document.getElementById('verify-err');
-  const btn   = document.getElementById('verify-btn');
-
-  if (!empno || !name) {
-    errEl.innerHTML = '사번과 이름을 모두 입력해주세요.';
-    errEl.style.display = 'block'; return;
+  if (!id || !name || !course || (hh===0 && hm===0) || !fileEl.files[0]) {
+    alert("모든 필수 항목을 입력하고 수료증을 첨부해주세요."); return;
   }
 
-  btn.disabled = true; btn.textContent = '확인 중...';
-  errEl.style.display = 'none';
+  const btn = document.getElementById('f-btn');
+  btn.disabled = true; btn.textContent = "제출 중...";
 
-  if (!IS_DEMO) {
-    showLoad('본인 확인 중...');
-    const staffRes = await apiGet({ action: 'checkStaff', empno, name });
-    hideLoad();
-
-    // [v3] 성공한 경우만 통과 — 그 외 모든 경우(오류·null 포함) 차단
-    if (staffRes && staffRes.success === true) {
-      staffJobType = staffRes.jobType || '일반직';
-    } else {
-      // API 통신 오류 / 사번 불일치 / 명단 미등록 등 모두 차단
-      const msg = staffRes?.error || '본인 확인에 실패했습니다. 잠시 후 다시 시도하거나 인사노무팀에 문의하세요.';
-      errEl.innerHTML = msg.replace(/\n/g, '<br>');
-      errEl.style.display = 'block';
-      btn.disabled = false; btn.textContent = '본인 확인';
-      return;
-    }
-  } else {
-    // 데모 모드 — 사번이 비어있지 않으면 통과
-    staffJobType = '일반직';
-  }
-
-  // 확인 완료 → 신청 폼 표시
-  document.getElementById('verify-area').style.display = 'none';
-  document.getElementById('apply-form-area').style.display = 'block';
-  document.getElementById('verified-name-display').textContent =
-    '✓ 본인 확인 완료 — ' + name + ' (' + empno + ')';
-  document.getElementById('f-empno').value = empno;
-  document.getElementById('f-name').value  = name;
-  btn.disabled = false; btn.textContent = '본인 확인';
-}
-
-function resetVerify() {
-  document.getElementById('verify-area').style.display = 'block';
-  document.getElementById('apply-form-area').style.display = 'none';
-  document.getElementById('v-empno').value = '';
-  document.getElementById('v-name').value  = '';
-  document.getElementById('verify-err').style.display = 'none';
-}
-
-// ════════════════════════════════════════════════
-// 신청 폼 분기
-// ════════════════════════════════════════════════
-function onCatChange() {
-  const c=document.getElementById('f-cat').value;
-  document.getElementById('sub-legal').classList.toggle('show',c==='법정의무');
-  document.getElementById('sub-common').classList.toggle('show',c==='공통필수');
-  document.getElementById('sub-inst').classList.toggle('show',c==='기관지정');
-}
-function onDrop(e) {
-  e.preventDefault(); document.getElementById('file-drop').classList.remove('drag');
-  const f=e.dataTransfer.files[0]; if(f){ selFile=f; setFileInfo(f); }
-}
-function onFileSelect(inp){ const f=inp.files[0]; if(f){ selFile=f; setFileInfo(f); } }
-function setFileInfo(f) {
-  const mb=(f.size/1048576);
-  if(mb>MAX_FILE_MB){ showToast(`${MAX_FILE_MB}MB 초과. 파일을 확인하세요.`,'red'); selFile=null; return; }
-  document.getElementById('file-name').textContent=f.name;
-  document.getElementById('file-sz').textContent=mb.toFixed(1)+'MB';
-}
-
-// ════════════════════════════════════════════════
-// 교육 신청 제출
-// ════════════════════════════════════════════════
-async function submitApply() {
-  const v=id=>document.getElementById(id).value.trim();
-  const empno=v('f-empno'),name=v('f-name'),dept=document.getElementById('f-dept').value;
-  const course=v('f-course'),hours=v('f-hours'),fdate=v('f-date');
-  const cat=document.getElementById('f-cat').value,method=document.getElementById('f-method').value;
-  const trainCost=parseInt(document.getElementById('f-train-cost').value)||0;
-  const travelCost=parseInt(document.getElementById('f-travel-cost').value)||0;
-  const costDetail=document.getElementById('f-cost-detail').value.trim();
-
-  // 필수 필드 하이라이트 헬퍼
-  function markField(id, bad) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (bad) {
-      el.style.borderColor = '#A32D2D';
-      el.style.boxShadow = '0 0 0 3px #FCEBEB';
-    } else {
-      el.style.borderColor = '';
-      el.style.boxShadow = '';
-    }
-  }
-
-  const missing = [];
-  markField('f-dept',   !dept);   if(!dept)   missing.push('부서를 선택해 주세요');
-  markField('f-course', !course); if(!course) missing.push('과정명을 입력해 주세요');
-  markField('f-hours',  !hours);  if(!hours)  missing.push('이수 시간을 입력해 주세요 (예: 4)');
-  markField('f-date',   !fdate);  if(!fdate)  missing.push('이수 일자를 선택해 주세요');
-  if(!selFile) missing.push('수료증빙 파일을 첨부해 주세요');
-
-  // 교육분류 추가 체크
-  let legalTypes=[],commonType='',cdpYn=false,jobTrack='';
-  if(cat==='법정의무'){ legalTypes=[...document.querySelectorAll('.lc:checked')].map(c=>c.value); if(!legalTypes.length) missing.push('법정의무 유형을 선택해 주세요'); }
-  if(cat==='공통필수'){ commonType=document.getElementById('f-common').value; if(!commonType) missing.push('공통필수 유형을 선택해 주세요'); }
-  if(cat==='기관지정'){ cdpYn=document.getElementById('f-cdp').value==='true'; if(cdpYn){jobTrack=document.getElementById('f-track').value; if(!jobTrack) missing.push('직무트랙을 선택해 주세요');} }
-
-  // 안내 배너 업데이트
-  const banner = document.getElementById('apply-err-banner');
-  const errList = document.getElementById('apply-err-list');
-  if(missing.length){
-    errList.innerHTML = missing.map(m => '<li>' + m + '</li>').join('');
-    banner.style.display = 'block';
-    banner.scrollIntoView({behavior:'smooth', block:'center'});
-    // 첫 번째 오류 필드 하이라이트
-    if(!selFile) { document.getElementById('file-drop').style.borderColor='#A32D2D'; }
-    else { document.getElementById('file-drop').style.borderColor=''; }
-    return;
-  } else {
-    banner.style.display = 'none';
-  }
-
-  if(!selFile){
-    document.getElementById('file-drop').style.borderColor='#A32D2D';
-    return;
-  } else {
-    document.getElementById('file-drop').style.borderColor='';
-  }
-
-  const btn=document.getElementById('sub-btn'); btn.disabled=true; btn.textContent='업로드 중...';
-  const prog=document.getElementById('file-prog'); prog.style.display='block';
-  const bar=document.getElementById('file-bar');
-
-  let fileId='',fileUrl='',fileName=selFile?selFile.name:'';
-  if(!IS_DEMO) {
-    bar.style.width='20%';
-    const base64=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(selFile); });
-    bar.style.width='50%';
-    showLoad('수료증 Drive에 업로드 중...');
-    const ur=await apiPost({action:'uploadFile',base64,mimeType:selFile.type,fileName:selFile.name,empno,name,course_name:course});
-    bar.style.width='80%';
-    if(!ur?.success){ hideLoad(); showToast('파일 업로드 실패: '+(ur?.error||'오류'),'red'); btn.disabled=false; btn.textContent='신청 제출'; return; }
-    fileId=ur.file_id; fileUrl=ur.file_url; fileName=ur.file_name;
-    showLoad('신청 정보 저장 중...');
-    const ar=await apiPost({action:'submitApply',empno,name,dept,course_name:course,hours:parseInt(hours),apply_date:fdate,org:v('f-org'),note:v('f-note'),edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,file_id:fileId,file_url:fileUrl,file_name:fileName,train_cost:trainCost,travel_cost:travelCost,cost_detail:costDetail});
-    bar.style.width='100%'; hideLoad();
-    if(!ar?.success){ showToast('저장 실패: '+(ar?.error||'오류'),'red'); btn.disabled=false; btn.textContent='신청 제출'; return; }
-  } else {
-    DB.unshift({id:'A'+Date.now(),apply_date:fdate,empno,name,dept,course_name:course,hours:parseInt(hours),org:v('f-org'),note:v('f-note'),edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,file_url:'',file_name:selFile?selFile.name:'',status:'대기',reject_reason:'',train_cost:trainCost,travel_cost:travelCost,cost_detail:costDetail});
-  }
-  btn.disabled=false; btn.textContent='신청 제출'; prog.style.display='none';
-  document.getElementById('apply-form-area').style.display='none';
-  document.getElementById('apply-ok').style.display='block';
-}
-
-function resetApply(){
-  ['f-empno','f-name','f-course','f-hours','f-date','f-org','f-note','f-train-cost','f-travel-cost','f-cost-detail'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f-dept').value=''; document.getElementById('f-cat').value='기관지정';
-  document.getElementById('file-name').textContent=''; document.getElementById('file-sz').textContent='';
-  document.querySelectorAll('.lc').forEach(c=>c.checked=false); selFile=null; onCatChange();
-  document.getElementById('verify-area').style.display='block';
-  document.getElementById('apply-form-area').style.display='none';
-  document.getElementById('apply-ok').style.display='none';
-  document.getElementById('v-empno').value='';
-  document.getElementById('v-name').value='';
-  document.getElementById('verify-err').style.display='none';
-  goPage('home',document.querySelector('#user-nav button'));
-}
-
-// ════════════════════════════════════════════════
-// 이수 현황 조회
-// ════════════════════════════════════════════════
-async function doLookup() {
-  const empno=document.getElementById('lu-no').value.trim(), name=document.getElementById('lu-nm').value.trim();
-  if(!empno&&!name){ showToast('사번 또는 이름을 입력하세요.','amber'); return; }
-  showLoad('조회 중...');
-  let rows;
-  if(!IS_DEMO){
-    if(empno && name) {
-      const sr = await apiGet({action:'checkStaff', empno, name});
-      if(sr?.success) staffJobType = sr.jobType || '일반직';
-    }
-    const r=await apiGet({action:'getApply',empno:empno||'',name:name||''});
-    hideLoad();
-    if(!r?.success){showToast('조회 오류','red');return;}
-    rows=r.data.map(x=>({...x,hours:Number(x.hours),legal_types:Array.isArray(x.legal_types)?x.legal_types:(x.legal_types||'').split(',').filter(Boolean)}));
-  } else{ hideLoad(); rows=DB.filter(r=>(!empno||r.empno===empno)&&(!name||r.name.includes(name))); }
-  if(!rows.length){ showToast('결과 없음','amber'); return; }
-
-  const done=rows.filter(r=>r.status==='승인');
-  const wait=rows.filter(r=>r.status==='대기');
-  const completedLegal=new Set();
-  done.filter(r=>r.edu_category==='법정의무').forEach(r=>(r.legal_types||[]).forEach(t=>completedLegal.add(t)));
-  const isGongmu=(staffJobType==='공무직');
-
-  document.getElementById('lu-head').textContent=rows[0].name+' ('+rows[0].empno+')';
-  document.getElementById('lu-dept').textContent=rows[0].dept+(isGongmu?' · 공무직':' · 일반직');
-  document.getElementById('lu-done').textContent=done.length+'건';
-  document.getElementById('lu-wait').textContent=wait.length+'건';
-
-  const totalH=done.reduce((s,r)=>s+r.hours,0);
-  if(isGongmu){
-    // 공무직: stats 그리드 숨김, 공무직 전용 이수시간 카드 표시
-    document.getElementById('lu-stats-grid').style.display='none';
-    document.getElementById('lu-summary-row').style.display='none';
-    document.getElementById('lu-gongmu-section').style.display='block';
-    document.getElementById('lu-gongmu-hrs').textContent=totalH+'시간';
-    document.getElementById('lu-hrs').textContent=totalH+'시간';
-  } else {
-    const TOTAL_GOAL=50,INST_GOAL=20,GROUP_GOAL=35;
-    const instH=done.filter(r=>r.edu_category==='기관지정').reduce((s,r)=>s+r.hours,0);
-    const groupH=done.filter(r=>r.edu_method==='집합').reduce((s,r)=>s+r.hours,0);
-    const cdpDone=done.some(r=>r.edu_category==='기관지정'&&r.cdp_yn===true);
-    document.getElementById('lu-stats-grid').style.display='';
-    document.getElementById('lu-summary-row').style.display='';
-    document.getElementById('lu-gongmu-section').style.display='none';
-    document.getElementById('lu-hrs').textContent=totalH+'시간';
-    document.getElementById('lu-total-prog').textContent=totalH+' / '+TOTAL_GOAL+'시간';
-    document.getElementById('lu-total-bar').style.width=Math.min(Math.round(totalH/TOTAL_GOAL*100),100)+'%';
-    document.getElementById('lu-inst-prog').textContent=instH+' / '+INST_GOAL+'시간';
-    document.getElementById('lu-inst-bar').style.width=Math.min(Math.round(instH/INST_GOAL*100),100)+'%';
-    document.getElementById('lu-group-prog').textContent=groupH+' / '+GROUP_GOAL+'시간';
-    document.getElementById('lu-group-bar').style.width=Math.min(Math.round(groupH/GROUP_GOAL*100),100)+'%';
-    const cdpEl=document.getElementById('lu-cdp-yn');
-    cdpEl.textContent=cdpDone?'✓ 이수':'✗ 미이수';
-    cdpEl.style.color=cdpDone?'#3B6D11':'#A32D2D';
-  }
-
-  document.getElementById('lu-legal-checklist').innerHTML=LEGAL_TYPES.map(t=>{
-    const ok=completedLegal.has(t);
-    return `<div style="display:flex;align-items:center;gap:7px;padding:7px 10px;background:${ok?'var(--gl)':'var(--gray)'};border-radius:var(--r);font-size:12px;">
-      <span style="font-size:14px;color:${ok?'#3B6D11':'#A32D2D'};">${ok?'✓':'✗'}</span>
-      <span style="color:${ok?'#3B6D11':'var(--text)'};">${t}</span>
-    </div>`;
-  }).join('');
-
-  const COMMON_DUTY_MAP = {'재난안전':['재난안전','재난·산업안전'], '디지털역량':['디지털역량'], '공직윤리':['공직윤리','공직윤리(청렴)']};
-  const completedCommonTypes = done.filter(r=>r.edu_category==='공통필수').map(r=>r.common_type||'');
-  document.getElementById('lu-common-duty-checklist').innerHTML=COMMON_DUTY_TYPES.map(t=>{
-    const aliases = COMMON_DUTY_MAP[t] || [t];
-    const ok = completedCommonTypes.some(c => aliases.some(a => c.includes(a) || a.includes(c)));
-    return `<div style="display:flex;align-items:center;gap:7px;padding:7px 10px;background:${ok?'#EEEDFE':'var(--gray)'};border-radius:var(--r);font-size:12px;">
-      <span style="font-size:14px;color:${ok?'#534AB7':'#A32D2D'};">${ok?'✓':'✗'}</span>
-      <span style="color:${ok?'#3C3489':'var(--text)'};">${t} <span style="font-size:11px;opacity:.7;">(2h↑)</span></span>
-    </div>`;
-  }).join('');
-
-  document.getElementById('lu-tbody').innerHTML=rows.map(r=>`<tr>
-    <td style="color:var(--muted);font-size:12px;">${fmtDate(r.apply_date)}</td>
-    <td style="font-weight:500;">${r.course_name||''}</td>
-    <td>${mBadge(r.edu_method)}</td><td>${cBadge(r.edu_category)}</td>
-    <td style="text-align:center;">${r.hours}h</td><td>${sBadge(r.status)}</td>
-  </tr>`).join('');
-
-  document.getElementById('lookup-result').style.display='block';
-}
-
-// ════════════════════════════════════════════════
-// 공지게시판 (직원용) — [v3 개선]
-// getNotices API 사용 (게시 상태만), 필터·검색 지원
-// ════════════════════════════════════════════════
-async function loadAndRenderNoticeBoard() {
-  if (!IS_DEMO) {
-    showLoad('공지 로드 중...');
-    const r = await apiGet({ action: 'getNotices' });
-    hideLoad();
-    if (r?.success) NOTICES = r.data; // 게시 상태만 덮어쓰기 (데모 포함 데이터 유지 불필요)
-  }
-  renderNoticeBoard();
-}
-
-function renderNoticeBoard() {
-  const lv  = document.getElementById('nb-lv-filter').value;
-  const q   = (document.getElementById('nb-search').value || '').trim().toLowerCase();
-
-  // 게시 상태 + 필터 적용
-  let list = NOTICES.filter(n => n.status === '게시');
-  if (lv !== 'all') list = list.filter(n => n.level === lv);
-  if (q) list = list.filter(n => n.title.toLowerCase().includes(q));
-
-  const cntEl  = document.getElementById('nb-count');
-  const listEl = document.getElementById('nb-list');
-  const emptyEl = document.getElementById('nb-empty');
-
-  cntEl.textContent = '총 ' + list.length + '건';
-
-  if (!list.length) {
-    listEl.innerHTML = '';
-    emptyEl.style.display = 'block';
-    return;
-  }
-  emptyEl.style.display = 'none';
-
-  listEl.innerHTML = list.map(n => `
-    <div class="nb-item" data-notice-id="${n.id}">
-      <span class="nb-lv ${n.level}">${n.level}</span>
-      <span class="nb-title">${n.title}</span>
-      <span class="nb-date">${fmtDate(n.reg_date, true)}</span>
-    </div>
-  `).join('');
-  // addEventListener 방식 — id 값이 특수문자 포함돼도 안전
-  listEl.querySelectorAll('.nb-item').forEach(el => {
-    el.addEventListener('click', function() {
-      openNoticePopup(this.dataset.noticeId);
-    });
-  });
-}
-
-// ════════════════════════════════════════════════
-// 관리자 로그인
-// ════════════════════════════════════════════════
-function openLogin(){ document.getElementById('adm-login').classList.add('open'); setTimeout(()=>document.getElementById('adm-pw').focus(),100); }
-async function checkAdmin() {
-  const pw=document.getElementById('adm-pw').value;
-  let ok=false;
-  if(!IS_DEMO){ showLoad('인증 중...'); const r=await apiGet({action:'checkAdmin',pw}); hideLoad(); ok=r?.success; }
-  else ok=(pw==='admin1234');
-  if(ok){
-    document.getElementById('adm-login').classList.remove('open');
-    document.getElementById('user-nav').style.display='none';
-    document.querySelectorAll('.page').forEach(p=>{ p.classList.remove('active'); p.style.display='none'; });
-    document.getElementById('admin-area').style.display='block';
-    window.scrollTo({top:0,behavior:'instant'});
-    await loadAll();
-  } else { document.getElementById('login-err').style.display='block'; }
-}
-function exitAdmin(){ document.getElementById('admin-area').style.display='none'; document.getElementById('user-nav').style.display='flex'; goPage('home',document.querySelector('#user-nav button')); }
-
-async function loadAll() {
-  if(!IS_DEMO){ showLoad('데이터 로드 중...'); const r=await apiGet({action:'getApply'}); if(r?.success){ DB=r.data.map(x=>({...x,hours:Number(x.hours),legal_types:Array.isArray(x.legal_types)?x.legal_types:(x.legal_types||'').split(',').filter(Boolean),cdp_yn:x.cdp_yn===true||x.cdp_yn==='TRUE'})); } hideLoad(); }
-  aRender(); updStats();
-}
-
-// ════════════════════════════════════════════════
-// 날짜 / 배지 헬퍼
-// ════════════════════════════════════════════════
-function fmtDate(d, full) {
-  if (!d) return '—';
-  // ISO(2026-03-15T15:00:00.000Z), 날짜만(2026-03-15) 모두 처리
-  const clean = String(d).replace(/T.*$/, '').slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(clean)) return String(d).slice(0, 10);
-  return full ? clean : clean.slice(5); // full=true → 2026-03-15 / false → 03-15
-}
-function sBadge(s){ return s==='대기'?'<span class="badge bd-wait">승인 대기</span>':s==='승인'?'<span class="badge bd-done">승인 완료</span>':'<span class="badge bd-rej">반려</span>'; }
-function cBadge(c){ const m={'기관지정':'bd-inst','법정의무':'bd-legal','공통필수':'bd-common','기타':'bd-etc'}; return `<span class="badge ${m[c]||'bd-etc'}">${c||'—'}</span>`; }
-function mBadge(m){ return m==='집합'?'<span class="badge bd-gb">집합</span>':'<span class="badge bd-ol">온라인</span>'; }
-
-// ════════════════════════════════════════════════
-// 승인 처리
-// ════════════════════════════════════════════════
-function getFlt(){
-  const st=document.getElementById('a-st').value, dp=document.getElementById('a-dp').value;
-  const ct=document.getElementById('a-ct').value, q=document.getElementById('a-q').value.toLowerCase();
-  return DB.filter(r=>{ if(st!=='all'&&r.status!==st)return false; if(dp!=='all'&&r.dept!==dp)return false; if(ct!=='all'&&r.edu_category!==ct)return false; if(q&&!r.name.includes(q)&&!(r.course_name||'').toLowerCase().includes(q))return false; return true; });
-}
-function aRender(){
-  document.getElementById('a-tbody').innerHTML=getFlt().map(r=>`<tr>
-    <td><input type="checkbox" class="chk row-chk" data-id="${r.id}" ${r.status!=='대기'?'disabled style="opacity:.3;"':''}></td>
-    <td style="color:var(--muted);font-size:12px;">${fmtDate(r.apply_date)}</td>
-    <td style="color:var(--muted);font-size:12px;">${r.empno}</td>
-    <td style="font-weight:500;white-space:nowrap;">${r.name}</td>
-    <td style="color:var(--muted);font-size:12px;">${r.dept}</td>
-    <td style="font-size:12px;">${r.bulk?'<span style="font-size:10px;font-weight:700;background:#EEEDFE;color:#3C3489;padding:1px 6px;border-radius:20px;margin-right:4px;">단체</span>':''}${r.course_name||''}</td>
-    <td>${mBadge(r.edu_method)}</td><td>${cBadge(r.edu_category)}</td>
-    <td style="text-align:center;">${r.hours}h</td><td>${sBadge(r.status)}</td>
-    <td>
-      <button class="act act-v" onclick="openDetail('${r.id}')">상세</button>
-      <button class="act" style="background:#E6F1FB;color:#0C447C;border-color:#B5D4F4;" onclick="openEditApply('${r.id}')">수정</button>
-      <button class="act act-cat" onclick="openCatEdit('${r.id}')">구분</button>
-      ${r.status==='대기'?`<button class="act act-ap" onclick="qAct('${r.id}','승인')">승인</button><button class="act act-rj" onclick="qAct('${r.id}','반려')">반려</button>`:''}
-      <button class="act act-del" onclick="delApply('${r.id}')">삭제</button>
-    </td>
-  </tr>`).join(''); updStats();
-}
-function updStats(){
-  document.getElementById('ap-w').textContent=DB.filter(r=>r.status==='대기').length;
-  document.getElementById('ap-d').textContent=DB.filter(r=>r.status==='승인').length;
-  document.getElementById('ap-r').textContent=DB.filter(r=>r.status==='반려').length;
-}
-async function qAct(id,act){
-  const r=DB.find(d=>d.id===id); if(!r)return;
-  if(!IS_DEMO){ showLoad(act+' 처리 중...'); const res=await apiPost({action:'updateStatus',id,status:act,reject_reason:''}); hideLoad(); if(!res?.success){showToast('처리 실패','red');return;} }
-  r.status=act==='승인'?'승인':'반려'; aRender(); showToast(act+' 처리되었습니다.',act==='승인'?'green':'red');
-}
-function toggleAll(cb){ document.querySelectorAll('.row-chk:not([disabled])').forEach(c=>c.checked=cb.checked); }
-async function bulkAct(act){
-  const ids=[...document.querySelectorAll('.row-chk:checked')].map(c=>c.dataset.id);
-  if(!ids.length){showToast('선택된 항목 없음','amber');return;}
-  if(!IS_DEMO){ showLoad(act+' 처리 중...'); await apiPost({action:'bulkStatus',ids,status:act}); hideLoad(); }
-  ids.forEach(id=>{ const r=DB.find(d=>d.id===id); if(r&&r.status==='대기')r.status=act==='승인'?'승인':'반려'; });
-  document.getElementById('chk-all').checked=false; aRender();
-  showToast(act+' '+ids.length+'건 처리.',act==='승인'?'green':'red');
-}
-
-// ════════════════════════════════════════════════
-// 상세 모달
-// ════════════════════════════════════════════════
-function openDetail(id){
-  const r=DB.find(d=>d.id===id); openId=id;
-  let catD=r.edu_category||'';
-  if(r.edu_category==='법정의무'&&(r.legal_types||[]).length) catD+=' ('+r.legal_types.join(', ')+')';
-  if(r.edu_category==='공통필수'&&r.common_type) catD+=' — '+r.common_type;
-  if(r.edu_category==='기관지정'&&r.cdp_yn) catD+=' / CDP: '+r.job_track;
-  document.getElementById('m-name').textContent=r.name+' ('+r.empno+')';
-  document.getElementById('m-dept').textContent=r.dept;
-  document.getElementById('m-course').textContent=r.course_name||'';
-  document.getElementById('m-method').textContent=r.edu_method;
-  document.getElementById('m-cat').textContent=catD;
-  document.getElementById('m-hours').textContent=r.hours+'시간';
-  document.getElementById('m-date').textContent=fmtDate(r.apply_date,true);
-  document.getElementById('m-org').textContent=r.org||'—';
-  document.getElementById('m-file').textContent=r.file_name?'📎 '+r.file_name:'첨부파일 없음';
-  // 단체처리 증빙 여부 표시
-  const bulkRow = document.getElementById('m-bulk-row');
-  if (r.bulk) { bulkRow.style.display='flex'; } else { bulkRow.style.display='none'; }
-  document.getElementById('m-train-cost').textContent=r.train_cost?Number(r.train_cost).toLocaleString()+'원':'없음';
-  document.getElementById('m-travel-cost').textContent=r.travel_cost?Number(r.travel_cost).toLocaleString()+'원':'없음';
-  const cdRow=document.getElementById('m-cost-detail-row');
-  if(r.cost_detail){ document.getElementById('m-cost-detail').textContent=r.cost_detail; cdRow.style.display='flex'; }
-  else cdRow.style.display='none';
-  document.getElementById('m-file')._url=r.file_url||'';
-  document.getElementById('m-remark').value=r.reject_reason||'';
-  document.getElementById('mo-detail').classList.add('open');
-}
-function openFile(){ const u=document.getElementById('m-file')._url; if(u)window.open(u,'_blank'); else showToast('파일 없음','amber'); }
-async function modalAct(act){
-  if(!openId)return;
-  const remark=document.getElementById('m-remark').value;
-  const r=DB.find(d=>d.id===openId);
-  if(!IS_DEMO){ showLoad(act+' 처리 중...'); await apiPost({action:'updateStatus',id:openId,status:act,reject_reason:remark}); hideLoad(); }
-  if(r){r.status=act==='승인'?'승인':'반려';r.reject_reason=remark;}
-  closeMo('mo-detail'); aRender(); showToast(act+' 처리되었습니다.',act==='승인'?'green':'red');
-}
-
-// ════════════════════════════════════════════════
-// 신청 내용 수정 (관리자)
-// ════════════════════════════════════════════════
-function openEditApply(id) {
-  const r = DB.find(d => d.id === id);
-  if (!r) return;
-  openId = id;
-  // 부서 옵션 동적 빌드
-  const deptSel = document.getElementById('ea-dept');
-  deptSel.innerHTML = '<option value="">부서 선택</option>';
-  DEPTS.forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; deptSel.appendChild(o); });
-  // 법정의무 체크박스 빌드 (없으면)
-  buildChk('ea-lg', 'ea-lc');
-  document.getElementById('ea-id').value      = id;
-  document.getElementById('ea-name').value    = r.name || '';
-  document.getElementById('ea-dept').value    = r.dept || '';
-  document.getElementById('ea-course').value  = r.course_name || '';
-  document.getElementById('ea-org').value     = r.org || '';
-  document.getElementById('ea-hours').value   = r.hours || '';
-  document.getElementById('ea-date').value    = (r.apply_date||'').slice(0,10);
-  document.getElementById('ea-method').value  = r.edu_method || '집합';
-  document.getElementById('ea-reason').value  = '';
-  // 교육구분 설정
-  const c = r.edu_category || '기관지정';
-  document.getElementById('ea-cat').value = c;
-  // 하위 섹션 표시 (값 복원 포함)
-  document.getElementById('ea-legal').classList.toggle('show', c==='법정의무');
-  document.getElementById('ea-common').classList.toggle('show', c==='공통필수');
-  document.getElementById('ea-inst').classList.toggle('show', c==='기관지정');
-  // 기존 값 복원
-  document.querySelectorAll('.ea-lc').forEach(ch => ch.checked = (r.legal_types||[]).includes(ch.value));
-  document.getElementById('ea-com').value = r.common_type || '';
-  document.getElementById('ea-cdp').value = r.cdp_yn ? 'true' : 'false';
-  document.getElementById('ea-track').value = r.job_track || '';
-  document.getElementById('ea-trk').style.display = r.cdp_yn ? 'block' : 'none';
-  document.getElementById('mo-edit-apply').classList.add('open');
-}
-function onEaChange() {
-  const c = document.getElementById('ea-cat').value;
-  document.getElementById('ea-legal').classList.toggle('show', c==='법정의무');
-  document.getElementById('ea-common').classList.toggle('show', c==='공통필수');
-  document.getElementById('ea-inst').classList.toggle('show', c==='기관지정');
-  if(c!=='법정의무') document.querySelectorAll('.ea-lc').forEach(ch=>ch.checked=false);
-  if(c!=='공통필수') document.getElementById('ea-com').value='';
-  if(c!=='기관지정') { document.getElementById('ea-cdp').value='false'; document.getElementById('ea-trk').style.display='none'; document.getElementById('ea-track').value=''; }
-}
-function onEaCdpChange() {
-  const v = document.getElementById('ea-cdp').value;
-  document.getElementById('ea-trk').style.display = v==='true' ? 'block' : 'none';
-  if(v!=='true') document.getElementById('ea-track').value='';
-}
-async function saveEditApply() {
-  const id      = document.getElementById('ea-id').value;
-  const dept    = document.getElementById('ea-dept').value;
-  const course  = document.getElementById('ea-course').value.trim();
-  const org     = document.getElementById('ea-org').value.trim();
-  const hours   = parseInt(document.getElementById('ea-hours').value) || 0;
-  const date    = document.getElementById('ea-date').value;
-  const method  = document.getElementById('ea-method').value;
-  const cat     = document.getElementById('ea-cat').value;
-  const reason  = document.getElementById('ea-reason').value.trim();
-  const legalTypes = [...document.querySelectorAll('.ea-lc:checked')].map(c=>c.value);
-  const commonType = document.getElementById('ea-com').value;
-  const cdpYn   = document.getElementById('ea-cdp').value === 'true';
-  const jobTrack= document.getElementById('ea-track').value;
-  if (!dept)    { showToast('부서를 선택하세요.', 'amber'); return; }
-  if (!course)  { showToast('과정명을 입력하세요.', 'amber'); return; }
-  if (!hours)   { showToast('이수 시간을 입력하세요.', 'amber'); return; }
-  if (!date)    { showToast('이수 일자를 선택하세요.', 'amber'); return; }
-  if (!reason)  { showToast('수정 사유를 입력하세요.', 'amber'); return; }
-  if (cat==='법정의무' && !legalTypes.length) { showToast('법정의무 유형을 하나 이상 선택하세요.', 'amber'); return; }
-  if (cat==='공통필수' && !commonType) { showToast('공통필수 유형을 선택하세요.', 'amber'); return; }
-  if (cat==='기관지정' && cdpYn && !jobTrack) { showToast('CDP 연계 시 직무트랙을 선택하세요.', 'amber'); return; }
-  const r = DB.find(d => d.id === id);
-  if (!r) return;
-  if (!IS_DEMO) {
-    showLoad("수정 저장 중...");
-    const res = await apiPost({ action:"editApply", id, dept, course_name:course, org, hours, apply_date:date, edu_method:method, edu_category:cat, legal_types:legalTypes, common_type:commonType, cdp_yn:cdpYn, job_track:jobTrack, reason });
-    hideLoad();
-    if (!res?.success) {
-      const errMsg = res?.error || "Apps Script 오류 — 브라우저 콘솔(F12)에서 상세 확인";
-      showToast("서버 저장 실패: " + errMsg, "red");
-      // 서버 실패해도 로컬 반영은 계속 진행
-    }
-  }
-  r.dept = dept; r.course_name = course; r.org = org; r.hours = hours;
-  r.apply_date = date; r.edu_method = method; r.edu_category = cat;
-  r.legal_types = cat==='법정의무' ? legalTypes : [];
-  r.common_type = cat==='공통필수' ? commonType : '';
-  r.cdp_yn = cat==='기관지정' ? cdpYn : false;
-  r.job_track = (cat==='기관지정' && cdpYn) ? jobTrack : '';
-  closeMo('mo-edit-apply');
-  aRender();
-  showToast('수정 완료되었습니다.', 'green');
-}
-
-// ════════════════════════════════════════════════
-// 신청 삭제
-// ════════════════════════════════════════════════
-async function delApply(id) {
-  if(!confirm('이 신청 내역을 삭제하시겠습니까?\n삭제 후 복구할 수 없습니다.')) return;
-  if(!IS_DEMO){ showLoad('삭제 중...'); const res=await apiPost({action:'deleteApply',id}); hideLoad(); if(!res?.success){showToast('삭제 실패: '+(res?.error||'오류'),'red');return;} }
-  else DB=DB.filter(r=>r.id!==id);
-  showToast('삭제되었습니다.','amber'); await loadAll();
-}
-async function bulkDel() {
-  const ids=[...document.querySelectorAll('.row-chk:checked')].map(c=>c.dataset.id);
-  if(!ids.length){showToast('선택된 항목이 없습니다.','amber');return;}
-  if(!confirm(ids.length+'건을 삭제하시겠습니까?\n삭제 후 복구할 수 없습니다.')) return;
-  if(!IS_DEMO){ showLoad('삭제 중...'); const res=await apiPost({action:'deleteApply',ids}); hideLoad(); if(!res?.success){showToast('삭제 실패','red');return;} }
-  else DB=DB.filter(r=>!ids.includes(r.id));
-  document.getElementById('chk-all').checked=false;
-  showToast(ids.length+'건 삭제되었습니다.','amber'); await loadAll();
-}
-
-// ════════════════════════════════════════════════
-// 카테고리 수정
-// ════════════════════════════════════════════════
-function onCeChange(){
-  const c=document.getElementById('ce-cat').value;
-  document.getElementById('ce-legal').classList.toggle('show',c==='법정의무');
-  document.getElementById('ce-common').classList.toggle('show',c==='공통필수');
-  document.getElementById('ce-inst').classList.toggle('show',c==='기관지정');
-  // 교육구분 변경 시 하위 필드 초기화
-  if(c!=='법정의무') document.querySelectorAll('.ce-lc').forEach(ch=>ch.checked=false);
-  if(c!=='공통필수') document.getElementById('ce-com').value='';
-  if(c!=='기관지정'){
-    document.getElementById('ce-cdp').value='false';
-    document.getElementById('ce-trk').style.display='none';
-    document.getElementById('ce-track').value='';
-  }
-}
-function onCeCdpChange(){
-  const v=document.getElementById('ce-cdp').value;
-  document.getElementById('ce-trk').style.display=v==='true'?'block':'none';
-  if(v!=='true') document.getElementById('ce-track').value='';
-}
-function openCatEdit(id){
-  const r=DB.find(d=>d.id===id); if(!r) return; openId=id;
-  document.getElementById('ce-tgt').textContent=r.name+' — '+(r.course_name||'');
-  document.getElementById('ce-method').value=r.edu_method||'집합';
-  document.getElementById('ce-reason').value='';
-
-  // 교육구분 먼저 설정 후 onCeChange로 섹션 표시 (이때 하위 초기화됨)
-  document.getElementById('ce-cat').value=r.edu_category||'기관지정';
-  // 섹션 show/hide (하위 초기화 없이)
-  const c=r.edu_category||'기관지정';
-  document.getElementById('ce-legal').classList.toggle('show',c==='법정의무');
-  document.getElementById('ce-common').classList.toggle('show',c==='공통필수');
-  document.getElementById('ce-inst').classList.toggle('show',c==='기관지정');
-
-  // 기존 값 복원
-  document.querySelectorAll('.ce-lc').forEach(ch=>ch.checked=(r.legal_types||[]).includes(ch.value));
-  document.getElementById('ce-com').value=r.common_type||'';
-  const cdpVal=r.cdp_yn?'true':'false';
-  document.getElementById('ce-cdp').value=cdpVal;
-  document.getElementById('ce-track').value=r.job_track||'';
-  document.getElementById('ce-trk').style.display=r.cdp_yn?'block':'none';
-
-  document.getElementById('mo-cat').classList.add('open');
-}
-async function saveCatEdit(){
-  const reason=document.getElementById('ce-reason').value.trim();
-  if(!reason){showToast('수정 사유를 입력해주세요.','amber');return;}
-  const r=DB.find(d=>d.id===openId); if(!r)return;
-  const nc=document.getElementById('ce-cat').value, nm=document.getElementById('ce-method').value;
-  const nl=[...document.querySelectorAll('.ce-lc:checked')].map(c=>c.value);
-  const ncom=document.getElementById('ce-com').value;
-  const ncdp=document.getElementById('ce-cdp').value==='true';
-  const ntrk=document.getElementById('ce-track').value;
-  // 유효성 검사
-  if(nc==='법정의무'&&!nl.length){showToast('법정의무 유형을 하나 이상 선택해주세요.','amber');return;}
-  if(nc==='공통필수'&&!ncom){showToast('공통필수 유형을 선택해주세요.','amber');return;}
-  if(nc==='기관지정'&&ncdp&&!ntrk){showToast('CDP 연계 시 직무트랙을 선택해주세요.','amber');return;}
-  const before={edu_method:r.edu_method,edu_category:r.edu_category,legal_types:r.legal_types,common_type:r.common_type,cdp_yn:r.cdp_yn,job_track:r.job_track};
-  if(!IS_DEMO){
-    showLoad("수정 저장 중...");
-    const res=await apiPost({action:"editCategory",apply_id:openId,edu_method:nm,edu_category:nc,legal_types:nl,common_type:ncom,cdp_yn:ncdp,job_track:ntrk,reason});
-    hideLoad();
-    if(!res?.success){
-      const errMsg=res?.error||"Apps Script 오류 — 브라우저 콘솔(F12)에서 상세 확인";
-      showToast("서버 저장 실패: "+errMsg,"red");
-      // 서버 실패해도 로컬 반영은 계속
-    }
-  }
-  r.edu_method=nm; r.edu_category=nc; r.legal_types=nc==='법정의무'?nl:[];
-  r.common_type=nc==='공통필수'?ncom:''; r.cdp_yn=nc==='기관지정'?ncdp:false;
-  r.job_track=(nc==='기관지정'&&ncdp)?ntrk:'';
-  const after={edu_method:r.edu_method,edu_category:r.edu_category,legal_types:r.legal_types,common_type:r.common_type,cdp_yn:r.cdp_yn,job_track:r.job_track};
-  CATLOG.unshift({apply_id:openId,name:r.name,course_name:r.course_name||'',changed_at:new Date().toLocaleString('ko'),changed_by:'관리자',before_json:before,after_json:after,reason});
-  closeMo('mo-cat'); aRender(); showToast('카테고리가 수정되었습니다.','green');
-}
-
-// ════════════════════════════════════════════════
-// 전체 이력
-// ════════════════════════════════════════════════
-function hRender(){
-  const dp=document.getElementById('h-dp').value,st=document.getElementById('h-st').value;
-  const ct=document.getElementById('h-ct').value,q=document.getElementById('h-q').value.toLowerCase();
-  const rows=DB.filter(r=>{if(dp!=='all'&&r.dept!==dp)return false;if(st!=='all'&&r.status!==st)return false;if(ct!=='all'&&r.edu_category!==ct)return false;if(q&&!r.name.includes(q)&&!(r.course_name||'').toLowerCase().includes(q))return false;return true;});
-  document.getElementById('h-tbody').innerHTML=rows.map(r=>`<tr>
-    <td style="color:var(--muted);font-size:12px;">${fmtDate(r.apply_date,true)}</td>
-    <td style="color:var(--muted);font-size:12px;white-space:nowrap;">${r.empno}</td>
-    <td style="font-weight:500;white-space:nowrap;">${r.name}</td><td style="font-size:12px;color:var(--muted);white-space:nowrap;">${r.dept}</td>
-    <td style="font-size:12px;">${r.course_name||''}</td>
-    <td>${mBadge(r.edu_method)}</td><td>${cBadge(r.edu_category)}</td>
-    <td style="text-align:center;">${r.hours}h</td><td>${sBadge(r.status)}</td>
-  </tr>`).join('');
-  document.getElementById('h-cnt').textContent='총 '+rows.length+'건';
-}
-function exportCSV(){
-  const hdr='이수일,사번,이름,부서,과정명,교육방법,교육구분,이수시간,상태\n';
-  const body=DB.map(r=>`${r.apply_date||''},${r.empno},${r.name},${r.dept},${r.course_name||''},${r.edu_method},${r.edu_category},${r.hours},${r.status}`).join('\n');
-  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\uFEFF'+hdr+body],{type:'text/csv;charset=utf-8;'})); a.download='교육이수현황_2026.csv'; a.click();
-  showToast('CSV 다운로드 완료','green');
-}
-
-// ════════════════════════════════════════════════
-// 카테고리 수정 이력
-// ════════════════════════════════════════════════
-async function renderCatLog(){
-  let data=CATLOG;
-  if(!IS_DEMO){ showLoad('이력 로드 중...'); const r=await apiGet({action:'getCatLog'}); hideLoad(); if(r?.success)data=r.data; }
-  const el=document.getElementById('catlog-wrap');
-  if(!data.length){ el.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">수정 이력이 없습니다.</div>'; return; }
-  el.innerHTML=data.map(l=>{
-    const b=l.before_json||{}, a=l.after_json||{};
-    const bStr=(b.edu_category||'')+(b.common_type?' — '+b.common_type:'')+((b.legal_types&&b.legal_types.length)?(' ('+b.legal_types+')'):'')+(b.cdp_yn?' / CDP:'+b.job_track:'');
-    const aStr=(a.edu_category||'')+(a.common_type?' — '+a.common_type:'')+((a.legal_types&&a.legal_types.length)?(' ('+a.legal_types+')'):'')+(a.cdp_yn?' / CDP:'+a.job_track:'');
-    return `<div class="log-item">
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;">
-        <span style="font-weight:500;font-size:13px;">${l.name}</span>
-        <span style="font-size:12px;color:var(--muted);">—</span>
-        <span style="font-size:12px;">${l.course_name||''}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
-        <span class="log-b">${bStr||'—'}</span>
-        <span style="color:var(--muted);font-size:12px;">→</span>
-        <span class="log-a">${aStr||'—'}</span>
-      </div>
-      <div style="font-size:11px;color:var(--muted);">${l.changed_at} · 수정자: ${l.changed_by} · 사유: ${l.reason}</div>
-    </div>`;
-  }).join('');
-}
-
-// ════════════════════════════════════════════════
-// 통계
-// ════════════════════════════════════════════════
-async function renderStats(){
-  let sm={total:0,wait:0,done:0,rej:0,total_hours:0}, byDept=[], byCat=[];
-  if(!IS_DEMO){ showLoad('통계 로드 중...'); const r=await apiGet({action:'getStats'}); hideLoad(); if(r?.success){sm=r.summary;byDept=r.by_dept;byCat=r.by_category;} }
-  else{
-    sm={total:DB.length,done:DB.filter(r=>r.status==='승인').length,wait:DB.filter(r=>r.status==='대기').length,rej:DB.filter(r=>r.status==='반려').length,total_hours:DB.filter(r=>r.status==='승인').reduce((s,r)=>s+r.hours,0)};
-    const dm={},cm={};DB.forEach(r=>{ dm[r.dept]=(dm[r.dept]||{total:0,done:0}); cm[r.edu_category]=(cm[r.edu_category]||{total:0,done:0}); dm[r.dept].total++;cm[r.edu_category].total++;if(r.status==='승인'){dm[r.dept].done++;cm[r.edu_category].done++;} });
-    byDept=Object.keys(dm).sort().map(d=>({dept:d,...dm[d]})); byCat=Object.keys(cm).map(c=>({edu_category:c,...cm[c]}));
-  }
-  document.getElementById('s-tot').textContent=sm.total;
-  document.getElementById('s-don').textContent=sm.done;
-  document.getElementById('s-hrs').textContent=(sm.total_hours||0)+'h';
-  document.getElementById('s-rat').textContent=sm.total?Math.round(sm.done/sm.total*100)+'%':'0%';
-  const maxD=Math.max(...byDept.map(d=>d.total),1);
-  document.getElementById('dept-chart').innerHTML=byDept.map(d=>{
-    const p=d.total?Math.round(d.done/d.total*100):0;
-    return `<div class="br"><div class="bl2">${d.dept}</div><div class="bt"><div class="bf" style="width:${p}%">${p>10?p+'%':''}</div></div><div class="bc">${d.done}/${d.total}</div></div>`;
-  }).join('');
-  const catColors={'기관지정':'#BA7517','법정의무':'#A32D2D','공통필수':'#534AB7','기타':'#888780'};
-  document.getElementById('cat-chart').innerHTML=byCat.map(c=>{
-    const tot=Math.max(...byCat.map(x=>x.total),1);
-    const p=Math.round(c.total/tot*100);
-    return `<div class="br"><div class="bl2">${c.edu_category}</div><div class="bt"><div class="bf" style="width:${p}%;background:${catColors[c.edu_category]||'#1D6FA4'}">${p>10?c.total+'건':''}</div></div><div class="bc">${c.total}건</div></div>`;
-  }).join('');
-}
-
-// ════════════════════════════════════════════════
-// 공지사항 관리 (관리자) — [v3 개선]
-// getAllNotices API 사용 → 숨김 공지도 표시, 필터 추가
-// ════════════════════════════════════════════════
-async function renderAdminNotice(){
-  let allData = NOTICES;
-
-  // 실서버: getAllNotices (숨김 포함 전체) 호출
-  if (!IS_DEMO) {
-    showLoad('공지 로드 중...');
-    const r = await apiGet({ action: 'getAllNotices' });
-    hideLoad();
-    if (r?.success) allData = r.data;
-  }
-
-  // 필터
-  const lv = document.getElementById('an-lv').value;
-  const st = document.getElementById('an-st').value;
-  let list = allData;
-  if (lv !== 'all') list = list.filter(n => n.level === lv);
-  if (st !== 'all') list = list.filter(n => n.status === st);
-
-  const lvColor = {
-    '긴급': 'background:#FCEBEB;color:#791F1F',
-    '중요': 'background:#FAEEDA;color:#633806',
-    '일반': 'background:#E6F1FB;color:#0C447C'
-  };
-  document.getElementById('n-tbody').innerHTML = list.map(n => `<tr>
-    <td style="color:var(--muted);font-size:12px;">${fmtDate(n.reg_date, true)}</td>
-    <td style="font-weight:500;">${n.title}</td>
-    <td><span style="${lvColor[n.level]||''};font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;">${n.level}</span></td>
-    <td>
-      <span style="font-size:12px;font-weight:700;color:${n.status==='게시'?'#3B6D11':'var(--muted)'};">
-        ${n.status==='게시'?'● 게시':'○ 숨김'}
-      </span>
-    </td>
-    <td>
-      <button class="act act-v" onclick="openNoticeModal('${n.id}')">수정</button>
-      <button class="act act-rj" onclick="delNotice('${n.id}')">삭제</button>
-    </td>
-  </tr>`).join('');
-  document.getElementById('n-cnt').textContent = '총 ' + list.length + '건 (전체 ' + allData.length + '건)';
-}
-
-function openNoticeModal(id){
-  // id가 있으면 NOTICES에서, 없으면 신규
-  const n = id ? NOTICES.find(x=>x.id===id) : null;
-  document.getElementById('nm-ttl').textContent = n ? '공지 수정' : '공지 추가';
-  document.getElementById('nm-id').value    = n ? n.id : '';
-  document.getElementById('nm-title').value = n ? n.title : '';
-  document.getElementById('nm-content').value = n ? n.content : '';
-  document.getElementById('nm-level').value  = n ? n.level : '일반';
-  document.getElementById('nm-status').value = n ? n.status : '게시';
-  document.getElementById('mo-notice').classList.add('open');
-}
-async function saveNotice(){
-  const title=document.getElementById('nm-title').value.trim();
-  if(!title){showToast('제목을 입력하세요.','amber');return;}
-  const d={id:document.getElementById('nm-id').value||null,title,content:document.getElementById('nm-content').value,level:document.getElementById('nm-level').value,status:document.getElementById('nm-status').value};
-  if(!IS_DEMO){ showLoad('저장 중...'); await apiPost({action:'saveNotice',...d}); hideLoad(); }
-  if(d.id){ const i=NOTICES.findIndex(n=>n.id===d.id); if(i>=0)NOTICES[i]={...NOTICES[i],...d}; }
-  else NOTICES.unshift({id:'N'+Date.now(),reg_date:new Date().toISOString().slice(0,10),...d});
-  closeMo('mo-notice'); renderAdminNotice(); renderBanner(); showToast('저장 완료','green');
-}
-async function delNotice(id){
-  if(!confirm('공지를 삭제하시겠습니까?'))return;
-  if(!IS_DEMO){ showLoad('삭제 중...'); await apiPost({action:'deleteNotice',id}); hideLoad(); }
-  NOTICES=NOTICES.filter(n=>n.id!==id); renderAdminNotice(); renderBanner(); showToast('삭제 완료','amber');
-}
-
-// ════════════════════════════════════════════════
-// 모달 / 토스트
-// ════════════════════════════════════════════════
-function closeMo(id){ document.getElementById(id).classList.remove('open'); openId=null; }
-document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
-document.getElementById('adm-login').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
-function showToast(msg,type='green'){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show '+type; setTimeout(()=>{t.className='toast';},2600); }
-
-// ════════════════════════════════════════════════
-// 단체 이수처리 (Bulk)
-// ════════════════════════════════════════════════
-let bkProofFile = null;
-
-function onBkProofDrop(e) {
-  e.preventDefault();
-  document.getElementById('bk-proof-drop').classList.remove('drag');
-  const f = e.dataTransfer.files[0];
-  if (f) setBkProof(f);
-}
-function onBkProofSelect(inp) {
-  const f = inp.files[0];
-  if (f) setBkProof(f);
-}
-function setBkProof(f) {
-  const mb = f.size / 1048576;
-  if (mb > 20) { showToast('20MB를 초과하는 파일은 첨부할 수 없습니다.', 'red'); return; }
-  bkProofFile = f;
-  document.getElementById('bk-proof-name').textContent = f.name;
-  document.getElementById('bk-proof-sz').textContent = mb.toFixed(1) + 'MB';
-  document.getElementById('bk-proof-drop').style.borderColor = 'var(--blue)';
-  document.getElementById('bk-proof-drop').style.background = 'var(--bl)';
-  const okEl = document.getElementById('bk-proof-ok');
-  document.getElementById('bk-proof-ok-name').textContent = '📎 ' + f.name + ' (' + mb.toFixed(1) + 'MB)';
-  okEl.style.display = 'flex';
-}
-function clearBkProof() {
-  bkProofFile = null;
-  document.getElementById('bk-proof-file').value = '';
-  document.getElementById('bk-proof-name').textContent = '';
-  document.getElementById('bk-proof-sz').textContent = '';
-  document.getElementById('bk-proof-drop').style.borderColor = '';
-  document.getElementById('bk-proof-drop').style.background = '';
-  document.getElementById('bk-proof-ok').style.display = 'none';
-}
-
-
-
-function initBulkPage() {
-  // 날짜 기본값 오늘
-  const today = new Date().toISOString().split('T')[0];
-  const maxDt  = today < '2026-12-31' ? today : '2026-12-31';
-  const dateEl = document.getElementById('bk-date');
-  if (dateEl) { dateEl.max = maxDt; if (!dateEl.value) dateEl.value = maxDt; }
-  // 법정 체크박스 빌드
-  buildBkLegalChk();
-  onBkCatChange();
-}
-
-function buildBkLegalChk() {
-  const g = document.getElementById('bk-legal-grid');
-  if (!g || g.innerHTML.trim()) return; // 이미 빌드됨
-  g.innerHTML = LEGAL_TYPES.map(t =>
-    `<label class="chk-item"><input type="checkbox" class="bk-lc" value="${t}"><span>${t}</span></label>`
-  ).join('');
-}
-
-function onBkCatChange() {
-  const c = document.getElementById('bk-cat').value;
-  document.getElementById('bk-sub-legal').style.display  = c === '법정의무'  ? 'block' : 'none';
-  document.getElementById('bk-sub-common').style.display = c === '공통필수' ? 'block' : 'none';
-}
-
-function onBkDrop(e) {
-  e.preventDefault();
-  document.getElementById('bk-file-drop').classList.remove('drag');
-  const f = e.dataTransfer.files[0];
-  if (f) parseBkFile(f);
-}
-function onBkFileSelect(inp) {
-  const f = inp.files[0];
-  if (f) parseBkFile(f);
-}
-
-function parseBkFile(file) {
-  document.getElementById('bk-file-name').textContent = file.name;
-  const ext = file.name.split('.').pop().toLowerCase();
+  const file = fileEl.files[0];
   const reader = new FileReader();
-
-  if (ext === 'csv') {
-    reader.onload = e => processBkCSV(e.target.result);
-    reader.readAsText(file, 'UTF-8');
-  } else if (ext === 'xlsx' || ext === 'xls') {
-    reader.onload = e => processBkXLSX(e.target.result);
-    reader.readAsArrayBuffer(file);
-  } else {
-    showToast('CSV 또는 Excel 파일만 업로드 가능합니다.', 'amber');
-  }
-}
-
-function processBkCSV(text) {
-  // BOM 제거
-  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-  const lines = text.split(/\r?\n/).filter(l => l.trim());
-  if (lines.length < 2) { showToast('데이터가 없습니다.', 'amber'); return; }
-
-  // 헤더 파싱
-  const header = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-  const empnoIdx = findColIdx(header, ['사번', 'empno', '직번', '사원번호', 'id']);
-  const nameIdx  = findColIdx(header, ['이름', 'name', '성명']);
-
-  if (empnoIdx < 0 || nameIdx < 0) {
-    showToast('사번/이름 열을 찾을 수 없습니다. 헤더를 확인하세요.', 'red'); return;
-  }
-
-  const rows = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-    const empno = cols[empnoIdx] || '';
-    const name  = cols[nameIdx]  || '';
-    rows.push({ rowNum: i + 1, empno, name,
-      error: !empno ? '사번 없음' : !name ? '이름 없음' : '' });
-  }
-  renderBkPreview(rows);
-}
-
-function processBkXLSX(buffer) {
-  // SheetJS CDN이 없으면 안내
-  if (typeof XLSX === 'undefined') {
-    showToast('Excel 파싱 라이브러리 로드 중... 잠시 후 다시 시도하세요.', 'amber');
-    // SheetJS 동적 로드
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-    s.onload = () => { showToast('라이브러리 로드 완료! 파일을 다시 선택하세요.', 'green'); };
-    document.head.appendChild(s);
-    return;
-  }
-  try {
-    const wb = XLSX.read(buffer, { type: 'array' });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
-    if (data.length < 2) { showToast('데이터가 없습니다.', 'amber'); return; }
-
-    const header = data[0].map(h => String(h || '').trim());
-    const empnoIdx = findColIdx(header, ['사번', 'empno', '직번', '사원번호', 'id']);
-    const nameIdx  = findColIdx(header, ['이름', 'name', '성명']);
-
-    if (empnoIdx < 0 || nameIdx < 0) {
-      showToast('사번/이름 열을 찾을 수 없습니다.', 'red'); return;
-    }
-    const rows = [];
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      const empno = String(row[empnoIdx] || '').trim();
-      const name  = String(row[nameIdx]  || '').trim();
-      if (!empno && !name) continue; // 빈 행 skip
-      rows.push({ rowNum: i + 1, empno, name,
-        error: !empno ? '사번 없음' : !name ? '이름 없음' : '' });
-    }
-    renderBkPreview(rows);
-  } catch(e) {
-    showToast('Excel 파싱 오류: ' + e.message, 'red');
-  }
-}
-
-function findColIdx(header, candidates) {
-  for (const h of header) {
-    const idx = candidates.findIndex(c => h.toLowerCase().includes(c.toLowerCase()));
-    if (idx >= 0) return header.indexOf(h);
-  }
-  return -1;
-}
-
-function renderBkPreview(rows) {
-  bkParsedRows = rows;
-  const errRows  = rows.filter(r => r.error);
-  const okRows   = rows.filter(r => !r.error);
-
-  document.getElementById('bk-preview-cnt').textContent = `총 ${rows.length}명 (정상 ${okRows.length}명)`;
-  document.getElementById('bk-err-cnt').textContent = errRows.length ? `오류 ${errRows.length}행` : '';
-
-  document.getElementById('bk-preview-tbody').innerHTML = rows.map(r => `
-    <tr style="background:${r.error ? 'var(--rl)' : 'transparent'};">
-      <td style="padding:7px 12px;text-align:center;color:var(--muted);font-size:12px;border-bottom:1px solid var(--bdr);">${r.rowNum}</td>
-      <td style="padding:7px 12px;border-bottom:1px solid var(--bdr);font-size:13px;">${r.empno || '<span style="color:#A32D2D;">없음</span>'}</td>
-      <td style="padding:7px 12px;border-bottom:1px solid var(--bdr);font-size:13px;">${r.name  || '<span style="color:#A32D2D;">없음</span>'}</td>
-      <td style="padding:7px 12px;border-bottom:1px solid var(--bdr);font-size:12px;color:${r.error ? '#A32D2D' : '#3B6D11'};">
-        ${r.error ? '⚠ ' + r.error : '✓ 정상'}
-      </td>
-    </tr>
-  `).join('');
-
-  if (errRows.length) {
-    document.getElementById('bk-err-box').style.display = 'block';
-    document.getElementById('bk-err-list').innerHTML = errRows.map(r =>
-      `· ${r.rowNum}행: ${r.error} (사번: ${r.empno||'—'}, 이름: ${r.name||'—'})`
-    ).join('<br>');
-  } else {
-    document.getElementById('bk-err-box').style.display = 'none';
-  }
-
-  document.getElementById('bk-preview-wrap').style.display = 'block';
-  document.getElementById('bk-result-wrap').style.display = 'none';
-  document.getElementById('bk-result-msg').textContent = '';
-}
-
-async function submitBulk() {
-  // 유효성 검사
-  const course = document.getElementById('bk-course').value.trim();
-  const date   = document.getElementById('bk-date').value;
-  const hours  = parseInt(document.getElementById('bk-hours').value) || 0;
-  const cat    = document.getElementById('bk-cat').value;
-  const method = document.getElementById('bk-method').value;
-  const status = document.getElementById('bk-status').value;
-  const org    = document.getElementById('bk-org').value.trim();
-
-  if (!course) { showToast('과정명을 입력하세요.', 'amber'); document.getElementById('bk-course').focus(); return; }
-  if (!date)   { showToast('이수 일자를 선택하세요.', 'amber'); return; }
-  if (!hours)  { showToast('이수 시간을 입력하세요.', 'amber'); return; }
-
-  let legalTypes = [], commonType = '';
-  if (cat === '법정의무') {
-    legalTypes = [...document.querySelectorAll('.bk-lc:checked')].map(c => c.value);
-    if (!legalTypes.length) { showToast('법정의무 유형을 선택하세요.', 'amber'); return; }
-  }
-  if (cat === '공통필수') {
-    commonType = document.getElementById('bk-common').value;
-    if (!commonType) { showToast('공통필수 유형을 선택하세요.', 'amber'); return; }
-  }
-
-  const validRows = bkParsedRows.filter(r => !r.error);
-  if (!validRows.length) { showToast('처리할 명단이 없습니다. 파일을 업로드하세요.', 'amber'); return; }
-
-  if (!confirm(`총 ${validRows.length}명의 이수처리를 진행하시겠습니까?\n\n과정: ${course}\n이수일: ${date} / ${hours}시간 / ${status}${bkProofFile ? '\n증빙파일: '+bkProofFile.name : '\n증빙파일: 없음 (추후 보완 가능)'}`)) return;
-
-  const btn = document.getElementById('bk-submit-btn');
-  btn.disabled = true; btn.textContent = '처리 중...';
-  showLoad(`단체 이수처리 중... (0 / ${validRows.length}명)`);
-
-  let okCount = 0, errCount = 0;
-  const resultLog = [];
-
-  for (let i = 0; i < validRows.length; i++) {
-    const r = validRows[i];
-    document.getElementById('lmsg').textContent = `단체 이수처리 중... (${i + 1} / ${validRows.length}명)`;
-
+  reader.onload = async function(e) {
+    const payload = {
+      action: "submit",
+      id, name, course,
+      hours: (hh * 60) + hm,
+      cat: document.getElementById('f-cat').value,
+      fileName: file.name,
+      fileData: e.target.result.split(',')[1]
+    };
     try {
-      const newRecord = {
-        id: 'BK' + Date.now() + '_' + i,
-        apply_date: date,
-        empno: r.empno,
-        name: r.name,
-        dept: '—',      // 명단에 부서 없는 경우 기본값
-        course_name: course,
-        hours: hours,
-        org: org || '단체교육',
-        edu_method: method,
-        edu_category: cat,
-        legal_types: legalTypes,
-        common_type: commonType,
-        cdp_yn: false,
-        job_track: '',
-        file_url: '',
-        file_name: bkProofFile ? bkProofFile.name : '단체이수처리',
-        status: status,
-        reject_reason: '',
-        bulk: true   // 단체처리 식별 플래그
-      };
-
-      if (!IS_DEMO) {
-        const res = await apiPost({ action: 'submitApply', ...newRecord,
-          legal_types: legalTypes, bulk: true });
-        if (res?.success) { okCount++; resultLog.push({ ...r, result: '✓ 성공' }); }
-        else { errCount++; resultLog.push({ ...r, result: '✗ 실패: ' + (res?.error || '오류') }); }
-      } else {
-        // 데모: DB에 직접 추가
-        DB.unshift(newRecord);
-        okCount++;
-        resultLog.push({ ...r, result: '✓ 등록 완료' });
+      const resp = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+      const res = await resp.json();
+      if(res.result === "success") {
+        showToast("제출 완료!", "#27500A");
+        document.querySelectorAll('#page-f input').forEach(i => i.value='');
+        document.getElementById('f-hours-preview').textContent = "";
       }
-    } catch(e) {
-      errCount++;
-      resultLog.push({ ...r, result: '✗ 오류: ' + e.message });
-    }
-  }
-
-  hideLoad();
-  btn.disabled = false; btn.textContent = '일괄 이수처리 실행';
-
-  // 결과 표시
-  document.getElementById('bk-res-ok').textContent  = okCount  + '명';
-  document.getElementById('bk-res-err').textContent = errCount + '명';
-  document.getElementById('bk-res-tot').textContent = validRows.length + '명';
-  document.getElementById('bk-res-detail').innerHTML = resultLog.map(r =>
-    `<span style="color:${r.result.startsWith('✓') ? '#3B6D11' : '#A32D2D'};">${r.result}</span> — ${r.empno} ${r.name}<br>`
-  ).join('');
-  document.getElementById('bk-result-wrap').style.display = 'block';
-
-  const msg = `이수처리 완료: 성공 ${okCount}명 / 실패 ${errCount}명`;
-  document.getElementById('bk-result-msg').textContent = msg;
-  document.getElementById('bk-result-msg').style.color = errCount ? '#A32D2D' : '#3B6D11';
-  showToast(msg, errCount ? 'amber' : 'green');
+    } catch(e) { alert("서버 오류가 발생했습니다."); }
+    finally { btn.disabled = false; btn.textContent = "제출하기"; }
+  };
+  reader.readAsDataURL(file);
 }
 
-function resetBulk() {
-  clearBkProof();
-  bkParsedRows = [];
-  document.getElementById('bk-course').value = '';
-  document.getElementById('bk-hours').value  = '';
-  document.getElementById('bk-org').value    = '';
-  document.getElementById('bk-cat').value    = '공통필수';
-  document.getElementById('bk-method').value = '집합';
-  document.getElementById('bk-status').value = '승인';
-  document.getElementById('bk-file-name').textContent = '';
-  document.getElementById('bk-file').value   = '';
-  document.getElementById('bk-preview-wrap').style.display = 'none';
-  document.getElementById('bk-result-wrap').style.display  = 'none';
-  document.getElementById('bk-result-msg').textContent = '';
-  document.querySelectorAll('.bk-lc').forEach(c => c.checked = false);
-  onBkCatChange();
-  showToast('초기화 완료', 'green');
+// 현황 조회 (lu)
+async function onLuSearch() {
+  const id = document.getElementById('lu-id').value.trim();
+  if(!id) return;
+  showToast("데이터 검색 중...");
+  try {
+    const resp = await fetch(`${API_URL}?action=query&id=${id}`);
+    const data = await resp.json();
+    const tbody = document.querySelector('#lu-table tbody');
+    tbody.innerHTML = "";
+    
+    if(data.length === 0) { alert("조회된 데이터가 없습니다."); return; }
+
+    let totalMins = 0; let count = 0;
+    data.forEach(r => {
+      const m = toMins(r.hours);
+      if(r.status === "승인") { totalMins += m; count++; }
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${r.course}</td><td>${minsToStr(m)}</td><td><span class="tag" style="background:var(--bl);color:var(--blue)">${r.status}</span></td>`;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('lu-total-hours').textContent = minsToStr(totalMins);
+    document.getElementById('lu-count').textContent = count + "건";
+    const goal = 3000; // 50시간
+    const per = Math.min(Math.round((totalMins/goal)*100), 100);
+    document.getElementById('lu-total-prog').textContent = per + "%";
+    document.getElementById('lu-total-bar').style.width = per + "%";
+    document.getElementById('lu-result').style.display = 'block';
+  } catch(e) { alert("조회 실패"); }
+}
+
+// 관리자 일괄 리스트 로드 (bk)
+async function loadBkList() {
+  showToast("전체 목록 로드 중...");
+  try {
+    const resp = await fetch(`${API_URL}?action=adminList`);
+    const data = await resp.json();
+    const tbody = document.querySelector('#bk-table tbody');
+    tbody.innerHTML = "";
+    data.reverse().forEach(r => {
+      const tr = document.createElement('tr');
+      const m = toMins(r.hours);
+      tr.innerHTML = `<td>${r.name}</td><td>${r.course}</td><td>${minsToStr(m)}</td><td><button onclick='openBkEdit(${JSON.stringify(r)})'>수정</button></td>`;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('bk-list-wrap').style.display = 'block';
+  } catch(e) { alert("로딩 실패"); }
+}
+
+function openBkEdit(r) {
+  const area = document.getElementById('bk-edit-area');
+  area.style.display = 'block';
+  document.getElementById('bk-row-idx').value = r.row;
+  document.getElementById('bk-course').value = r.course;
+  const m = toMins(r.hours);
+  document.getElementById('bk-hours-h').value = Math.floor(m / 60);
+  document.getElementById('bk-hours-m').value = m % 60;
+  document.getElementById('bk-status').value = r.status;
+  window.scrollTo({ top: area.offsetTop - 100, behavior: 'smooth' });
+}
+
+async function onBkUpdate() {
+  const payload = {
+    action: "update",
+    row: document.getElementById('bk-row-idx').value,
+    course: document.getElementById('bk-course').value,
+    status: document.getElementById('bk-status').value,
+    hours: (parseInt(document.getElementById('bk-hours-h').value) || 0) * 60 + (parseInt(document.getElementById('bk-hours-m').value) || 0)
+  };
+  try {
+    const resp = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+    const res = await resp.json();
+    if(res.result === "success") {
+      showToast("수정 완료!");
+      document.getElementById('bk-edit-area').style.display = 'none';
+      loadBkList();
+    }
+  } catch(e) { alert("수정 실패"); }
 }
 
 function downloadSampleCSV() {
-  const rows = [
-    '사번,이름',
-    '20210045,김민준',
-    '20190022,이수연',
-    '20220031,박지훈',
-    '20170009,강나래',
-    '20200038,윤도현',
-  ];
-  const blob = new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = '단체이수처리_명단양식.csv';
-  a.click();
+  const rows = [['사번','이름','과정명','시간(분)'],['20260001','최두원','엑셀 실무','120']];
+  const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rows.map(e => e.join(",")).join("\n");
+  const link = document.createElement("a");
+  link.setAttribute("href", encodeURI(csvContent));
+  link.setAttribute("download", "근무복_교육이수_샘플.csv");
+  document.body.appendChild(link); link.click();
 }
 
-// ════════════════════════════════════════════════
-// 시작
-// ════════════════════════════════════════════════
-// SheetJS 미리 로드 (Excel 업로드 지원)
-(function loadSheetJS() {
-  const s = document.createElement('script');
-  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-  document.head.appendChild(s);
-})();
-
-init();
-
-
+// 초기 로드
+window.onload = () => { if(window.location.hash === '#bk') showPage('bk'); };
 </script>
+
 </body>
 </html>
