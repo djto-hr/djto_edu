@@ -241,6 +241,52 @@ function migrateHours(row) {
   row.hours_unit = 'min';
   return row;
 }
+
+// ════════════════════════════════════════════════
+// 의무학습제 이수 완료 조건 판별
+// 7가지 조건 모두 충족 시에만 이수 완료
+// ════════════════════════════════════════════════
+const COMPLETION_CONDS = {
+  TOTAL_MINS:   3000, // 전체 50시간
+  INST_MINS:    1200, // 기관지정 20시간 (40%)
+  GROUP_MINS:   2100, // 집합교육 35시간 (70%)
+  COMMON_MINS:   120, // 공통필수 각 항목 2시간
+};
+
+// 직원의 승인완료 내역 배열로 7조건 충족 여부 반환
+function checkCompleted(doneRows) {
+  const totalMins = doneRows.reduce((s,r) => s + toMins(r.hours), 0);
+  const instMins  = doneRows.filter(r => r.edu_category==='기관지정')
+                            .reduce((s,r) => s + toMins(r.hours), 0);
+  const groupMins = doneRows.filter(r => r.edu_method==='집합')
+                            .reduce((s,r) => s + toMins(r.hours), 0);
+  const cdpDone   = doneRows.some(r => r.edu_category==='기관지정' && r.cdp_yn===true);
+
+  const commonRows = doneRows.filter(r => r.edu_category==='공통필수');
+  const cMins = (kws) => commonRows
+    .filter(r => kws.some(k => (r.common_type||'').includes(k)))
+    .reduce((s,r) => s + toMins(r.hours), 0);
+
+  const disasterMins = cMins(['재난','산업안전']);
+  const ethicsMins   = cMins(['공직윤리','청렴']);
+  const digitalMins  = cMins(['디지털','AI','DX']);
+
+  return {
+    total:   { ok: totalMins >= COMPLETION_CONDS.TOTAL_MINS,  mins: totalMins,    goal: COMPLETION_CONDS.TOTAL_MINS,  label: '전체 이수시간',    detail: '50시간 이상' },
+    inst:    { ok: instMins  >= COMPLETION_CONDS.INST_MINS,   mins: instMins,     goal: COMPLETION_CONDS.INST_MINS,   label: '기관지정 교육',    detail: '20시간 이상 (40%)' },
+    group:   { ok: groupMins >= COMPLETION_CONDS.GROUP_MINS,  mins: groupMins,    goal: COMPLETION_CONDS.GROUP_MINS,  label: '집합교육',         detail: '35시간 이상 (70%)' },
+    cdp:     { ok: cdpDone,                                   mins: cdpDone?1:0,  goal: 1,                            label: 'CDP 직무교육',     detail: '1회 이상' },
+    disaster:{ ok: disasterMins >= COMPLETION_CONDS.COMMON_MINS, mins: disasterMins, goal: COMPLETION_CONDS.COMMON_MINS, label: '재난·산업안전',  detail: '2시간 이상' },
+    ethics:  { ok: ethicsMins   >= COMPLETION_CONDS.COMMON_MINS, mins: ethicsMins,   goal: COMPLETION_CONDS.COMMON_MINS, label: '공직윤리(청렴)', detail: '2시간 이상' },
+    digital: { ok: digitalMins  >= COMPLETION_CONDS.COMMON_MINS, mins: digitalMins,  goal: COMPLETION_CONDS.COMMON_MINS, label: 'AI·디지털역량',  detail: '2시간 이상' },
+  };
+}
+
+function isFullyCompleted(doneRows) {
+  const c = checkCompleted(doneRows);
+  return Object.values(c).every(v => v.ok);
+}
+
 function minsToStr(m) {
   if (!m || m <= 0) return '0분';
   const h = Math.floor(m / 60), min = m % 60;
@@ -582,6 +628,13 @@ function updateTimePreview(hId, mId, previewId) {
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:18px;" id="lu-legal-checklist"></div>
       <div style="font-size:13px;font-weight:700;margin-bottom:6px;margin-top:4px;">공통의무교육 이수 체크리스트 <span style="font-size:11px;font-weight:400;color:var(--muted);">각 2시간 이상</span></div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:18px;" id="lu-common-duty-checklist"></div>
+      <!-- 의무학습 7대 이수 조건 체크리스트 -->
+      <div id="lu-completion-section" style="margin-bottom:18px;display:none;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;">의무학습제 이수 조건 <span style="font-size:11px;font-weight:400;color:var(--muted);">7가지 모두 충족 시 이수 완료</span></div>
+        <div id="lu-completion-banner" style="margin-bottom:10px;"></div>
+        <div id="lu-completion-checklist" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"></div>
+      </div>
+
       <!-- 승진자 과정 섹션 (관리자가 대상 지정 시에만 표시) -->
       <div id="lu-promotion-section" style="display:none;margin-bottom:18px;">
         <div style="font-size:13px;font-weight:700;margin-bottom:6px;margin-top:4px;">승진자 과정 <span style="font-size:11px;font-weight:400;color:var(--muted);">승진 1년 이내 필수</span></div>
@@ -844,7 +897,10 @@ function updateTimePreview(hId, mId, previewId) {
       <div class="apage" id="apage-stats">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
           <h2 style="font-size:17px;font-weight:700;">통계 대시보드</h2>
-          <button class="btn btn-gh" onclick="renderStats()">↻ 새로고침</button>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-gh" onclick="renderStats()">↻ 새로고침</button>
+            <button class="btn btn-pri" onclick="openDownloadModal()">📥 다운로드</button>
+          </div>
         </div>
 
         <!-- 요약 카드 -->
@@ -883,7 +939,8 @@ function updateTimePreview(hId, mId, previewId) {
                   <tr>
                     <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);">부서</th>
                     <th style="padding:8px 12px;text-align:center;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);white-space:nowrap;">일반직 인원</th>
-                    <th style="padding:8px 12px;text-align:center;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);white-space:nowrap;">이수 완료자</th>
+                    <th style="padding:8px 12px;text-align:center;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);white-space:nowrap;">신청자</th>
+                    <th style="padding:8px 12px;text-align:center;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);white-space:nowrap;">이수 완료<br><span style="font-size:10px;font-weight:400;">(7조건 충족)</span></th>
                     <th style="padding:8px 12px;text-align:center;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);white-space:nowrap;">이수율</th>
                     <th style="padding:8px 12px;text-align:center;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);">총 이수시간</th>
                   </tr>
@@ -929,7 +986,7 @@ function updateTimePreview(hId, mId, previewId) {
 
         <!-- 탭3: 법정의무 이수율 -->
         <div id="tab-legal" class="stats-tab-content" style="display:none;">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">전체 직원 대비 교육별 이수율 (승인 완료 기준)</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">공무직 포함 전 직원 대비 교육별 이수율 (승인 완료 기준)</div>
           <div id="legal-rate-wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:11px;"></div>
         </div>
 
@@ -1118,6 +1175,67 @@ function updateTimePreview(hId, mId, previewId) {
     <div class="mh"><h3>공지사항</h3><button class="mcl" onclick="closeMo('mo-notice-view')">✕</button></div>
     <div id="notice-popup-body"></div>
     <div class="ma"><button class="m-cl" style="flex:none;padding:9px 24px;" onclick="closeMo('mo-notice-view')">닫기</button></div>
+  </div>
+</div>
+
+<!-- 통계 다운로드 모달 -->
+<div class="mo" id="mo-download">
+  <div class="mb wide">
+    <div class="mh">
+      <h3>통계 데이터 다운로드</h3>
+      <button class="mcl" onclick="closeMo('mo-download')">✕</button>
+    </div>
+
+    <!-- 데이터 선택 -->
+    <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">📋 다운로드할 데이터 선택</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+      <label style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:var(--gray);border-radius:var(--r);cursor:pointer;border:2px solid transparent;" id="dl-lbl-dept" onclick="toggleDlCheck('dl-dept','dl-lbl-dept')">
+        <input type="checkbox" id="dl-dept" class="chk" checked style="margin-top:1px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;">부서별 이수현황</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">부서 / 일반직 인원 / 이수자 / 이수율 / 총 이수시간</div>
+        </div>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:var(--gray);border-radius:var(--r);cursor:pointer;border:2px solid transparent;" id="dl-lbl-budget" onclick="toggleDlCheck('dl-budget','dl-lbl-budget')">
+        <input type="checkbox" id="dl-budget" class="chk" checked style="margin-top:1px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;">예산 사용현황</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">이름 / 부서 / 과정명 / 교육훈련비 / 출장비 / 합계</div>
+        </div>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:var(--gray);border-radius:var(--r);cursor:pointer;border:2px solid transparent;" id="dl-lbl-legal" onclick="toggleDlCheck('dl-legal','dl-lbl-legal')">
+        <input type="checkbox" id="dl-legal" class="chk" checked style="margin-top:1px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;">법정의무 이수율</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">교육명 / 이수자 수 / 전체 인원 / 이수율</div>
+        </div>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:var(--gray);border-radius:var(--r);cursor:pointer;border:2px solid transparent;" id="dl-lbl-all" onclick="toggleDlCheck('dl-all','dl-lbl-all')">
+        <input type="checkbox" id="dl-all" class="chk" checked style="margin-top:1px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;">전체 이수 이력</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">사번 / 이름 / 부서 / 과정명 / 시간 / 상태 등</div>
+        </div>
+      </label>
+    </div>
+
+    <!-- 형식 선택 -->
+    <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">📁 파일 형식</div>
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <label style="display:flex;align-items:center;gap:7px;padding:9px 18px;background:var(--bl);border:2px solid var(--blue);border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:700;color:var(--bd);" id="dl-fmt-csv-lbl">
+        <input type="radio" name="dl-fmt" id="dl-fmt-csv" value="csv" checked onchange="onDlFmtChange()" style="accent-color:var(--blue);">
+        CSV
+      </label>
+      <label style="display:flex;align-items:center;gap:7px;padding:9px 18px;background:var(--gray);border:2px solid var(--bdr);border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);" id="dl-fmt-xlsx-lbl">
+        <input type="radio" name="dl-fmt" id="dl-fmt-xlsx" value="xlsx" onchange="onDlFmtChange()" style="accent-color:var(--blue);">
+        Excel (.xlsx)
+      </label>
+    </div>
+
+    <div class="ma">
+      <button class="m-sv" onclick="executeDownload()" style="flex:2;">📥 다운로드</button>
+      <button class="m-cl" onclick="closeMo('mo-download')">취소</button>
+    </div>
   </div>
 </div>
 
@@ -1537,6 +1655,54 @@ async function doLookup() {
     document.getElementById('lu-group-bar').style.width=Math.min(Math.round(groupMins/GROUP_GOAL_MINS*100),100)+'%';
     const cdpEl=document.getElementById('lu-cdp-yn');
     cdpEl.textContent=cdpDone?'✓ 이수':'✗ 미이수'; cdpEl.style.color=cdpDone?'#3B6D11':'#A32D2D';
+  }
+
+  // ── 의무학습 7대 이수조건 체크리스트 (일반직만) ──────────────
+  const completionSec = document.getElementById('lu-completion-section');
+  if (!isGongmu) {
+    completionSec.style.display = 'block';
+    const conds = checkCompleted(done);
+    const allOk = Object.values(conds).every(v => v.ok);
+
+    // 상단 배너
+    document.getElementById('lu-completion-banner').innerHTML = `
+      <div style="background:${allOk?'var(--gl)':'var(--rl)'};border:1px solid ${allOk?'var(--gm)':'var(--rm)'};border-radius:var(--rl2);padding:12px 18px;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:22px;">${allOk?'✓':'✗'}</span>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;color:${allOk?'var(--gd)':'var(--rd)'};">
+            의무학습 ${allOk?'이수 완료':'미완료'}
+          </div>
+          <div style="font-size:12px;color:${allOk?'#3B6D11':'#A32D2D'};margin-top:2px;">
+            ${allOk?'7가지 조건을 모두 충족했습니다.':'아래 미충족 항목을 확인하세요. 모두 충족해야 이수 완료 처리됩니다.'}
+          </div>
+        </div>
+        <span style="font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;background:${allOk?'var(--gm)':'var(--rm)'};color:${allOk?'var(--gd)':'var(--rd)'};">
+          ${Object.values(conds).filter(v=>v.ok).length}/7 충족
+        </span>
+      </div>`;
+
+    // 7대 조건 체크 카드
+    document.getElementById('lu-completion-checklist').innerHTML =
+      Object.values(conds).map(c => {
+        const pct = c.goal > 1
+          ? Math.min(Math.round(c.mins / c.goal * 100), 100)
+          : (c.ok ? 100 : 0);
+        const display = c.goal === 1
+          ? (c.ok ? '완료' : '미완료')
+          : minsToStr(c.mins) + ' / ' + minsToStr(c.goal);
+        return `<div style="background:${c.ok?'var(--gl)':'var(--gray)'};border:1px solid ${c.ok?'var(--gm)':'var(--bdr)'};border-radius:var(--r);padding:10px 13px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+            <span style="font-size:12px;font-weight:700;color:${c.ok?'var(--gd)':'var(--text)'};">${c.label}</span>
+            <span style="font-size:11px;color:${c.ok?'var(--gd)':'var(--muted)'};">${c.detail}</span>
+          </div>
+          <div style="background:rgba(0,0,0,.08);border-radius:20px;height:5px;margin-bottom:5px;overflow:hidden;">
+            <div style="height:100%;border-radius:20px;background:${c.ok?'var(--gd)':'var(--bm)'};width:${pct}%;transition:width .5s;"></div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:${c.ok?'var(--gd)':'#854F0B'};">${display}</div>
+        </div>`;
+      }).join('');
+  } else {
+    completionSec.style.display = 'none';
   }
 
   document.getElementById('lu-legal-checklist').innerHTML=LEGAL_TYPES.map(t=>{
@@ -2032,6 +2198,184 @@ async function renderCatLog(){
 }
 
 // ════════════════════════════════════════════════
+// 통계 다운로드
+// ════════════════════════════════════════════════
+function toggleDlCheck(cbId, lblId) {
+  // label onclick으로 체크박스 토글 + 시각적 피드백
+  setTimeout(() => {
+    const cb  = document.getElementById(cbId);
+    const lbl = document.getElementById(lblId);
+    if (!cb || !lbl) return;
+    lbl.style.borderColor  = cb.checked ? 'var(--blue)' : 'transparent';
+    lbl.style.background   = cb.checked ? 'var(--bl)'   : 'var(--gray)';
+  }, 0);
+}
+
+function onDlFmtChange() {
+  const isCsv = document.getElementById('dl-fmt-csv').checked;
+  document.getElementById('dl-fmt-csv-lbl').style.background   = isCsv ? 'var(--bl)' : 'var(--gray)';
+  document.getElementById('dl-fmt-csv-lbl').style.borderColor  = isCsv ? 'var(--blue)' : 'var(--bdr)';
+  document.getElementById('dl-fmt-csv-lbl').style.color        = isCsv ? 'var(--bd)' : 'var(--muted)';
+  document.getElementById('dl-fmt-xlsx-lbl').style.background  = !isCsv ? 'var(--bl)' : 'var(--gray)';
+  document.getElementById('dl-fmt-xlsx-lbl').style.borderColor = !isCsv ? 'var(--blue)' : 'var(--bdr)';
+  document.getElementById('dl-fmt-xlsx-lbl').style.color       = !isCsv ? 'var(--bd)' : 'var(--muted)';
+}
+
+function openDownloadModal() {
+  document.getElementById('mo-download').classList.add('open');
+}
+
+// CSV 유틸
+function toCSV(headers, rows) {
+  const esc = v => {
+    const s = String(v ?? '');
+    return s.includes(',') || s.includes('"') || s.includes('\n')
+      ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  return '\uFEFF' + [headers, ...rows].map(r => r.map(esc).join(',')).join('\n');
+}
+
+function downloadBlob(blob, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// Excel 시트 생성 (SheetJS)
+function makeXlsxSheet(headers, rows) {
+  const ws = {};
+  const encode = (r, c) => XLSX.utils.encode_cell({ r, c });
+  headers.forEach((h, c) => {
+    ws[encode(0, c)] = { v: h, t: 's', s: { font: { bold: true } } };
+  });
+  rows.forEach((row, r) => {
+    row.forEach((val, c) => {
+      ws[encode(r + 1, c)] = { v: val ?? '', t: typeof val === 'number' ? 'n' : 's' };
+    });
+  });
+  ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: headers.length - 1 } });
+  ws['!cols'] = headers.map(() => ({ wch: 18 }));
+  return ws;
+}
+
+async function executeDownload() {
+  const fmt    = document.getElementById('dl-fmt-xlsx').checked ? 'xlsx' : 'csv';
+  const dlDept   = document.getElementById('dl-dept').checked;
+  const dlBudget = document.getElementById('dl-budget').checked;
+  const dlLegal  = document.getElementById('dl-legal').checked;
+  const dlAll    = document.getElementById('dl-all').checked;
+
+  if (!dlDept && !dlBudget && !dlLegal && !dlAll) {
+    showToast('다운로드할 항목을 선택하세요.', 'amber'); return;
+  }
+
+  // 데이터 준비
+  const done   = DB.filter(r => r.status === '승인');
+  const rawDB  = DB;
+  const today  = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const LEGAL_LIST = ['4대폭력예방','직장내괴롭힘예방','소방안전화재예방','장애인인식개선교육','자살예방교육','퇴직연금교육','아동학대예방교육','개인정보보호교육','정보공개교육'];
+
+  // 부서별 이수현황 데이터 — 7조건 충족 기준
+  const getDeptData = () => {
+    const empMap = {};
+    done.forEach(r => {
+      if (!empMap[r.empno]) empMap[r.empno] = { dept: r.dept, rows: [] };
+      empMap[r.empno].rows.push(r);
+    });
+    const deptMap = {};
+    Object.entries(empMap).forEach(([empno, {dept, rows}]) => {
+      if (!deptMap[dept]) deptMap[dept] = { applied: new Set(), completed: new Set(), hrs: 0 };
+      deptMap[dept].applied.add(empno);
+      deptMap[dept].hrs += rows.reduce((s,r) => s + toMins(r.hours), 0);
+      if (isFullyCompleted(rows)) deptMap[dept].completed.add(empno);
+    });
+    return Object.entries(deptMap).sort(([a],[b])=>a.localeCompare(b)).map(([dept,d]) => [
+      dept, d.applied.size, d.completed.size,
+      d.applied.size > 0 ? Math.round(d.completed.size/d.applied.size*100)+'%' : '0%',
+      minsToStr(d.hrs)
+    ]);
+  };
+
+  // 예산 데이터
+  const getBudgetData = () =>
+    done.filter(r => (Number(r.train_cost)||0) + (Number(r.travel_cost)||0) > 0)
+        .sort((a,b) => ((Number(b.train_cost)||0)+(Number(b.travel_cost)||0)) - ((Number(a.train_cost)||0)+(Number(a.travel_cost)||0)))
+        .map(r => {
+          const tc = Number(r.train_cost)||0, tv = Number(r.travel_cost)||0;
+          return [r.name, r.dept, r.course_name||'', tc, tv, tc+tv];
+        });
+
+  // 법정의무 이수율 데이터
+  const getLegalData = () => {
+    const legalDoneMap = {};
+    done.filter(r => r.edu_category === '법정의무').forEach(r => {
+      (r.legal_types||[]).forEach(t => {
+        if (!legalDoneMap[t]) legalDoneMap[t] = new Set();
+        legalDoneMap[t].add(r.empno);
+      });
+    });
+    const totalStaff = [...new Set(rawDB.map(r => r.empno))].length || 1;
+    return LEGAL_LIST.map(t => {
+      const n = (legalDoneMap[t] || new Set()).size;
+      return [t, n, totalStaff, Math.round(n / totalStaff * 100) + '%'];
+    });
+  };
+
+  // 전체 이수 이력 데이터
+  const getAllData = () =>
+    rawDB.map(r => [
+      r.apply_date||'', r.empno, r.name, r.dept,
+      r.course_name||'', r.edu_method, r.edu_category,
+      minsToStr(toMins(r.hours)), r.status, r.reject_reason||''
+    ]);
+
+  if (fmt === 'csv') {
+    // 선택된 항목을 하나의 CSV로 합치거나 각각 다운로드
+    const sheets = [];
+    if (dlDept)   sheets.push({ name:'부서별이수현황',   h:['부서','신청자','이수완료자(7조건)','이수율','총이수시간'], rows: getDeptData() });
+    if (dlBudget) sheets.push({ name:'예산사용현황',     h:['이름','부서','과정명','교육훈련비','출장비','합계'], rows: getBudgetData() });
+    if (dlLegal)  sheets.push({ name:'법정의무이수율',   h:['교육명','이수자','전체인원','이수율'], rows: getLegalData() });
+    if (dlAll)    sheets.push({ name:'전체이수이력',     h:['이수일','사번','이름','부서','과정명','방법','구분','시간','상태','반려사유'], rows: getAllData() });
+
+    if (sheets.length === 1) {
+      // 단일 선택 → 파일 1개
+      const csv = toCSV(sheets[0].h, sheets[0].rows);
+      downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), `${sheets[0].name}_${today}.csv`);
+    } else {
+      // 복수 선택 → 각각 다운로드
+      for (const s of sheets) {
+        await new Promise(r => setTimeout(r, 300));
+        const csv = toCSV(s.h, s.rows);
+        downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), `${s.name}_${today}.csv`);
+      }
+    }
+    showToast(`CSV ${sheets.length}개 다운로드 완료`, 'green');
+
+  } else {
+    // Excel — SheetJS 필요
+    if (typeof XLSX === 'undefined') {
+      showToast('Excel 라이브러리 로드 중... 잠시 후 다시 시도하세요.', 'amber');
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload = () => showToast('로드 완료! 다시 다운로드 버튼을 누르세요.', 'green');
+      document.head.appendChild(s);
+      return;
+    }
+    const wb = XLSX.utils.book_new();
+    if (dlDept)   XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['부서','신청자','이수완료자(7조건)','이수율','총이수시간'], getDeptData()), '부서별이수현황');
+    if (dlBudget) XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['이름','부서','과정명','교육훈련비','출장비','합계'], getBudgetData()), '예산사용현황');
+    if (dlLegal)  XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['교육명','이수자','전체인원','이수율'], getLegalData()), '법정의무이수율');
+    if (dlAll)    XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['이수일','사번','이름','부서','과정명','방법','구분','시간','상태','반려사유'], getAllData()), '전체이수이력');
+    XLSX.writeFile(wb, `교육훈련통계_${today}.xlsx`);
+    showToast('Excel 다운로드 완료', 'green');
+  }
+
+  closeMo('mo-download');
+}
+
+// ════════════════════════════════════════════════
 // 통계
 // ════════════════════════════════════════════════
 function switchStatsTab(tabId, btn) {
@@ -2093,13 +2437,20 @@ async function renderStats(){
     }
   }
 
-  // 부서별 이수 완료자 수 (unique empno 기준)
+  // 부서별 이수 완료자 수 — 7조건 모두 충족한 인원 기준
   const doneByDept = {};
-  const doneEmpnoByDept = {};
-  done.forEach(r=>{
-    if(!doneByDept[r.dept]) { doneByDept[r.dept]={empnos:new Set(),hrs:0}; }
-    doneByDept[r.dept].empnos.add(r.empno);
-    doneByDept[r.dept].hrs += toMins(r.hours);
+  // 직원별 승인내역 그룹핑
+  const empDoneMap = {};
+  done.forEach(r => {
+    if (!empDoneMap[r.empno]) empDoneMap[r.empno] = { dept: r.dept, rows: [] };
+    empDoneMap[r.empno].rows.push(r);
+  });
+  // 직원별 7조건 충족 여부 계산
+  Object.entries(empDoneMap).forEach(([empno, {dept, rows}]) => {
+    if (!doneByDept[dept]) doneByDept[dept] = { empnos: new Set(), completedEmpnos: new Set(), hrs: 0 };
+    doneByDept[dept].empnos.add(empno);
+    doneByDept[dept].hrs += rows.reduce((s,r) => s + toMins(r.hours), 0);
+    if (isFullyCompleted(rows)) doneByDept[dept].completedEmpnos.add(empno);
   });
 
   // 부서별 바 차트 (기존)
@@ -2110,10 +2461,11 @@ async function renderStats(){
 
   // 부서별 이수율 순위 (일반직 기준)
   const deptRankData = Object.keys({...doneByDept,...staffByDept}).map(dept=>{
-    const staff = staffByDept[dept] || 0;
-    const doneCount = doneByDept[dept]?.empnos?.size || 0;
-    const rate = staff > 0 ? Math.round(doneCount/staff*100) : (doneCount>0?100:0);
-    return { dept, staff, doneCount, rate, hrs: doneByDept[dept]?.hrs||0 };
+    const staffCount    = staffByDept[dept] || 0;
+    const doneCount     = doneByDept[dept]?.completedEmpnos?.size || 0; // 7조건 충족자
+    const appliedCount  = doneByDept[dept]?.empnos?.size || 0;          // 신청자 수
+    const rate = staffCount > 0 ? Math.round(doneCount/staffCount*100) : (doneCount>0?100:0);
+    return { dept, staff: staffCount, doneCount, appliedCount, rate, hrs: doneByDept[dept]?.hrs||0 };
   }).sort((a,b)=>b.rate-a.rate);
 
   document.getElementById('dept-rank-chart').innerHTML = deptRankData.map((d,i)=>{
@@ -2132,6 +2484,7 @@ async function renderStats(){
     return `<tr>
       <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);font-weight:500;">${d.dept}</td>
       <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);text-align:center;color:var(--muted);">${d.staff||'—'}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);text-align:center;color:var(--muted);">${d.appliedCount}</td>
       <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);text-align:center;font-weight:700;color:var(--blue);">${d.doneCount}</td>
       <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);text-align:center;">
         <span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:${rateBg};color:${rateColor};">${d.rate}%</span>
@@ -2194,7 +2547,18 @@ async function renderStats(){
 
   // ── 탭3: 법정의무 이수율 ──
   const LEGAL_LIST = ['4대폭력예방','직장내괴롭힘예방','소방안전화재예방','장애인인식개선교육','자살예방교육','퇴직연금교육','아동학대예방교육','개인정보보호교육','정보공개교육'];
-  const totalStaff = IS_DEMO ? [...new Set(rawDB.map(r=>r.empno))].length : (Object.values(staffByDept).reduce((s,n)=>s+n,0)||sm.total||1);
+  // 법정의무: 공무직 포함 전 직원 기준
+  let totalAllStaff = 0;
+  if (!IS_DEMO && Object.keys(staffByDept).length > 0) {
+    // getStaff로 전체 직원 수 확인 (이미 로드됨)
+    // staffByDept는 일반직만 → 전 직원은 별도 카운트
+    const sr2 = await apiGet({action:'getStaff'});
+    totalAllStaff = sr2?.success ? sr2.data.length : Object.values(staffByDept).reduce((s,n)=>s+n,0);
+  } else {
+    // 데모: rawDB unique empno 또는 직원명단 전체
+    totalAllStaff = [...new Set(rawDB.map(r=>r.empno))].length || sm.total || 1;
+  }
+  const totalStaff = totalAllStaff || 1;
 
   // 법정의무 완료자별 유형 집계
   const legalDoneMap = {}; // { type: Set(empno) }
