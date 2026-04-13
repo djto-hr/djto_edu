@@ -236,9 +236,8 @@ function toMins(val) {
 // hours_unit 필드가 'min'이면 이미 분 단위이므로 스킵.
 // 데모 DB는 아래 init()에서 직접 ×60 처리.
 function migrateHours(row) {
-  // 서버 응답에 hours_unit:'min' 이 없으면 시간 단위로 간주
-  if (row.hours_unit === 'min') return row;
-  row.hours = Math.round(Number(row.hours) * 60);
+  // 시트 데이터는 이미 분 단위로 저장됨 → 변환 없이 그대로 반환
+  // AS v5 배포 후에는 hours_unit:'min'으로 명시적으로 구분됨
   row.hours_unit = 'min';
   return row;
 }
