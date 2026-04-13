@@ -2572,7 +2572,7 @@ function drillDept(dept) {
 
   const LEGAL_LIST_DRILL = ['4대폭력예방','직장내괴롭힘예방','소방안전화재예방','장애인인식개선교육','자살예방교육','퇴직연금교육','아동학대예방교육','개인정보보호교육','정보공개교육'];
 
-  // 부서 내 법정의무 교육별 이수자 집계
+  // 법정의무: 부서 내 공무직 포함 전 직원 이수자 집계
   const legalByType = {};
   DB.filter(r => r.status==='승인' && normalizeDept(r.dept)===dept && r.edu_category==='법정의무')
     .forEach(r => {
@@ -2582,24 +2582,46 @@ function drillDept(dept) {
       });
     });
 
-  const deptTotal = (data.sc || data.ac) || 1;
-  const completed  = data.members.filter(m=>m.completed).sort((a,b)=>b.hrs-a.hrs);
-  const inProgress = data.members.filter(m=>!m.completed).sort((a,b)=>b.hrs-a.hrs);
+  // 전체 직원 목록 (명단 기반)
+  const allStaff   = data.allStaff || [];
+  const generalStaff = allStaff.filter(s => s.jobType==='일반직');
+  const allCount   = allStaff.length || data.ac || 1;
+  const genCount   = generalStaff.length || data.sc || 1;
 
-  const memberRow = (m, status) => {
-    const color = status==='완료'?'var(--gd)':status==='신청중'?'var(--ad)':'var(--muted)';
-    const bg    = status==='완료'?'var(--gl)':status==='신청중'?'var(--al)':'var(--gray)';
-    const badgeBg = status==='완료'?'var(--gm)':status==='신청중'?'var(--am)':'var(--bdr)';
+  // 직원별 신청내역 맵
+  const empRowsMap = {};
+  DB.filter(r => r.status==='승인' && normalizeDept(r.dept)===dept)
+    .forEach(r => {
+      if (!empRowsMap[r.empno]) empRowsMap[r.empno] = [];
+      empRowsMap[r.empno].push(r);
+    });
+
+  // 일반직 전원 의무학습 이수 여부 판단
+  const generalRows = generalStaff.map(s => {
+    const rows = empRowsMap[s.empno] || [];
+    const completed = rows.length > 0 && isFullyCompleted(rows);
+    const hrs = rows.reduce((sum,r) => sum + toMins(r.hours), 0);
+    return { ...s, completed, applied: rows.length > 0, hrs };
+  }).sort((a,b) => (b.completed-a.completed) || (b.hrs-a.hrs));
+
+  const completedList  = generalRows.filter(s => s.completed);
+  const inProgressList = generalRows.filter(s => !s.completed && s.applied);
+  const notAppliedList = generalRows.filter(s => !s.applied);
+
+  const memberRow = (s, status) => {
+    const color  = status==='완료'?'var(--gd)':status==='신청중'?'var(--ad)':'var(--muted)';
+    const bg     = status==='완료'?'var(--gl)':status==='신청중'?'var(--al)':'var(--gray)';
+    const badge  = status==='완료'?'var(--gm)':status==='신청중'?'var(--am)':'var(--bdr)';
     return '<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:var(--r);background:'+bg+';margin-bottom:4px;">'
-      + '<span style="font-size:13px;font-weight:700;flex:0 0 60px;">'+m.name+'</span>'
-      + '<span style="font-size:11px;color:var(--muted);flex:1;">'+minsToStr(m.hrs)+' 이수</span>'
-      + '<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:'+badgeBg+';color:'+color+';">'+status+'</span>'
+      + '<span style="font-size:13px;font-weight:700;flex:0 0 60px;">'+s.name+'</span>'
+      + '<span style="font-size:11px;color:var(--muted);flex:1;">'+(s.hrs>0?minsToStr(s.hrs)+' 이수':'미신청')+'</span>'
+      + '<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:'+badge+';color:'+color+';">'+status+'</span>'
       + '</div>';
   };
 
   const legalCards = LEGAL_LIST_DRILL.map(t => {
     const n     = (legalByType[t]||new Set()).size;
-    const rate  = Math.round(n/deptTotal*100);
+    const rate  = Math.round(n/allCount*100);
     const color = rate>=80?'var(--gd)':rate>=50?'var(--ad)':'var(--rd)';
     const bg    = rate>=80?'var(--gl)':rate>=50?'var(--al)':'var(--rl)';
     const bdr   = rate>=80?'var(--gm)':rate>=50?'var(--am)':'var(--rm)';
@@ -2611,29 +2633,41 @@ function drillDept(dept) {
       + '<div style="background:rgba(0,0,0,.08);border-radius:20px;height:5px;overflow:hidden;">'
       + '<div style="height:100%;border-radius:20px;background:'+color+';width:'+rate+'%;"></div>'
       + '</div>'
-      + '<div style="font-size:11px;color:'+color+';opacity:.8;margin-top:4px;">'+n+'명 이수</div>'
+      + '<div style="font-size:11px;color:'+color+';opacity:.8;margin-top:4px;">'+n+'명 이수 / 전체 '+allCount+'명</div>'
       + '</div>';
   }).join('');
 
   contentEl.innerHTML =
-    '<div style="font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--bdr);">의무학습 이수 현황</div>'
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">'
+    // ── 의무학습 (일반직만) ──
+    '<div style="font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--bdr);">'
+    + '의무학습 이수 현황 <span style="font-size:11px;font-weight:400;color:var(--muted);">일반직 '+genCount+'명 기준</span>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">'
+    // 이수 완료
     + '<div>'
-    + '<div style="font-size:12px;font-weight:700;color:var(--gd);margin-bottom:8px;">✓ 이수 완료 '+completed.length+'명</div>'
-    + (completed.length ? completed.map(m=>memberRow(m,'완료')).join('') : '<div style="color:var(--muted);font-size:13px;padding:8px;">없음</div>')
+    + '<div style="font-size:12px;font-weight:700;color:var(--gd);margin-bottom:6px;">✓ 이수 완료 '+completedList.length+'명</div>'
+    + (completedList.length ? completedList.map(s=>memberRow(s,'완료')).join('') : '<div style="color:var(--muted);font-size:12px;padding:6px;">없음</div>')
     + '</div>'
+    // 신청중 (미완료)
     + '<div>'
-    + '<div style="font-size:12px;font-weight:700;color:var(--ad);margin-bottom:8px;">↻ 이수 중 '+inProgress.length+'명 (7조건 미달)</div>'
-    + (inProgress.length ? inProgress.map(m=>memberRow(m,'신청중')).join('') : '<div style="color:var(--muted);font-size:13px;padding:8px;">없음</div>')
+    + '<div style="font-size:12px;font-weight:700;color:var(--ad);margin-bottom:6px;">↻ 이수 중 '+inProgressList.length+'명</div>'
+    + (inProgressList.length ? inProgressList.map(s=>memberRow(s,'이수중')).join('') : '<div style="color:var(--muted);font-size:12px;padding:6px;">없음</div>')
+    + '</div>'
+    // 미신청
+    + '<div>'
+    + '<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;">— 미신청 '+notAppliedList.length+'명</div>'
+    + (notAppliedList.length ? notAppliedList.map(s=>memberRow(s,'미신청')).join('') : '<div style="color:var(--muted);font-size:12px;padding:6px;">없음</div>')
     + '</div>'
     + '</div>'
+    // ── 법정의무 (공무직 포함 전체) ──
     + '<div style="font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--bdr);">'
-    + '법정의무 교육별 이수율 <span style="font-size:11px;font-weight:400;color:var(--muted);">부서 인원 '+deptTotal+'명 기준</span>'
+    + '법정의무 교육별 이수율 <span style="font-size:11px;font-weight:400;color:var(--muted);">공무직 포함 전체 '+allCount+'명 기준</span>'
     + '</div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
     + legalCards
     + '</div>';
 }
+
 
 
 
@@ -2690,21 +2724,27 @@ async function renderStats(){
   // ── 탭1: 부서별 이수현황 ──
   // 직원명단에서 부서별 일반직 인원 (IS_DEMO면 byDept 기준)
   const staffByDept = {}; // { dept: 일반직 인원 수 }
+  // 부서별 전체 직원 목록 (일반직/공무직 모두)
+  const allStaffByDept = {}; // { dept: [{empno, name, jobType}] }
   if (!IS_DEMO) {
     const sr = await apiGet({action:'getStaff'});
     if (sr?.success) {
-      sr.data.filter(s=>s.jobType==='일반직').forEach(s=>{
+      sr.data.forEach(s=>{
         const nd = normalizeDept(s.dept);
-        staffByDept[nd] = (staffByDept[nd]||0)+1;
+        if(s.jobType==='일반직') staffByDept[nd] = (staffByDept[nd]||0)+1;
+        if(!allStaffByDept[nd]) allStaffByDept[nd]=[];
+        allStaffByDept[nd].push({ empno:String(s.empno), name:s.name, jobType:s.jobType||'일반직' });
       });
     }
   } else {
-    // IS_DEMO: rawDB에서 부서별 유니크 직원 수 추정
     const seen = {};
     rawDB.forEach(r=>{
       const nd = normalizeDept(r.dept);
       if(!seen[nd]) seen[nd]=new Set();
       seen[nd].add(r.empno);
+      if(!allStaffByDept[nd]) allStaffByDept[nd]=[];
+      if(![...allStaffByDept[nd]].find(x=>x.empno===String(r.empno)))
+        allStaffByDept[nd].push({ empno:String(r.empno), name:r.name, jobType:'일반직' });
     });
     Object.entries(seen).forEach(([d,s])=>{ staffByDept[d]=s.size; });
   }
@@ -2747,7 +2787,7 @@ async function renderStats(){
     const lt  = sc||ac||1;
     const rate      = sc>0?Math.round(dc/sc*100):0;
     const legalRate = Math.round(ld/lt*100);
-    return { dept, sc, dc, ac, rate, legalRate, ld, hrs:doneByDept[dept]?.hrs||0, members:doneByDept[dept]?.members||[] };
+    return { dept, sc, dc, ac, rate, legalRate, ld, hrs:doneByDept[dept]?.hrs||0, members:doneByDept[dept]?.members||[], allStaff:allStaffByDept[dept]||[] };
   });
 
   window._deptDrillData = deptRankData;
