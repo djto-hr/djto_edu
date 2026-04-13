@@ -473,6 +473,16 @@ function updateTimePreview(hId, mId, previewId) {
           </div>
         </div>
         <div class="cat-sub" id="sub-inst">
+          <!-- 중간관리자 과정 체크박스 -->
+          <div style="background:var(--bl);border:1px solid var(--bm);border-radius:var(--r);padding:10px 13px;margin-bottom:10px;">
+            <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;font-weight:500;color:var(--bd);">
+              <input type="checkbox" id="f-mgr-course" class="chk"
+                onchange="onMgrCourseCheck(this)"
+                style="width:16px;height:16px;accent-color:var(--blue);">
+              <span>중간관리자 과정 이수 신청</span>
+              <span style="font-size:11px;font-weight:400;color:var(--muted);">과정명 자동 입력, 이수 시간은 직접 입력</span>
+            </label>
+          </div>
           <div class="fg" style="margin-bottom:8px;"><label>CDP 연계 여부 <span class="req">*</span></label>
             <select id="f-cdp" onchange="document.getElementById('sub-track').style.display=this.value==='true'?'block':'none'"><option value="false">아니오</option><option value="true">예 — 직무트랙 선택</option></select>
           </div>
@@ -572,6 +582,11 @@ function updateTimePreview(hId, mId, previewId) {
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:18px;" id="lu-legal-checklist"></div>
       <div style="font-size:13px;font-weight:700;margin-bottom:6px;margin-top:4px;">공통의무교육 이수 체크리스트 <span style="font-size:11px;font-weight:400;color:var(--muted);">각 2시간 이상</span></div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:18px;" id="lu-common-duty-checklist"></div>
+      <!-- 승진자 과정 섹션 (관리자가 대상 지정 시에만 표시) -->
+      <div id="lu-promotion-section" style="display:none;margin-bottom:18px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:6px;margin-top:4px;">승진자 과정 <span style="font-size:11px;font-weight:400;color:var(--muted);">승진 1년 이내 필수</span></div>
+        <div id="lu-promotion-check"></div>
+      </div>
       <div id="lu-summary-row" class="srow" style="margin-bottom:18px;">
         <div class="sbox"><div class="sl">이수 완료</div><div class="sv" style="color:#3B6D11;" id="lu-done">—</div></div>
         <div class="sbox"><div class="sl">승인 대기</div><div class="sv" style="color:#854F0B;" id="lu-wait">—</div></div>
@@ -619,6 +634,8 @@ function updateTimePreview(hId, mId, previewId) {
       <button class="sb-btn" onclick="goAdmin('catlog',this)"><svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> 카테고리 수정 이력</button>
       <div class="sb-sec">현황</div>
       <button class="sb-btn" onclick="goAdmin('stats',this)"><svg width="13" height="13" fill="none" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/></svg> 통계 대시보드</button>
+      <div class="sb-sec">대상자 관리</div>
+      <button class="sb-btn" onclick="goAdmin('promotion',this)"><svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 승진자 과정 대상자</button>
       <div class="sb-sec">공지 관리</div>
       <button class="sb-btn" onclick="goAdmin('notice',this)"><svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> 공지사항 관리</button>
       <hr style="border:none;border-top:1px solid var(--bdr);margin:10px 13px;">
@@ -838,6 +855,39 @@ function updateTimePreview(hId, mId, previewId) {
         </div>
       </div>
 
+      <!-- 승진자 과정 대상자 관리 -->
+      <div class="apage" id="apage-promotion">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div>
+            <h2 style="font-size:17px;font-weight:700;">승진자 과정 대상자 관리</h2>
+            <p style="font-size:12px;color:var(--muted);margin-top:2px;">대상자로 지정된 직원은 이수 현황 조회 시 승진자 과정 이수 여부가 표시됩니다.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="text" id="promo-search" placeholder="이름 또는 사번 검색..." oninput="renderPromoList()"
+              style="font-size:13px;padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r);font-family:inherit;outline:none;width:200px;">
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th style="width:90px;">사번</th>
+              <th style="width:90px;">이름</th>
+              <th style="width:120px;">부서</th>
+              <th style="width:80px;">직군</th>
+              <th style="width:100px;">승진자 지정</th>
+              <th style="width:130px;">승진일</th>
+              <th style="width:130px;">이수 마감일</th>
+              <th style="width:100px;">중간관리자<br>과정 이수</th>
+            </tr></thead>
+            <tbody id="promo-tbody"></tbody>
+          </table>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:7px;display:flex;justify-content:space-between;align-items:center;">
+          <span id="promo-cnt"></span>
+          <button onclick="savePromotion()" class="btn btn-pri" style="font-size:12px;">변경사항 저장</button>
+        </div>
+      </div>
+
       <!-- 공지 관리 -->
       <div class="apage" id="apage-notice">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -1022,6 +1072,8 @@ let CATLOG = [];
 let openId = null;
 let selFile = null;
 let staffJobType = '일반직';
+let staffIsPromotion = false; // 승진자 과정 대상 여부
+let staffPromoData   = null;  // { promoDt, deadlineDt }
 let bkParsedRows = [];
 let bkProofFile = null;
 
@@ -1147,6 +1199,7 @@ async function goAdmin(n,b){
   if(n==='catlog')    renderCatLog();
   if(n==='stats')     renderStats();
   if(n==='notice')    renderAdminNotice();
+  if(n==='promotion')  renderPromoList();
 }
 
 // ════════════════════════════════════════════════
@@ -1165,6 +1218,8 @@ async function verifyStaff() {
     hideLoad();
     if (staffRes && staffRes.success === true) {
       staffJobType = staffRes.jobType || '일반직';
+      staffIsPromotion = staffRes.isPromotion === true;
+      staffPromoData   = staffRes.isPromotion ? { promoDt: staffRes.promoDt||'', deadlineDt: staffRes.deadlineDt||'', mgrDone: staffRes.mgrDone===true } : null;
     } else {
       const msg = staffRes?.error || '본인 확인에 실패했습니다. 잠시 후 다시 시도하거나 인사노무팀에 문의하세요.';
       errEl.innerHTML = msg.replace(/\n/g,'<br>'); errEl.style.display='block';
@@ -1189,6 +1244,29 @@ function resetVerify() {
 // ════════════════════════════════════════════════
 // 신청 폼 분기
 // ════════════════════════════════════════════════
+// 중간관리자 과정 체크 시 과정명·시간 자동 입력
+const MGR_COURSE_NAME = '중간관리자과정 (신임 관리자 역량개발)';
+function onMgrCourseCheck(cb) {
+  const courseEl = document.getElementById('f-course');
+  const hEl = document.getElementById('f-hours-h');
+  const mEl = document.getElementById('f-hours-m');
+  const prevEl = document.getElementById('f-hours-preview');
+  if (cb.checked) {
+    // 과정명만 고정 — 시간은 직접 입력
+    courseEl.value = MGR_COURSE_NAME;
+    courseEl.readOnly = true;
+    courseEl.style.background = 'var(--gray)';
+    courseEl.style.color = 'var(--muted)';
+    // CDP 자동 on
+    document.getElementById('f-cdp').value = 'true';
+    document.getElementById('sub-track').style.display = 'block';
+  } else {
+    courseEl.value = '';
+    courseEl.readOnly = false;
+    courseEl.style.background = ''; courseEl.style.color = '';
+  }
+}
+
 function onCatChange() {
   const c=document.getElementById('f-cat').value;
   document.getElementById('sub-legal').classList.toggle('show',c==='법정의무');
@@ -1283,6 +1361,9 @@ function resetApply(){
   document.getElementById('f-dept').value=''; document.getElementById('f-cat').value='기관지정';
   document.getElementById('file-name').textContent=''; document.getElementById('file-sz').textContent='';
   document.querySelectorAll('.lc').forEach(c=>c.checked=false); selFile=null; onCatChange();
+  // 중간관리자 체크박스 초기화
+  const mgrCb = document.getElementById('f-mgr-course');
+  if (mgrCb && mgrCb.checked) { mgrCb.checked = false; onMgrCourseCheck(mgrCb); }
   document.getElementById('verify-area').style.display='block';
   document.getElementById('apply-form-area').style.display='none';
   document.getElementById('apply-ok').style.display='none';
@@ -1302,7 +1383,7 @@ async function doLookup() {
   if(!IS_DEMO){
     if(empno && name) {
       const sr=await apiGet({action:'checkStaff',empno,name});
-      if(sr?.success) staffJobType=sr.jobType||'일반직';
+      if(sr?.success){ staffJobType=sr.jobType||'일반직'; staffIsPromotion=sr.isPromotion===true; staffPromoData=sr.isPromotion?{promoDt:sr.promoDt||'',deadlineDt:sr.deadlineDt||'',mgrDone:sr.mgrDone===true}:null; }
     }
     const r=await apiGet({action:'getApply',empno:empno||'',name:name||''});
     hideLoad();
@@ -1375,6 +1456,101 @@ async function doLookup() {
       <span style="color:${ok?'#3C3489':'var(--text)'};">${t} <span style="font-size:11px;opacity:.7;">(2h↑ · ${minsToStr(totalTypeMin)})</span></span>
     </div>`;
   }).join('');
+
+  // 승진자 과정 섹션 렌더
+  const promoSec = document.getElementById('lu-promotion-section');
+  const promoChk = document.getElementById('lu-promotion-check');
+  if (staffIsPromotion) {
+    promoSec.style.display = 'block';
+
+    // 승진일/마감일 정보 (checkStaff 응답에서 받음)
+    const promoDt    = staffPromoData?.promoDt    || '';
+    const deadlineDt = staffPromoData?.deadlineDt || '';
+    const dday = deadlineDt
+      ? Math.ceil((new Date(deadlineDt) - new Date()) / 86400000)
+      : null;
+    const ddayColor = dday === null ? 'var(--muted)' :
+                      dday < 0     ? '#A32D2D' :
+                      dday <= 30   ? '#854F0B' : '#3B6D11';
+    const ddayLabel = dday === null ? '' :
+                      dday < 0     ? `기한 초과 ${Math.abs(dday)}일` :
+                                     `D-${dday}`;
+
+    // 중간관리자 과정 이수 확인
+    // — 과정명에 '중간관리자' 포함 OR is_mgr 플래그(관리자 직접 처리)
+    // — 기관지정으로 신청된 경우 기관지정 시간에도 자동 중복 반영
+    // 관리자가 직접 이수 처리한 경우 우선 반영 (mgrDone)
+    const mgrDoneByAdmin = staffPromoData?.mgrDone === true;
+    const promoRows = done.filter(r =>
+      (r.course_name||'').includes('중간관리자') || r.is_mgr === true
+    );
+    // 관리자 직접 처리 OR 과정 이수 완료
+    const mgrDone = mgrDoneByAdmin || promoRows.length > 0;
+    const promoHrs  = promoRows.reduce((s,r) => s + toMins(r.hours), 0);
+    // 이수 완료 판단: 관리자 직접 처리 OR 과정 이수 내역 있음 (시간 무관)
+    const promoOk = mgrDoneByAdmin || promoRows.length > 0;
+
+    // 기관지정으로 중복 인정된 시간 (중간관리자 과정 중 기관지정인 것)
+    const promoInstHrs = promoRows
+      .filter(r => r.edu_category === '기관지정')
+      .reduce((s,r) => s + toMins(r.hours), 0);
+    const instTotal = done.filter(r => r.edu_category === '기관지정')
+                          .reduce((s,r) => s + toMins(r.hours), 0);
+
+    // 이수한 중간관리자 과정 목록 (표시용)
+    const promoListHtml = promoRows.length
+      ? promoRows.map(r => `
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid ${promoOk?'var(--gm)':'var(--rm)'};">
+            <span style="font-size:12px;color:${promoOk?'#3B6D11':'#A32D2D'};">✓</span>
+            <span style="font-size:13px;flex:1;">${r.course_name||''}</span>
+            <span style="font-size:12px;color:var(--muted);">${fmtDate(r.apply_date,true)}</span>
+            <span style="font-size:12px;font-weight:700;color:${promoOk?'var(--gd)':'var(--rd)'};">${minsToStr(toMins(r.hours))}</span>
+            ${r.edu_category==='기관지정'?`<span style="font-size:10px;padding:1px 6px;border-radius:20px;background:var(--al);color:var(--ad);">기관지정 중복</span>`:''}
+          </div>`).join('')
+      : `<div style="font-size:13px;color:var(--muted);padding:8px 0;">이수한 중간관리자 과정이 없습니다.</div>`;
+
+    promoChk.innerHTML = `
+      <div style="background:${promoOk?'var(--gl)':'var(--rl)'};border:1px solid ${promoOk?'var(--gm)':'var(--rm)'};border-radius:var(--rl2);overflow:hidden;">
+        <!-- 상단 요약 -->
+        <div style="padding:16px 20px;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:${(promoDt||deadlineDt)?'12px':'0'};">
+            <span style="font-size:26px;">${promoOk ? '✓' : '✗'}</span>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:700;color:${promoOk?'var(--gd)':'var(--rd)'};">
+                중간관리자 과정 ${promoOk?'이수 완료':'미이수'}
+              </div>
+              <div style="font-size:12px;color:${promoOk?'#3B6D11':'#A32D2D'};margin-top:3px;">
+                ${promoHrs > 0
+                  ? `이수 ${minsToStr(promoHrs)}${promoInstHrs>0?' &nbsp;|&nbsp; 기관지정 '+minsToStr(promoInstHrs)+' 자동 중복 반영':''}`
+                  : '미이수 — 승진 1년 이내 반드시 이수하세요 (목표: 35시간)'}
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;background:${promoOk?'var(--gm)':'var(--rm)'};color:${promoOk?'var(--gd)':'var(--rd)'};">
+                ${promoOk?'완료':'필수'}
+              </span>
+            </div>
+          </div>
+          ${(promoDt || deadlineDt) ? `
+          <div style="border-top:1px solid ${promoOk?'var(--gm)':'var(--rm)'};padding-top:10px;display:flex;gap:20px;flex-wrap:wrap;">
+            ${promoDt ? `<div style="font-size:12px;color:${promoOk?'var(--gd)':'var(--rd)'};">
+              <span style="opacity:.7;">승진일</span> &nbsp;<b>${promoDt}</b>
+            </div>` : ''}
+            ${deadlineDt ? `<div style="font-size:12px;color:${promoOk?'var(--gd)':'var(--rd)'};">
+              <span style="opacity:.7;">이수 마감</span> &nbsp;<b>${deadlineDt}</b>
+              ${ddayLabel ? `&nbsp;<span style="font-weight:700;color:${ddayColor};">(${ddayLabel})</span>` : ''}
+            </div>` : ''}
+          </div>` : ''}
+        </div>
+        <!-- 이수 과정 목록 -->
+        <div style="background:${promoOk?'rgba(234,243,222,.5)':'rgba(252,235,235,.5)'};border-top:1px solid ${promoOk?'var(--gm)':'var(--rm)'};padding:10px 20px;">
+          <div style="font-size:12px;font-weight:700;color:${promoOk?'var(--gd)':'var(--rd)'};margin-bottom:6px;">이수 과정 내역</div>
+          ${promoListHtml}
+        </div>
+      </div>`;
+  } else {
+    promoSec.style.display = 'none';
+  }
 
   document.getElementById('lu-tbody').innerHTML=rows.map(r=>`<tr>
     <td style="color:var(--muted);font-size:12px;">${fmtDate(r.apply_date)}</td>
@@ -1972,6 +2148,187 @@ function downloadSampleCSV(){
   const rows=['사번,이름','20210045,김민준','20190022,이수연','20220031,박지훈','20170009,강나래','20200038,윤도현'];
   const blob=new Blob(['\uFEFF'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='단체이수처리_명단양식.csv'; a.click();
+}
+
+
+// ════════════════════════════════════════════════
+// 승진자 과정 대상자 관리
+// ════════════════════════════════════════════════
+// PROMO_MAP: { empno: { promoDt: 'YYYY-MM-DD', deadlineDt: 'YYYY-MM-DD' } }
+let PROMO_MAP  = {};
+let STAFF_LIST = [];
+
+// 승진일 +1년 마감일 계산
+function calcDeadline(promoDt) {
+  if (!promoDt) return '';
+  try {
+    const d = new Date(promoDt);
+    d.setFullYear(d.getFullYear() + 1);
+    d.setDate(d.getDate() - 1); // 하루 빼서 1년 이내
+    return d.toISOString().slice(0, 10);
+  } catch(e) { return ''; }
+}
+
+// D-day 계산
+function calcDday(deadlineDt) {
+  if (!deadlineDt) return null;
+  const diff = Math.ceil((new Date(deadlineDt) - new Date()) / 86400000);
+  return diff;
+}
+
+async function loadStaffList() {
+  if (STAFF_LIST.length) return;
+  if (!IS_DEMO) {
+    showLoad('직원 명단 로드 중...');
+    const r = await apiGet({ action: 'getStaff' });
+    hideLoad();
+    if (r?.success) STAFF_LIST = r.data;
+  } else {
+    const seen = new Set();
+    DB.forEach(r => {
+      if (!seen.has(r.empno)) {
+        seen.add(r.empno);
+        STAFF_LIST.push({ empno: r.empno, name: r.name, dept: r.dept, jobType: '일반직' });
+      }
+    });
+  }
+}
+
+async function loadPromoMap() {
+  PROMO_MAP = {};
+  if (!IS_DEMO) {
+    const r = await apiGet({ action: 'getPromotion' });
+    if (r?.success) {
+      // data: [{ empno, promoDt, deadlineDt }, ...]
+      (r.data || []).forEach(p => { PROMO_MAP[String(p.empno)] = { ...p, mgrDone: p.mgrDone === true }; });
+    }
+  }
+}
+
+async function renderPromoList() {
+  await loadStaffList();
+  await loadPromoMap();
+  const q = (document.getElementById('promo-search')?.value || '').toLowerCase();
+  const list = STAFF_LIST.filter(s =>
+    !q || s.name.includes(q) || String(s.empno).includes(q)
+  );
+  const promoCount = Object.keys(PROMO_MAP).length;
+  document.getElementById('promo-cnt').textContent =
+    '총 ' + list.length + '명 (승진자 지정: ' + promoCount + '명)';
+
+  document.getElementById('promo-tbody').innerHTML = list.map(s => {
+    const empno = String(s.empno);
+    const pData = PROMO_MAP[empno];
+    const isPromo = !!pData;
+    const promoDt    = pData?.promoDt    || '';
+    const deadlineDt = pData?.deadlineDt || '';
+    const dday = deadlineDt ? calcDday(deadlineDt) : null;
+    const ddayStr = dday === null ? '' :
+                    dday < 0    ? `<span style="color:#A32D2D;font-size:11px;">기한 초과 ${Math.abs(dday)}일</span>` :
+                    dday <= 30  ? `<span style="color:#854F0B;font-size:11px;">D-${dday}</span>` :
+                                  `<span style="color:var(--muted);font-size:11px;">D-${dday}</span>`;
+    return `<tr>
+      <td style="color:var(--muted);font-size:12px;">${s.empno}</td>
+      <td style="font-weight:500;">${s.name}</td>
+      <td style="font-size:13px;">${s.dept||''}</td>
+      <td style="font-size:13px;">${s.jobType||''}</td>
+      <td style="text-align:center;">
+        <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" class="chk promo-chk" data-empno="${empno}"
+            ${isPromo ? 'checked' : ''}
+            onchange="onPromoChkChange(this)">
+          <span style="font-size:12px;font-weight:700;color:${isPromo?'var(--gd)':'var(--muted)'};" id="promo-lbl-${empno}">
+            ${isPromo ? '대상자' : '—'}
+          </span>
+        </label>
+      </td>
+      <td style="text-align:center;">
+        <input type="date" id="promo-dt-${empno}"
+          value="${promoDt}"
+          style="font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:var(--r);font-family:inherit;width:120px;${isPromo?'':'opacity:.3;pointer-events:none;'}"
+          onchange="onPromoDtChange('${empno}', this.value)">
+      </td>
+      <td style="text-align:center;font-size:12px;">
+        <span id="promo-ddl-${empno}" style="color:var(--muted);">
+          ${deadlineDt ? deadlineDt + ' ' + ddayStr : '—'}
+        </span>
+      </td>
+      <td style="text-align:center;">
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" class="chk promo-mgr-chk" data-empno="${empno}"
+            ${pData?.mgrDone ? 'checked' : ''}
+            ${isPromo ? '' : 'disabled style="opacity:.3;"'}
+            onchange="onPromoMgrChange(this)">
+          <span style="font-size:11px;font-weight:700;color:${pData?.mgrDone?'var(--gd)':'var(--muted)'};" id="promo-mgr-lbl-${empno}">
+            ${pData?.mgrDone ? '이수' : '—'}
+          </span>
+        </label>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function onPromoChkChange(cb) {
+  const empno = String(cb.dataset.empno);
+  const lbl   = document.getElementById('promo-lbl-' + empno);
+  const dtInp = document.getElementById('promo-dt-' + empno);
+  if (cb.checked) {
+    if (!PROMO_MAP[empno]) PROMO_MAP[empno] = { empno, promoDt: '', deadlineDt: '' };
+    if (lbl) { lbl.textContent = '대상자'; lbl.style.color = 'var(--gd)'; }
+    if (dtInp) { dtInp.style.opacity = '1'; dtInp.style.pointerEvents = 'auto'; }
+  } else {
+    delete PROMO_MAP[empno];
+    if (lbl) { lbl.textContent = '—'; lbl.style.color = 'var(--muted)'; }
+    if (dtInp) { dtInp.value = ''; dtInp.style.opacity = '.3'; dtInp.style.pointerEvents = 'none'; }
+    const ddlEl = document.getElementById('promo-ddl-' + empno);
+    if (ddlEl) ddlEl.textContent = '—';
+  }
+  const cnt = document.getElementById('promo-cnt');
+  if (cnt) cnt.textContent = '총 ' + document.querySelectorAll('.promo-chk').length +
+    '명 (승진자 지정: ' + Object.keys(PROMO_MAP).length + '명)';
+}
+
+function onPromoDtChange(empno, val) {
+  if (!PROMO_MAP[empno]) PROMO_MAP[empno] = { empno, promoDt: '', deadlineDt: '' };
+  PROMO_MAP[empno].promoDt = val;
+  const ddl = calcDeadline(val);
+  PROMO_MAP[empno].deadlineDt = ddl;
+  const ddlEl = document.getElementById('promo-ddl-' + empno);
+  if (ddlEl) {
+    if (ddl) {
+      const dday = calcDday(ddl);
+      const ddayStr = dday < 0
+        ? `<span style="color:#A32D2D;font-size:11px;">기한 초과 ${Math.abs(dday)}일</span>`
+        : dday <= 30
+        ? `<span style="color:#854F0B;font-size:11px;">D-${dday}</span>`
+        : `<span style="color:var(--muted);font-size:11px;">D-${dday}</span>`;
+      ddlEl.innerHTML = ddl + ' ' + ddayStr;
+    } else {
+      ddlEl.textContent = '—';
+    }
+  }
+}
+
+function onPromoMgrChange(cb) {
+  const empno = String(cb.dataset.empno);
+  if (!PROMO_MAP[empno]) return;
+  PROMO_MAP[empno].mgrDone = cb.checked;
+  const lbl = document.getElementById('promo-mgr-lbl-' + empno);
+  if (lbl) {
+    lbl.textContent = cb.checked ? '이수' : '—';
+    lbl.style.color = cb.checked ? 'var(--gd)' : 'var(--muted)';
+  }
+}
+
+async function savePromotion() {
+  const list = Object.values(PROMO_MAP).map(p => ({ ...p, mgrDone: p.mgrDone === true }));
+  if (!IS_DEMO) {
+    showLoad('저장 중...');
+    const res = await apiPost({ action: 'savePromotion', list });
+    hideLoad();
+    if (!res?.success) { showToast('저장 실패: ' + (res?.error||'오류'), 'red'); return; }
+  }
+  showToast('승진자 대상자 저장 완료 (' + list.length + '명)', 'green');
 }
 
 // ════════════════════════════════════════════════
