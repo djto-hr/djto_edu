@@ -3091,8 +3091,8 @@ async function renderStats(){
   if (!IS_DEMO && Object.keys(staffByDept).length > 0) {
     // getStaff로 전체 직원 수 확인 (이미 로드됨)
     // staffByDept는 일반직만 → 전 직원은 별도 카운트
-    const sr2 = await apiGet({action:'getStaff'});
-    totalAllStaff = sr2?.success ? sr2.data.length : Object.values(staffByDept).reduce((s,n)=>s+n,0);
+    // allStaffByDept에서 전체 인원 합산 (getStaff 재호출 불필요)
+    totalAllStaff = Object.values(allStaffByDept).reduce((s,arr)=>s+arr.length, 0) || Object.values(staffByDept).reduce((s,n)=>s+n,0);
   } else {
     // 데모: rawDB unique empno 또는 직원명단 전체
     totalAllStaff = [...new Set(rawDB.map(r=>r.empno))].length || sm.total || 1;
@@ -3129,12 +3129,11 @@ async function renderStats(){
     </div>`;
 
   // 전체 직원 명단 로드 (IS_DEMO면 rawDB에서, 실서버면 getStaff에서 이미 로드됨)
+  // totalStaffList: allStaffByDept 값들을 flat하게 합친 것 (이미 로드됨)
   let totalStaffList = [];
   if (!IS_DEMO) {
-    const srAll = await apiGet({action:'getStaff'});
-    if (srAll?.success) totalStaffList = srAll.data;
+    totalStaffList = Object.values(allStaffByDept).flat();
   } else {
-    // 데모: rawDB에서 unique 직원 추출
     const seen = {};
     rawDB.forEach(r => {
       if (!seen[r.empno]) { seen[r.empno]=true; totalStaffList.push({empno:String(r.empno),name:r.name,dept:r.dept,jobType:'일반직'}); }
