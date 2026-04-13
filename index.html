@@ -240,6 +240,34 @@ function normalizeDept(dept) {
 // DB.hours는 항상 분(minutes) 단위로 유지.
 // 기존 시트 데이터(시간 단위)는 loadAll/doLookup 시점에
 // migrateHours()로 1회 변환되므로 toMins()는 그냥 pass-through.
+
+// 직원 조회화면 특수업무 체크박스 핸들러
+async function onDutyCheck(cb) {
+  // cbId 형식: 'lu-duty-chk-hr', 'lu-duty-chk-budget', 'lu-duty-chk-account'
+  const key = cb.id.replace('lu-duty-chk-', '');
+  const lbl = document.getElementById('lu-duty-chk-' + key + '-lbl');
+  if (lbl) { lbl.textContent = cb.checked ? '이수' : '미이수'; lbl.style.color = cb.checked ? 'var(--gd)' : 'var(--muted)'; }
+  staffSpecialDone[key] = cb.checked;
+  if (!IS_DEMO && staffEmpno) {
+    // 현재 SPECIAL_MAP에 반영 후 저장
+    if (!SPECIAL_MAP[staffEmpno]) SPECIAL_MAP[staffEmpno] = { empno: staffEmpno };
+    SPECIAL_MAP[staffEmpno]['done' + key.charAt(0).toUpperCase() + key.slice(1)] = cb.checked;
+    SPECIAL_MAP[staffEmpno].dutyHr      = staffSpecialDuty.hr;
+    SPECIAL_MAP[staffEmpno].dutyBudget  = staffSpecialDuty.budget;
+    SPECIAL_MAP[staffEmpno].dutyAccount = staffSpecialDuty.account;
+    SPECIAL_MAP[staffEmpno].doneHr      = staffSpecialDone.hr;
+    SPECIAL_MAP[staffEmpno].doneBudget  = staffSpecialDone.budget;
+    SPECIAL_MAP[staffEmpno].doneAccount = staffSpecialDone.account;
+    const list = [SPECIAL_MAP[staffEmpno]];
+    // 기존 전체 목록에서 해당 직원만 업데이트
+    const all = await apiGet({action:'getSpecial'});
+    const merged = (all?.data||[]).filter(p=>String(p.empno)!==String(staffEmpno));
+    merged.push(SPECIAL_MAP[staffEmpno]);
+    await apiPost({action:'saveSpecial', list: merged});
+    showToast((cb.checked?'이수':'미이수') + ' 처리됐습니다.', cb.checked?'green':'amber');
+  }
+}
+
 function toMins(val) {
   const n = Number(val);
   if (!n || isNaN(n)) return 0;
@@ -1714,6 +1742,12 @@ async function doLookup() {
   const wait=rows.filter(r=>r.status==='대기');
   const completedLegal=new Set();
   done.filter(r=>r.edu_category==='법정의무').forEach(r=>(r.legal_types||[]).forEach(t=>completedLegal.add(t)));
+  // 재난·안전 공통필수 → 소방안전화재예방 중복 인정
+  done.filter(r=>r.edu_category==='공통필수').forEach(r=>{
+    const kws=['재난','산업안전','소방','화재'];
+    if(kws.some(k=>(r.common_type||'').includes(k)||(r.course_name||'').includes(k)))
+      completedLegal.add('소방안전화재예방');
+  });
   const isGongmu=(staffJobType==='공무직');
 
   // 직원 기본정보: staffInfo 우선, 없으면 rows[0]
@@ -1842,7 +1876,6 @@ async function doLookup() {
     document.getElementById('lu-special-check').innerHTML = DUTY_TYPES
       .filter(dt => staffSpecialDuty[dt.key])
       .map(dt => {
-        // 관리자 직접 처리 OR 신청 시 duty 체크 OR 키워드 매칭
         const adminDone = staffSpecialDone[dt.key];
         const dutyField = { hr:'duty_hr', budget:'duty_budget', account:'duty_account' }[dt.key];
         const autoRows  = done.filter(r =>
@@ -1852,18 +1885,27 @@ async function doLookup() {
         const autoMins  = autoRows.reduce((s,r) => s + toMins(r.hours), 0);
         const ok        = adminDone || autoMins >= DUTY_GOAL_MINS;
         const dispMins  = adminDone ? DUTY_GOAL_MINS : autoMins;
-        return '<div style="background:'+(ok?'var(--gl)':'var(--rl)')+';border:1px solid '+(ok?'var(--gm)':'var(--rm)')+';border-radius:var(--r);padding:12px 14px;">'
-          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-          + '<span style="font-size:13px;font-weight:700;color:'+(ok?'var(--gd)':'var(--rd)')+';">'+dt.label+'</span>'
-          + '<span style="font-size:18px;">'+(ok?'✓':'✗')+'</span>'
-          + '</div>'
-          + '<div style="background:rgba(0,0,0,.08);border-radius:20px;height:5px;margin-bottom:6px;overflow:hidden;">'
-          + '<div style="height:100%;border-radius:20px;background:'+(ok?'var(--gd)':'var(--rm)')+';width:'+Math.min(Math.round(dispMins/DUTY_GOAL_MINS*100),100)+'%;"></div>'
-          + '</div>'
-          + '<div style="font-size:11px;color:'+(ok?'var(--gd)':'#A32D2D')+';">'
-          + (adminDone ? '관리자 이수 처리' : (autoMins>0 ? minsToStr(autoMins)+' / 2시간' : '미이수 — 2시간 이상 필요'))
-          + '</div>'
-          + '</div>';
+        const pct       = Math.min(Math.round(dispMins/DUTY_GOAL_MINS*100), 100);
+        const gc = ok?'var(--gd)':'var(--rd)';
+        const gb = ok?'var(--gl)':'var(--rl)';
+        const gm = ok?'var(--gm)':'var(--rm)';
+        const cbId = 'lu-duty-chk-' + dt.key;
+        const parts = [
+          '<div style="background:'+gb+';border:1px solid '+gm+';border-radius:var(--r);padding:12px 14px;">',
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">',
+          '<span style="font-size:13px;font-weight:700;color:'+gc+';">'+dt.label+'</span>',
+          '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;">',
+          '<input type="checkbox" id="'+cbId+'" class="chk"'+(ok?' checked':'')+' style="width:15px;height:15px;accent-color:var(--blue);" onchange="onDutyCheck(this)">',
+          '<span style="font-size:11px;font-weight:700;color:'+gc+';" id="'+cbId+'-lbl">'+(ok?'이수':'미이수')+'</span>',
+          '</label></div>',
+          '<div style="background:rgba(0,0,0,.08);border-radius:20px;height:5px;margin-bottom:6px;overflow:hidden;">',
+          '<div style="height:100%;border-radius:20px;background:'+gc+';width:'+pct+'%;"></div>',
+          '</div>',
+          '<div style="font-size:11px;color:'+gc+';">',
+          (adminDone ? '관리자 이수 처리' : (autoMins>0 ? minsToStr(autoMins)+' / 2시간' : '미이수 — 2시간 이상 필요')),
+          '</div></div>'
+        ];
+        return parts.join('');
       }).join('');
   } else {
     specialSec.style.display = 'none';
@@ -2532,7 +2574,7 @@ function drillDept(dept) {
 
   // 부서 내 법정의무 교육별 이수자 집계
   const legalByType = {};
-  DB.filter(r => r.status==='승인' && r.dept===dept && r.edu_category==='법정의무')
+  DB.filter(r => r.status==='승인' && normalizeDept(r.dept)===dept && r.edu_category==='법정의무')
     .forEach(r => {
       (r.legal_types||[]).forEach(t => {
         if (!legalByType[t]) legalByType[t] = new Set();
@@ -2652,16 +2694,25 @@ async function renderStats(){
     const sr = await apiGet({action:'getStaff'});
     if (sr?.success) {
       sr.data.filter(s=>s.jobType==='일반직').forEach(s=>{
-        const nd = normalizeDept(s.dept); // 괄호 제거 + 임원 통합
+        const nd = normalizeDept(s.dept);
         staffByDept[nd] = (staffByDept[nd]||0)+1;
       });
     }
+  } else {
+    // IS_DEMO: rawDB에서 부서별 유니크 직원 수 추정
+    const seen = {};
+    rawDB.forEach(r=>{
+      const nd = normalizeDept(r.dept);
+      if(!seen[nd]) seen[nd]=new Set();
+      seen[nd].add(r.empno);
+    });
+    Object.entries(seen).forEach(([d,s])=>{ staffByDept[d]=s.size; });
   }
 
   // ── 부서별 집계 (신청내역 dept 기준) ──────────────────────
   const empDoneMap = {};
   done.forEach(r => {
-    if (!empDoneMap[r.empno]) empDoneMap[r.empno] = { dept: r.dept, name: r.name, rows: [] };
+    if (!empDoneMap[r.empno]) empDoneMap[r.empno] = { dept: normalizeDept(r.dept), name: r.name, rows: [] };
     empDoneMap[r.empno].rows.push(r);
   });
   const doneByDept = {};
@@ -2677,8 +2728,9 @@ async function renderStats(){
   // 법정의무 부서별 이수자
   const legalDoneByDept = {};
   done.filter(r=>r.edu_category==='법정의무').forEach(r=>{
-    if(!legalDoneByDept[r.dept]) legalDoneByDept[r.dept]=new Set();
-    legalDoneByDept[r.dept].add(r.empno);
+    const nd = normalizeDept(r.dept);
+    if(!legalDoneByDept[nd]) legalDoneByDept[nd]=new Set();
+    legalDoneByDept[nd].add(r.empno);
   });
 
   // DEPT_ORDER 기준 정렬
@@ -2722,21 +2774,7 @@ async function renderStats(){
   }).join('');
 
 
-  // 부서별 상세 테이블
-  document.getElementById('dept-detail-tbody').innerHTML = deptRankData.map(d=>{
-    const rateColor = d.rate>=80?'#3B6D11':d.rate>=50?'#854F0B':'#A32D2D';
-    const rateBg    = d.rate>=80?'var(--gl)':d.rate>=50?'var(--al)':'var(--rl)';
-    return `<tr>
-      <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);font-weight:500;">${d.dept}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);text-align:center;color:var(--muted);">${d.staff||'—'}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);text-align:center;color:var(--muted);">${d.appliedCount}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);text-align:center;font-weight:700;color:var(--blue);">${d.doneCount}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);text-align:center;">
-        <span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:${rateBg};color:${rateColor};">${d.rate}%</span>
-      </td>
-      <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);text-align:center;font-size:12px;color:var(--muted);">${minsToStr(d.hrs)}</td>
-    </tr>`;
-  }).join('');
+  // (구버전 dept-detail-tbody 렌더 제거됨)
 
   // ── 탭2: 예산 사용현황 ──
   const budgetDone = done.filter(r=>(Number(r.train_cost)||0)+(Number(r.travel_cost)||0)>0);
