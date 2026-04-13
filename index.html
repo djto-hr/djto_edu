@@ -842,17 +842,105 @@ function updateTimePreview(hId, mId, previewId) {
 
       <!-- 통계 -->
       <div class="apage" id="apage-stats">
-        <div style="margin-bottom:14px;"><h2 style="font-size:17px;font-weight:700;">통계 대시보드</h2></div>
-        <div class="sgrid">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <h2 style="font-size:17px;font-weight:700;">통계 대시보드</h2>
+          <button class="btn btn-gh" onclick="renderStats()">↻ 새로고침</button>
+        </div>
+
+        <!-- 요약 카드 -->
+        <div class="sgrid" style="margin-bottom:16px;">
           <div class="sc"><div class="sl">전체 신청</div><div class="sv" id="s-tot">—</div></div>
           <div class="sc"><div class="sl">승인 완료</div><div class="sv green" id="s-don">—</div></div>
           <div class="sc"><div class="sl">총 이수시간</div><div class="sv blue" id="s-hrs">—</div></div>
           <div class="sc"><div class="sl">전체 이수율</div><div class="sv green" id="s-rat">—</div></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;">
-          <div class="card"><div class="card-title">부서별 이수 현황</div><div id="dept-chart"></div></div>
-          <div class="card"><div class="card-title">교육구분별 현황</div><div id="cat-chart"></div></div>
+
+        <!-- 탭 네비게이션 -->
+        <div style="display:flex;gap:4px;margin-bottom:14px;background:var(--gray);border-radius:var(--r);padding:4px;width:fit-content;">
+          <button class="stats-tab active" onclick="switchStatsTab('tab-dept',this)" style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;background:var(--white);color:var(--bd);box-shadow:0 1px 3px rgba(0,0,0,.08);">부서별 이수현황</button>
+          <button class="stats-tab" onclick="switchStatsTab('tab-budget',this)" style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;background:transparent;color:var(--muted);">예산 사용현황</button>
+          <button class="stats-tab" onclick="switchStatsTab('tab-legal',this)" style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;background:transparent;color:var(--muted);">법정의무 이수율</button>
+          <button class="stats-tab" onclick="switchStatsTab('tab-cat',this)" style="padding:7px 16px;border:none;border-radius:8px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;background:transparent;color:var(--muted);">교육구분별</button>
         </div>
+
+        <!-- 탭1: 부서별 이수현황 -->
+        <div id="tab-dept" class="stats-tab-content">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;">
+            <div class="card">
+              <div class="card-title">부서별 이수 현황 <span style="font-size:11px;font-weight:400;color:var(--muted);">일반직 기준 이수 인원</span></div>
+              <div id="dept-chart"></div>
+            </div>
+            <div class="card">
+              <div class="card-title">부서별 이수율 순위</div>
+              <div id="dept-rank-chart"></div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:13px;">
+            <div class="card-title">부서별 상세 현황 <span style="font-size:11px;font-weight:400;color:var(--muted);">일반직 대비 이수 완료 인원</span></div>
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead style="background:var(--gray);">
+                  <tr>
+                    <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);">부서</th>
+                    <th style="padding:8px 12px;text-align:center;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);white-space:nowrap;">일반직 인원</th>
+                    <th style="padding:8px 12px;text-align:center;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);white-space:nowrap;">이수 완료자</th>
+                    <th style="padding:8px 12px;text-align:center;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);white-space:nowrap;">이수율</th>
+                    <th style="padding:8px 12px;text-align:center;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);">총 이수시간</th>
+                  </tr>
+                </thead>
+                <tbody id="dept-detail-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 탭2: 예산 사용현황 -->
+        <div id="tab-budget" class="stats-tab-content" style="display:none;">
+          <div class="sgrid" style="margin-bottom:13px;">
+            <div class="sc"><div class="sl">교육훈련비 합계</div><div class="sv blue" id="b-train">—</div></div>
+            <div class="sc"><div class="sl">출장비 합계</div><div class="sv amber" id="b-travel">—</div></div>
+            <div class="sc"><div class="sl">총 예산 사용</div><div class="sv" id="b-total">—</div></div>
+            <div class="sc"><div class="sl">예산 사용 건수</div><div class="sv" id="b-cnt">—</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;">
+            <div class="card">
+              <div class="card-title">부서별 예산 사용현황</div>
+              <div id="budget-dept-chart"></div>
+            </div>
+            <div class="card">
+              <div class="card-title">이수자별 예산 내역 <span style="font-size:11px;font-weight:400;color:var(--muted);">승인 건 기준</span></div>
+              <div style="max-height:360px;overflow-y:auto;">
+                <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                  <thead style="position:sticky;top:0;background:var(--gray);z-index:1;">
+                    <tr>
+                      <th style="padding:7px 10px;text-align:left;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);">이름</th>
+                      <th style="padding:7px 10px;text-align:left;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);">과정명</th>
+                      <th style="padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);white-space:nowrap;">교육훈련비</th>
+                      <th style="padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);">출장비</th>
+                      <th style="padding:7px 10px;text-align:right;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--muted);">합계</th>
+                    </tr>
+                  </thead>
+                  <tbody id="budget-person-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 탭3: 법정의무 이수율 -->
+        <div id="tab-legal" class="stats-tab-content" style="display:none;">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">전체 직원 대비 교육별 이수율 (승인 완료 기준)</div>
+          <div id="legal-rate-wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:11px;"></div>
+        </div>
+
+        <!-- 탭4: 교육구분별 -->
+        <div id="tab-cat" class="stats-tab-content" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;">
+            <div class="card"><div class="card-title">교육구분별 현황</div><div id="cat-chart"></div></div>
+            <div class="card"><div class="card-title">교육방법별 현황</div><div id="method-chart"></div></div>
+          </div>
+        </div>
+
       </div>
 
       <!-- 승진자 과정 대상자 관리 -->
@@ -1946,26 +2034,212 @@ async function renderCatLog(){
 // ════════════════════════════════════════════════
 // 통계
 // ════════════════════════════════════════════════
+function switchStatsTab(tabId, btn) {
+  document.querySelectorAll('.stats-tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.stats-tab').forEach(b => {
+    b.style.background = 'transparent'; b.style.color = 'var(--muted)';
+    b.style.fontWeight = '500'; b.style.boxShadow = 'none';
+  });
+  document.getElementById(tabId).style.display = 'block';
+  btn.style.background = 'var(--white)'; btn.style.color = 'var(--bd)';
+  btn.style.fontWeight = '700'; btn.style.boxShadow = '0 1px 3px rgba(0,0,0,.08)';
+}
+
+function fmtWon(n) {
+  n = Number(n) || 0;
+  if (n === 0) return '—';
+  return n.toLocaleString() + '원';
+}
+
 async function renderStats(){
-  let sm={total:0,wait:0,done:0,rej:0,total_hours:0},byDept=[],byCat=[];
-  if(!IS_DEMO){ showLoad('통계 로드 중...'); const r=await apiGet({action:'getStats'}); hideLoad(); if(r?.success){sm=r.summary;byDept=r.by_dept;byCat=r.by_category;} }
-  else{
+  let sm={total:0,wait:0,done:0,rej:0,total_hours:0}, byDept=[], byCat=[];
+  let rawDB = IS_DEMO ? DB : [];
+
+  if(!IS_DEMO){
+    showLoad('통계 로드 중...');
+    const r=await apiGet({action:'getStats'});
+    hideLoad();
+    if(r?.success){ sm=r.summary; byDept=r.by_dept; byCat=r.by_category; }
+    // 예산/법정의무 상세용 전체 데이터 로드
+    const r2=await apiGet({action:'getApply'});
+    if(r2?.success) rawDB=r2.data.map(x=>migrateHours({...x,hours:Number(x.hours),train_cost:Number(x.train_cost)||0,travel_cost:Number(x.travel_cost)||0,legal_types:Array.isArray(x.legal_types)?x.legal_types:(x.legal_types||'').split(',').filter(Boolean),cdp_yn:x.cdp_yn===true||x.cdp_yn==='TRUE'}));
+  } else {
     sm={total:DB.length,done:DB.filter(r=>r.status==='승인').length,wait:DB.filter(r=>r.status==='대기').length,rej:DB.filter(r=>r.status==='반려').length,total_hours:DB.filter(r=>r.status==='승인').reduce((s,r)=>s+toMins(r.hours),0)};
     const dm={},cm={};
     DB.forEach(r=>{ dm[r.dept]=(dm[r.dept]||{total:0,done:0}); cm[r.edu_category]=(cm[r.edu_category]||{total:0,done:0}); dm[r.dept].total++;cm[r.edu_category].total++;if(r.status==='승인'){dm[r.dept].done++;cm[r.edu_category].done++;} });
-    byDept=Object.keys(dm).sort().map(d=>({dept:d,...dm[d]})); byCat=Object.keys(cm).map(c=>({edu_category:c,...cm[c]}));
+    byDept=Object.keys(dm).sort().map(d=>({dept:d,...dm[d]}));
+    byCat=Object.keys(cm).map(c=>({edu_category:c,...cm[c]}));
+    rawDB = DB;
   }
+
+  const done = rawDB.filter(r=>r.status==='승인');
+
+  // ── 요약 카드 ──
   document.getElementById('s-tot').textContent=sm.total;
   document.getElementById('s-don').textContent=sm.done;
-  // 통계: 총 이수시간을 분→시간분으로 표시
   const totalStatMins=IS_DEMO?sm.total_hours:toMins(sm.total_hours||0);
   document.getElementById('s-hrs').textContent=minsToStr(IS_DEMO?sm.total_hours:totalStatMins);
   document.getElementById('s-rat').textContent=sm.total?Math.round(sm.done/sm.total*100)+'%':'0%';
-  document.getElementById('dept-chart').innerHTML=byDept.map(d=>{ const p=d.total?Math.round(d.done/d.total*100):0; return `<div class="br"><div class="bl2">${d.dept}</div><div class="bt"><div class="bf" style="width:${p}%">${p>10?p+'%':''}</div></div><div class="bc">${d.done}/${d.total}</div></div>`; }).join('');
-  const catColors={'기관지정':'#BA7517','법정의무':'#A32D2D','공통필수':'#534AB7','기타':'#888780'};
-  document.getElementById('cat-chart').innerHTML=byCat.map(c=>{ const tot=Math.max(...byCat.map(x=>x.total),1); const p=Math.round(c.total/tot*100); return `<div class="br"><div class="bl2">${c.edu_category}</div><div class="bt"><div class="bf" style="width:${p}%;background:${catColors[c.edu_category]||'#1D6FA4'}">${p>10?c.total+'건':''}</div></div><div class="bc">${c.total}건</div></div>`; }).join('');
-}
 
+  // ── 탭1: 부서별 이수현황 ──
+  // 직원명단에서 부서별 일반직 인원 (IS_DEMO면 byDept 기준)
+  const staffByDept = {}; // { dept: 일반직 인원 수 }
+  if (!IS_DEMO) {
+    const sr = await apiGet({action:'getStaff'});
+    if (sr?.success) {
+      sr.data.filter(s=>s.jobType==='일반직').forEach(s=>{
+        staffByDept[s.dept] = (staffByDept[s.dept]||0)+1;
+      });
+    }
+  }
+
+  // 부서별 이수 완료자 수 (unique empno 기준)
+  const doneByDept = {};
+  const doneEmpnoByDept = {};
+  done.forEach(r=>{
+    if(!doneByDept[r.dept]) { doneByDept[r.dept]={empnos:new Set(),hrs:0}; }
+    doneByDept[r.dept].empnos.add(r.empno);
+    doneByDept[r.dept].hrs += toMins(r.hours);
+  });
+
+  // 부서별 바 차트 (기존)
+  document.getElementById('dept-chart').innerHTML=byDept.map(d=>{
+    const p=d.total?Math.round(d.done/d.total*100):0;
+    return `<div class="br"><div class="bl2">${d.dept}</div><div class="bt"><div class="bf" style="width:${p}%">${p>10?p+'%':''}</div></div><div class="bc">${d.done}/${d.total}</div></div>`;
+  }).join('');
+
+  // 부서별 이수율 순위 (일반직 기준)
+  const deptRankData = Object.keys({...doneByDept,...staffByDept}).map(dept=>{
+    const staff = staffByDept[dept] || 0;
+    const doneCount = doneByDept[dept]?.empnos?.size || 0;
+    const rate = staff > 0 ? Math.round(doneCount/staff*100) : (doneCount>0?100:0);
+    return { dept, staff, doneCount, rate, hrs: doneByDept[dept]?.hrs||0 };
+  }).sort((a,b)=>b.rate-a.rate);
+
+  document.getElementById('dept-rank-chart').innerHTML = deptRankData.map((d,i)=>{
+    const color = d.rate>=80?'#3B6D11':d.rate>=50?'#854F0B':'#A32D2D';
+    return `<div class="br">
+      <div class="bl2" style="font-size:11px;">${d.dept}</div>
+      <div class="bt"><div style="height:100%;border-radius:20px;background:${color};width:${d.rate}%;display:flex;align-items:center;padding-left:6px;font-size:11px;font-weight:700;color:#fff;">${d.rate>15?d.rate+'%':''}</div></div>
+      <div class="bc" style="font-size:11px;color:${color};">${d.doneCount}/${d.staff||'?'}</div>
+    </div>`;
+  }).join('');
+
+  // 부서별 상세 테이블
+  document.getElementById('dept-detail-tbody').innerHTML = deptRankData.map(d=>{
+    const rateColor = d.rate>=80?'#3B6D11':d.rate>=50?'#854F0B':'#A32D2D';
+    const rateBg    = d.rate>=80?'var(--gl)':d.rate>=50?'var(--al)':'var(--rl)';
+    return `<tr>
+      <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);font-weight:500;">${d.dept}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);text-align:center;color:var(--muted);">${d.staff||'—'}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);text-align:center;font-weight:700;color:var(--blue);">${d.doneCount}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);text-align:center;">
+        <span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:${rateBg};color:${rateColor};">${d.rate}%</span>
+      </td>
+      <td style="padding:8px 12px;border-bottom:1px solid var(--bdr);text-align:center;font-size:12px;color:var(--muted);">${minsToStr(d.hrs)}</td>
+    </tr>`;
+  }).join('');
+
+  // ── 탭2: 예산 사용현황 ──
+  const budgetDone = done.filter(r=>(Number(r.train_cost)||0)+(Number(r.travel_cost)||0)>0);
+  const trainTotal  = budgetDone.reduce((s,r)=>s+(Number(r.train_cost)||0),0);
+  const travelTotal = budgetDone.reduce((s,r)=>s+(Number(r.travel_cost)||0),0);
+  document.getElementById('b-train').textContent  = trainTotal.toLocaleString()+'원';
+  document.getElementById('b-travel').textContent = travelTotal.toLocaleString()+'원';
+  document.getElementById('b-total').textContent  = (trainTotal+travelTotal).toLocaleString()+'원';
+  document.getElementById('b-cnt').textContent    = budgetDone.length+'건';
+
+  // 부서별 예산 바 차트
+  const budgetByDept={};
+  done.forEach(r=>{
+    const tc=Number(r.train_cost)||0, tv=Number(r.travel_cost)||0;
+    if(tc+tv===0) return;
+    if(!budgetByDept[r.dept]) budgetByDept[r.dept]={train:0,travel:0};
+    budgetByDept[r.dept].train+=tc; budgetByDept[r.dept].travel+=tv;
+  });
+  const budgetList=Object.entries(budgetByDept)
+    .map(([dept,v])=>({dept,total:v.train+v.travel,...v}))
+    .sort((a,b)=>b.total-a.total);
+  const maxBudget=Math.max(...budgetList.map(d=>d.total),1);
+  document.getElementById('budget-dept-chart').innerHTML=budgetList.map(d=>{
+    const pct=Math.round(d.total/maxBudget*100);
+    return `<div class="br">
+      <div class="bl2" style="font-size:11px;">${d.dept}</div>
+      <div class="bt">
+        <div style="height:100%;display:flex;border-radius:20px;overflow:hidden;">
+          <div style="width:${Math.round(d.train/maxBudget*100)}%;background:var(--blue);"></div>
+          <div style="width:${Math.round(d.travel/maxBudget*100)}%;background:var(--am);"></div>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:700;width:70px;text-align:right;color:var(--muted);">${Math.round(d.total/1000)}천원</div>
+    </div>`;
+  }).join('') + (budgetList.length?`<div style="font-size:11px;color:var(--muted);margin-top:8px;display:flex;gap:12px;"><span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--blue);display:inline-block;"></span>교육훈련비</span><span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--am);display:inline-block;"></span>출장비</span></div>`:'');
+
+  // 이수자별 예산 테이블
+  const personBudget = done
+    .filter(r=>(Number(r.train_cost)||0)+(Number(r.travel_cost)||0)>0)
+    .sort((a,b)=>((Number(b.train_cost)||0)+(Number(b.travel_cost)||0))-((Number(a.train_cost)||0)+(Number(a.travel_cost)||0)));
+  document.getElementById('budget-person-tbody').innerHTML = personBudget.length
+    ? personBudget.map(r=>{
+        const tc=Number(r.train_cost)||0, tv=Number(r.travel_cost)||0;
+        return `<tr>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--bdr);font-weight:500;white-space:nowrap;">${r.name}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--bdr);font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;">${r.course_name||''}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--bdr);text-align:right;color:var(--bd);">${fmtWon(tc)}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--bdr);text-align:right;color:var(--ad);">${fmtWon(tv)}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--bdr);text-align:right;font-weight:700;">${fmtWon(tc+tv)}</td>
+        </tr>`;
+      }).join('')
+    : '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--muted);">예산 사용 내역이 없습니다.</td></tr>';
+
+  // ── 탭3: 법정의무 이수율 ──
+  const LEGAL_LIST = ['4대폭력예방','직장내괴롭힘예방','소방안전화재예방','장애인인식개선교육','자살예방교육','퇴직연금교육','아동학대예방교육','개인정보보호교육','정보공개교육'];
+  const totalStaff = IS_DEMO ? [...new Set(rawDB.map(r=>r.empno))].length : (Object.values(staffByDept).reduce((s,n)=>s+n,0)||sm.total||1);
+
+  // 법정의무 완료자별 유형 집계
+  const legalDoneMap = {}; // { type: Set(empno) }
+  done.filter(r=>r.edu_category==='법정의무').forEach(r=>{
+    (r.legal_types||[]).forEach(t=>{
+      if(!legalDoneMap[t]) legalDoneMap[t]=new Set();
+      legalDoneMap[t].add(r.empno);
+    });
+  });
+
+  document.getElementById('legal-rate-wrap').innerHTML = LEGAL_LIST.map(t=>{
+    const doneSet = legalDoneMap[t] || new Set();
+    const doneN   = doneSet.size;
+    const rate    = totalStaff>0?Math.round(doneN/totalStaff*100):0;
+    const color   = rate>=80?'var(--gd)':rate>=50?'var(--ad)':'var(--rd)';
+    const bg      = rate>=80?'var(--gl)':rate>=50?'var(--al)':'var(--rl)';
+    const border  = rate>=80?'var(--gm)':rate>=50?'var(--am)':'var(--rm)';
+    return `<div style="background:${bg};border:1px solid ${border};border-radius:var(--rl2);padding:14px 18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:700;color:${color};">${t}</div>
+        <div style="font-size:20px;font-weight:800;color:${color};">${rate}%</div>
+      </div>
+      <div style="background:rgba(255,255,255,.5);border-radius:20px;height:6px;margin-bottom:6px;overflow:hidden;">
+        <div style="height:100%;border-radius:20px;background:${color};width:${rate}%;transition:width .5s;"></div>
+      </div>
+      <div style="font-size:11px;color:${color};opacity:.8;">${doneN}명 이수 / 전체 ${totalStaff}명</div>
+    </div>`;
+  }).join('');
+
+  // ── 탭4: 교육구분별 / 방법별 ──
+  const catColors={'기관지정':'#BA7517','법정의무':'#A32D2D','공통필수':'#534AB7','기타':'#888780'};
+  document.getElementById('cat-chart').innerHTML=byCat.map(c=>{
+    const tot=Math.max(...byCat.map(x=>x.total),1);
+    const p=Math.round(c.total/tot*100);
+    return `<div class="br"><div class="bl2">${c.edu_category}</div><div class="bt"><div class="bf" style="width:${p}%;background:${catColors[c.edu_category]||'#1D6FA4'}">${p>10?c.total+'건':''}</div></div><div class="bc">${c.total}건</div></div>`;
+  }).join('');
+
+  const methodMap={};
+  rawDB.forEach(r=>{ methodMap[r.edu_method]=(methodMap[r.edu_method]||0)+1; });
+  const methodList=Object.entries(methodMap).sort((a,b)=>b[1]-a[1]);
+  const maxM=Math.max(...methodList.map(m=>m[1]),1);
+  document.getElementById('method-chart').innerHTML=methodList.map(([m,n])=>
+    `<div class="br"><div class="bl2">${m}</div><div class="bt"><div class="bf" style="width:${Math.round(n/maxM*100)}%;background:#534AB7">${Math.round(n/maxM*100)>10?n+'건':''}</div></div><div class="bc">${n}건</div></div>`
+  ).join('');
+}
 // ════════════════════════════════════════════════
 // 공지사항 관리 (관리자)
 // ════════════════════════════════════════════════
