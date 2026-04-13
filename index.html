@@ -533,7 +533,7 @@ function updateTimePreview(hId, mId, previewId) {
         </div>
         <div class="cat-sub" id="sub-inst">
           <!-- 중간관리자 과정 체크박스 -->
-          <div style="background:var(--bl);border:1px solid var(--bm);border-radius:var(--r);padding:10px 13px;margin-bottom:10px;">
+          <div style="background:var(--bl);border:1px solid var(--bm);border-radius:var(--r);padding:10px 13px;margin-bottom:8px;">
             <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;font-weight:500;color:var(--bd);">
               <input type="checkbox" id="f-mgr-course" class="chk"
                 onchange="onMgrCourseCheck(this)"
@@ -541,6 +541,24 @@ function updateTimePreview(hId, mId, previewId) {
               <span>중간관리자 과정 이수 신청</span>
               <span style="font-size:11px;font-weight:400;color:var(--muted);">과정명 자동 입력, 이수 시간은 직접 입력</span>
             </label>
+          </div>
+          <!-- 특수업무 담당자 교육 중복 체크박스 -->
+          <div style="background:var(--gl);border:1px solid var(--gm);border-radius:var(--r);padding:10px 13px;margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:700;color:var(--gd);margin-bottom:7px;">이 교육이 특수업무 담당자 필수교육에 해당하나요? <span style="font-weight:400;color:var(--muted);">(기관지정 시간에 중복 반영)</span></div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;">
+                <input type="checkbox" id="f-duty-hr" class="chk" style="accent-color:var(--blue);">
+                <span>인사 담당자 교육</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;">
+                <input type="checkbox" id="f-duty-budget" class="chk" style="accent-color:var(--blue);">
+                <span>예산 담당자 교육</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;">
+                <input type="checkbox" id="f-duty-account" class="chk" style="accent-color:var(--blue);">
+                <span>회계 담당자 교육</span>
+              </label>
+            </div>
           </div>
           <div class="fg" style="margin-bottom:8px;"><label>CDP 연계 여부 <span class="req">*</span></label>
             <select id="f-cdp" onchange="document.getElementById('sub-track').style.display=this.value==='true'?'block':'none'"><option value="false">아니오</option><option value="true">예 — 직무트랙 선택</option></select>
@@ -648,6 +666,12 @@ function updateTimePreview(hId, mId, previewId) {
         <div id="lu-completion-checklist" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"></div>
       </div>
 
+      <!-- 특수업무 담당자 교육 섹션 -->
+      <div id="lu-special-section" style="display:none;margin-bottom:18px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:6px;margin-top:4px;">특수업무 담당자 교육 <span style="font-size:11px;font-weight:400;color:var(--muted);">연 2시간 이상 필수</span></div>
+        <div id="lu-special-check" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"></div>
+      </div>
+
       <!-- 승진자 과정 섹션 (관리자가 대상 지정 시에만 표시) -->
       <div id="lu-promotion-section" style="display:none;margin-bottom:18px;">
         <div style="font-size:13px;font-weight:700;margin-bottom:6px;margin-top:4px;">승진자 과정 <span style="font-size:11px;font-weight:400;color:var(--muted);">승진 1년 이내 필수</span></div>
@@ -702,6 +726,7 @@ function updateTimePreview(hId, mId, previewId) {
       <button class="sb-btn" onclick="goAdmin('stats',this)"><svg width="13" height="13" fill="none" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/></svg> 통계 대시보드</button>
       <div class="sb-sec">대상자 관리</div>
       <button class="sb-btn" onclick="goAdmin('promotion',this)"><svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 승진자 과정 대상자</button>
+      <button class="sb-btn" onclick="goAdmin('special',this)"><svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" stroke="currentColor" stroke-width="1.5"/><path d="M16 12h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> 특수업무 담당자</button>
       <div class="sb-sec">공지 관리</div>
       <button class="sb-btn" onclick="goAdmin('notice',this)"><svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> 공지사항 관리</button>
       <hr style="border:none;border-top:1px solid var(--bdr);margin:10px 13px;">
@@ -1057,6 +1082,39 @@ function updateTimePreview(hId, mId, previewId) {
         </div>
       </div>
 
+      <!-- 특수업무 담당자 관리 -->
+      <div class="apage" id="apage-special">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div>
+            <h2 style="font-size:17px;font-weight:700;">특수업무 담당자 관리</h2>
+            <p style="font-size:12px;color:var(--muted);margin-top:2px;">지정된 담당자는 이수 현황 조회 시 해당 교육 이수 여부가 표시됩니다. (연 2시간 이상 필수)</p>
+          </div>
+          <input type="text" id="special-search" placeholder="이름 또는 사번 검색..." oninput="renderSpecialList()"
+            style="font-size:13px;padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r);font-family:inherit;outline:none;width:200px;">
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th style="width:90px;">사번</th>
+              <th style="width:90px;">이름</th>
+              <th style="width:120px;">부서</th>
+              <th style="width:80px;">직군</th>
+              <th style="width:90px;">인사<br>담당자</th>
+              <th style="width:90px;">인사교육<br>이수</th>
+              <th style="width:90px;">예산<br>담당자</th>
+              <th style="width:90px;">예산교육<br>이수</th>
+              <th style="width:90px;">회계<br>담당자</th>
+              <th style="width:90px;">회계교육<br>이수</th>
+            </tr></thead>
+            <tbody id="special-tbody"></tbody>
+          </table>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:7px;display:flex;justify-content:space-between;align-items:center;">
+          <span id="special-cnt"></span>
+          <button onclick="saveSpecial()" class="btn btn-pri" style="font-size:12px;">변경사항 저장</button>
+        </div>
+      </div>
+
       <!-- 공지 관리 -->
       <div class="apage" id="apage-notice">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -1303,7 +1361,9 @@ let openId = null;
 let selFile = null;
 let staffJobType = '일반직';
 let staffIsPromotion = false; // 승진자 과정 대상 여부
-let staffPromoData   = null;  // { promoDt, deadlineDt }
+let staffPromoData   = null;
+let staffSpecialDuty = { hr: false, budget: false, account: false }; // 담당자 여부
+let staffSpecialDone = { hr: false, budget: false, account: false }; // 이수 여부  // { promoDt, deadlineDt }
 let bkParsedRows = [];
 let bkProofFile = null;
 
@@ -1430,6 +1490,7 @@ async function goAdmin(n,b){
   if(n==='stats')     renderStats();
   if(n==='notice')    renderAdminNotice();
   if(n==='promotion')  renderPromoList();
+  if(n==='special')     renderSpecialList();
 }
 
 // ════════════════════════════════════════════════
@@ -1450,6 +1511,8 @@ async function verifyStaff() {
       staffJobType = staffRes.jobType || '일반직';
       staffIsPromotion = staffRes.isPromotion === true;
       staffPromoData   = staffRes.isPromotion ? { promoDt: staffRes.promoDt||'', deadlineDt: staffRes.deadlineDt||'', mgrDone: staffRes.mgrDone===true } : null;
+      staffSpecialDuty = { hr: staffRes.dutyHr===true, budget: staffRes.dutyBudget===true, account: staffRes.dutyAccount===true };
+      staffSpecialDone = { hr: staffRes.doneHr===true, budget: staffRes.doneBudget===true, account: staffRes.doneAccount===true };
     } else {
       const msg = staffRes?.error || '본인 확인에 실패했습니다. 잠시 후 다시 시도하거나 인사노무팀에 문의하세요.';
       errEl.innerHTML = msg.replace(/\n/g,'<br>'); errEl.style.display='block';
@@ -1572,7 +1635,7 @@ async function submitApply() {
     fileId=ur.file_id; fileUrl=ur.file_url; fileName=ur.file_name;
     showLoad('신청 정보 저장 중...');
     // hours를 분 단위로 전송
-    const ar=await apiPost({action:'submitApply',empno,name,dept,course_name:course,hours:totalMins,apply_date:fdate,org:org,note:v('f-note'),edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,file_id:fileId,file_url:fileUrl,file_name:fileName,train_cost:trainCost,travel_cost:travelCost,cost_detail:costDetail});
+    const ar=await apiPost({action:'submitApply',empno,name,dept,course_name:course,hours:totalMins,apply_date:fdate,org:org,note:v('f-note'),duty_hr:document.getElementById('f-duty-hr')?.checked||false,duty_budget:document.getElementById('f-duty-budget')?.checked||false,duty_account:document.getElementById('f-duty-account')?.checked||false,edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,file_id:fileId,file_url:fileUrl,file_name:fileName,train_cost:trainCost,travel_cost:travelCost,cost_detail:costDetail});
     bar.style.width='100%'; hideLoad();
     if(!ar?.success){ showToast('저장 실패: '+(ar?.error||'오류'),'red'); btn.disabled=false; btn.textContent='신청 제출'; return; }
   } else {
@@ -1594,6 +1657,13 @@ function resetApply(){
   // 중간관리자 체크박스 초기화
   const mgrCb = document.getElementById('f-mgr-course');
   if (mgrCb && mgrCb.checked) { mgrCb.checked = false; onMgrCourseCheck(mgrCb); }
+  ['f-duty-hr','f-duty-budget','f-duty-account'].forEach(id => {
+    const cb = document.getElementById(id); if (cb) cb.checked = false;
+  });
+  ['f-duty-hr','f-duty-budget','f-duty-account'].forEach(id => {
+    const cb = document.getElementById(id);
+    if (cb) cb.checked = false;
+  });
   document.getElementById('verify-area').style.display='block';
   document.getElementById('apply-form-area').style.display='none';
   document.getElementById('apply-ok').style.display='none';
@@ -1620,6 +1690,8 @@ async function doLookup() {
         staffJobType=sr.jobType||'일반직';
         staffIsPromotion=sr.isPromotion===true;
         staffPromoData=sr.isPromotion?{promoDt:sr.promoDt||'',deadlineDt:sr.deadlineDt||'',mgrDone:sr.mgrDone===true}:null;
+        staffSpecialDuty={hr:sr.dutyHr===true,budget:sr.dutyBudget===true,account:sr.dutyAccount===true};
+        staffSpecialDone={hr:sr.doneHr===true,budget:sr.doneBudget===true,account:sr.doneAccount===true};
       } else {
         hideLoad(); showToast(sr?.error||'직원을 찾을 수 없습니다.','amber'); return;
       }
@@ -1754,6 +1826,48 @@ async function doLookup() {
       <span style="color:${ok?'#3C3489':'var(--text)'};">${t} <span style="font-size:11px;opacity:.7;">(2h↑ · ${minsToStr(totalTypeMin)})</span></span>
     </div>`;
   }).join('');
+
+  // ── 특수업무 담당자 교육 섹션 렌더 ───────────────────────────
+  const specialSec = document.getElementById('lu-special-section');
+  const anyDuty = staffSpecialDuty.hr || staffSpecialDuty.budget || staffSpecialDuty.account;
+  if (anyDuty) {
+    specialSec.style.display = 'block';
+    const DUTY_TYPES = [
+      { key:'hr',      label:'인사교육',   kws:['인사','인사관리','채용','노무'] },
+      { key:'budget',  label:'예산교육',   kws:['예산','예산회계','재무'] },
+      { key:'account', label:'회계교육',   kws:['회계','결산','부기'] },
+    ];
+    const DUTY_GOAL_MINS = 120; // 2시간
+
+    document.getElementById('lu-special-check').innerHTML = DUTY_TYPES
+      .filter(dt => staffSpecialDuty[dt.key])
+      .map(dt => {
+        // 관리자 직접 처리 OR 신청 시 duty 체크 OR 키워드 매칭
+        const adminDone = staffSpecialDone[dt.key];
+        const dutyField = { hr:'duty_hr', budget:'duty_budget', account:'duty_account' }[dt.key];
+        const autoRows  = done.filter(r =>
+          r[dutyField] === true ||
+          dt.kws.some(k => (r.course_name||'').includes(k) || (r.common_type||'').includes(k))
+        );
+        const autoMins  = autoRows.reduce((s,r) => s + toMins(r.hours), 0);
+        const ok        = adminDone || autoMins >= DUTY_GOAL_MINS;
+        const dispMins  = adminDone ? DUTY_GOAL_MINS : autoMins;
+        return '<div style="background:'+(ok?'var(--gl)':'var(--rl)')+';border:1px solid '+(ok?'var(--gm)':'var(--rm)')+';border-radius:var(--r);padding:12px 14px;">'
+          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+          + '<span style="font-size:13px;font-weight:700;color:'+(ok?'var(--gd)':'var(--rd)')+';">'+dt.label+'</span>'
+          + '<span style="font-size:18px;">'+(ok?'✓':'✗')+'</span>'
+          + '</div>'
+          + '<div style="background:rgba(0,0,0,.08);border-radius:20px;height:5px;margin-bottom:6px;overflow:hidden;">'
+          + '<div style="height:100%;border-radius:20px;background:'+(ok?'var(--gd)':'var(--rm)')+';width:'+Math.min(Math.round(dispMins/DUTY_GOAL_MINS*100),100)+'%;"></div>'
+          + '</div>'
+          + '<div style="font-size:11px;color:'+(ok?'var(--gd)':'#A32D2D')+';">'
+          + (adminDone ? '관리자 이수 처리' : (autoMins>0 ? minsToStr(autoMins)+' / 2시간' : '미이수 — 2시간 이상 필요'))
+          + '</div>'
+          + '</div>';
+      }).join('');
+  } else {
+    specialSec.style.display = 'none';
+  }
 
   // 승진자 과정 섹션 렌더
   const promoSec = document.getElementById('lu-promotion-section');
@@ -2941,6 +3055,117 @@ function downloadSampleCSV(){
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='단체이수처리_명단양식.csv'; a.click();
 }
 
+
+
+// ════════════════════════════════════════════════
+// 특수업무 담당자 관리 (인사/예산/회계)
+// ════════════════════════════════════════════════
+// SPECIAL_MAP: { empno: { dutyHr, dutyBudget, dutyAccount, doneHr, doneBudget, doneAccount } }
+let SPECIAL_MAP = {};
+
+async function loadSpecialMap() {
+  SPECIAL_MAP = {};
+  if (!IS_DEMO) {
+    const r = await apiGet({ action: 'getSpecial' });
+    if (r?.success) {
+      (r.data || []).forEach(p => { SPECIAL_MAP[String(p.empno)] = p; });
+    }
+  }
+}
+
+async function renderSpecialList() {
+  await loadStaffList();
+  await loadSpecialMap();
+  const q = (document.getElementById('special-search')?.value || '').toLowerCase();
+  const list = STAFF_LIST.filter(s => !q || s.name.includes(q) || String(s.empno).includes(q));
+  const designated = Object.values(SPECIAL_MAP).filter(p => p.dutyHr || p.dutyBudget || p.dutyAccount).length;
+  document.getElementById('special-cnt').textContent = '총 ' + list.length + '명 (담당자 지정: ' + designated + '명)';
+
+  const chkCell = (empno, field, label) => {
+    const p = SPECIAL_MAP[empno] || {};
+    const isDuty = !!p[field.replace('done','duty').replace('Done','Duty')];
+    const isDone = !!p[field];
+    const dutyField = field.startsWith('done') ? 'duty' + field.slice(4) : field;
+    return '<td style="text-align:center;">'
+      + '<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">'
+      + '<input type="checkbox" class="chk" data-empno="' + empno + '" data-field="' + field + '"'
+      + (isDone ? ' checked' : '')
+      + ((!isDuty && field.startsWith('done')) ? ' disabled style="opacity:.3;"' : '')
+      + ' onchange="onSpecialChk(this)">'
+      + '<span style="font-size:11px;font-weight:700;color:' + (isDone ? 'var(--gd)' : 'var(--muted)') + ';" id="sp-lbl-' + empno + '-' + field + '">'
+      + (isDone ? '이수' : '—') + '</span></label></td>';
+  };
+
+  const dutyCell = (empno, field) => {
+    const p = SPECIAL_MAP[empno] || {};
+    const isOn = !!p[field];
+    return '<td style="text-align:center;">'
+      + '<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">'
+      + '<input type="checkbox" class="chk" data-empno="' + empno + '" data-field="' + field + '"'
+      + (isOn ? ' checked' : '')
+      + ' onchange="onSpecialChk(this)">'
+      + '<span style="font-size:11px;font-weight:700;color:' + (isOn ? 'var(--bd)' : 'var(--muted)') + ';" id="sp-lbl-' + empno + '-' + field + '">'
+      + (isOn ? '지정' : '—') + '</span></label></td>';
+  };
+
+  document.getElementById('special-tbody').innerHTML = list.map(s => {
+    const empno = String(s.empno);
+    return '<tr>'
+      + '<td style="color:var(--muted);font-size:12px;">' + s.empno + '</td>'
+      + '<td style="font-weight:500;">' + s.name + '</td>'
+      + '<td style="font-size:13px;">' + (s.dept||'') + '</td>'
+      + '<td style="font-size:13px;">' + (s.jobType||'') + '</td>'
+      + dutyCell(empno, 'dutyHr')
+      + chkCell(empno, 'doneHr', '인사')
+      + dutyCell(empno, 'dutyBudget')
+      + chkCell(empno, 'doneBudget', '예산')
+      + dutyCell(empno, 'dutyAccount')
+      + chkCell(empno, 'doneAccount', '회계')
+      + '</tr>';
+  }).join('');
+}
+
+function onSpecialChk(cb) {
+  const empno = String(cb.dataset.empno);
+  const field = cb.dataset.field;
+  if (!SPECIAL_MAP[empno]) SPECIAL_MAP[empno] = { empno };
+  SPECIAL_MAP[empno][field] = cb.checked;
+  const lbl = document.getElementById('sp-lbl-' + empno + '-' + field);
+  if (lbl) {
+    const isDutyField = field.startsWith('duty');
+    lbl.textContent = cb.checked ? (isDutyField ? '지정' : '이수') : '—';
+    lbl.style.color = cb.checked ? (isDutyField ? 'var(--bd)' : 'var(--gd)') : 'var(--muted)';
+  }
+  // 담당자 해제 시 이수도 해제
+  if (field.startsWith('duty') && !cb.checked) {
+    const doneField = 'done' + field.slice(4);
+    if (SPECIAL_MAP[empno]) SPECIAL_MAP[empno][doneField] = false;
+    const doneCb = document.querySelector('[data-empno="' + empno + '"][data-field="' + doneField + '"]');
+    if (doneCb) { doneCb.checked = false; doneCb.disabled = true; doneCb.style.opacity = '.3'; }
+    const doneLbl = document.getElementById('sp-lbl-' + empno + '-' + doneField);
+    if (doneLbl) { doneLbl.textContent = '—'; doneLbl.style.color = 'var(--muted)'; }
+  }
+  // 담당자 지정 시 이수 체크박스 활성화
+  if (field.startsWith('duty') && cb.checked) {
+    const doneField = 'done' + field.slice(4);
+    const doneCb = document.querySelector('[data-empno="' + empno + '"][data-field="' + doneField + '"]');
+    if (doneCb) { doneCb.disabled = false; doneCb.style.opacity = '1'; }
+  }
+  const cnt = document.getElementById('special-cnt');
+  const designated = Object.values(SPECIAL_MAP).filter(p => p.dutyHr || p.dutyBudget || p.dutyAccount).length;
+  if (cnt) cnt.textContent = '총 ' + document.querySelectorAll('#special-tbody tr').length + '명 (담당자 지정: ' + designated + '명)';
+}
+
+async function saveSpecial() {
+  const list = Object.values(SPECIAL_MAP).filter(p => p.dutyHr || p.dutyBudget || p.dutyAccount);
+  if (!IS_DEMO) {
+    showLoad('저장 중...');
+    const res = await apiPost({ action: 'saveSpecial', list });
+    hideLoad();
+    if (!res?.success) { showToast('저장 실패: ' + (res?.error||'오류'), 'red'); return; }
+  }
+  showToast('특수업무 담당자 저장 완료 (' + list.length + '명)', 'green');
+}
 
 // ════════════════════════════════════════════════
 // 승진자 과정 대상자 관리
