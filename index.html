@@ -409,7 +409,7 @@ function updateTimePreview(hId, mId, previewId) {
 
 <!-- ════════ 교육 신청 ════════ -->
 <div class="page" id="page-apply">
-  <div id="verify-area">
+  <div id="verify-area" style="display:flex;justify-content:center;">
     <div class="fc" style="max-width:460px;">
       <div style="font-size:16px;font-weight:700;margin-bottom:6px;">본인 확인</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--bdr);">사번과 이름을 입력해 본인 확인 후 신청할 수 있습니다.</div>
@@ -422,7 +422,7 @@ function updateTimePreview(hId, mId, previewId) {
     </div>
   </div>
 
-  <div id="apply-form-area" style="display:none;">
+  <div id="apply-form-area" style="display:none;flex-direction:column;align-items:center;">
     <div style="background:var(--gl);color:var(--gd);border:1px solid var(--gm);border-radius:var(--rl2);padding:10px 18px;margin-bottom:14px;max-width:660px;display:flex;align-items:center;justify-content:space-between;">
       <div style="font-size:13px;font-weight:500;" id="verified-name-display"></div>
       <button onclick="resetVerify()" style="font-size:11px;background:none;border:none;color:var(--gd);cursor:pointer;text-decoration:underline;">다시 확인</button>
@@ -508,7 +508,7 @@ function updateTimePreview(hId, mId, previewId) {
       <button class="sub-btn" id="sub-btn" onclick="submitApply()">신청 제출</button>
     </div>
   </div>
-  <div id="apply-ok" style="display:none;">
+  <div id="apply-ok" style="display:none;justify-content:center;">
     <div class="success-box">
       <div class="succ-icon"><svg width="26" height="26" fill="none" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="#3B6D11" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <h3 style="font-size:16px;font-weight:700;margin-bottom:8px;">신청이 완료되었습니다!</h3>
@@ -1173,7 +1173,7 @@ async function verifyStaff() {
     }
   } else { staffJobType='일반직'; }
   document.getElementById('verify-area').style.display='none';
-  document.getElementById('apply-form-area').style.display='block';
+  document.getElementById('apply-form-area').style.display='flex';
   document.getElementById('verified-name-display').textContent='✓ 본인 확인 완료 — '+name+' ('+empno+')';
   document.getElementById('f-empno').value=empno;
   document.getElementById('f-name').value=name;
@@ -1273,7 +1273,7 @@ async function submitApply() {
   }
   btn.disabled=false; btn.textContent='신청 제출'; prog.style.display='none';
   document.getElementById('apply-form-area').style.display='none';
-  document.getElementById('apply-ok').style.display='block';
+  document.getElementById('apply-ok').style.display='flex';
 }
 
 function resetApply(){
