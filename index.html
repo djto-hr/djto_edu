@@ -655,26 +655,11 @@ function updateTimePreview(hId, mId, previewId) {
       <!-- 의무학습 이수 상태 배너 (일반직) -->
       <div id="lu-completion-section" style="display:none;margin-bottom:14px;">
         <div id="lu-completion-banner" style="margin-bottom:10px;"></div>
-        <!-- 이수시간 요약 바 -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;" id="lu-stats-grid">
-          <div style="background:#E6F1FB;border:1px solid #B5D4F4;border-radius:var(--r);padding:11px 13px;">
-            <div style="font-size:11px;color:#185FA5;margin-bottom:4px;">전체 이수시간</div>
-            <div style="font-size:14px;font-weight:700;color:#0C447C;" id="lu-total-prog">—</div>
-            <div style="height:5px;background:rgba(24,95,165,.15);border-radius:20px;overflow:hidden;margin-top:6px;"><div id="lu-total-bar" style="height:100%;border-radius:20px;background:#185FA5;width:0%;"></div></div>
-            <div style="font-size:10px;color:#185FA5;opacity:.7;margin-top:3px;" id="lu-total-goal">목표 50시간</div>
-          </div>
-          <div style="background:#FAEEDA;border:1px solid #FAC775;border-radius:var(--r);padding:11px 13px;">
-            <div style="font-size:11px;color:#854F0B;margin-bottom:4px;">기관지정</div>
-            <div style="font-size:14px;font-weight:700;color:#633806;" id="lu-inst-prog">—</div>
-            <div style="height:5px;background:rgba(133,79,11,.15);border-radius:20px;overflow:hidden;margin-top:6px;"><div id="lu-inst-bar" style="height:100%;border-radius:20px;background:#BA7517;width:0%;"></div></div>
-            <div style="font-size:10px;color:#854F0B;opacity:.7;margin-top:3px;">목표 20시간 (40%)</div>
-          </div>
-          <div style="background:#EEEDFE;border:1px solid #AFA9EC;border-radius:var(--r);padding:11px 13px;">
-            <div style="font-size:11px;color:#534AB7;margin-bottom:4px;">집합교육</div>
-            <div style="font-size:14px;font-weight:700;color:#26215C;" id="lu-group-prog">—</div>
-            <div style="height:5px;background:rgba(83,74,183,.15);border-radius:20px;overflow:hidden;margin-top:6px;"><div id="lu-group-bar" style="height:100%;border-radius:20px;background:#534AB7;width:0%;"></div></div>
-            <div style="font-size:10px;color:#534AB7;opacity:.7;margin-top:3px;">목표 35시간 (70%)</div>
-          </div>
+        <!-- 이수시간 바 (JS 참조용, 숨김) -->
+        <div style="display:none;" id="lu-stats-grid">
+          <div id="lu-total-prog"></div><div id="lu-total-bar"></div><div id="lu-total-goal"></div>
+          <div id="lu-inst-prog"></div><div id="lu-inst-bar"></div>
+          <div id="lu-group-prog"></div><div id="lu-group-bar"></div>
         </div>
         <!-- 7조건 체크리스트 -->
         <div id="lu-completion-checklist" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;"></div>
@@ -1856,27 +1841,20 @@ async function doLookup() {
         const display = c.goal === 1
           ? (c.ok ? '완료' : '미완료')
           : minsToStr(c.mins) + ' / ' + minsToStr(c.goal);
-        const condColors = {
-          total:   { bg:'#E6F1FB', bdr:'#B5D4F4', txt:'#0C447C', bar:'#185FA5' },
-          inst:    { bg:'#FAEEDA', bdr:'#FAC775', txt:'#633806', bar:'#BA7517' },
-          group:   { bg:'#EEEDFE', bdr:'#AFA9EC', txt:'#26215C', bar:'#534AB7' },
-          cdp:     { bg:'#E1F5EE', bdr:'#9FE1CB', txt:'#085041', bar:'#1D9E75' },
-          disaster:{ bg:'#FCEBEB', bdr:'#F7C1C1', txt:'#501313', bar:'#E24B4A' },
-          ethics:  { bg:'#FCEBEB', bdr:'#F7C1C1', txt:'#501313', bar:'#E24B4A' },
-          digital: { bg:'#FCEBEB', bdr:'#F7C1C1', txt:'#501313', bar:'#E24B4A' },
-        };
+        // 충족: 초록 / 미충족: 무채색
         const cc = c.ok
           ? { bg:'var(--gl)', bdr:'var(--gm)', txt:'var(--gd)', bar:'var(--gd)' }
-          : (condColors[k] || { bg:'var(--gray)', bdr:'var(--bdr)', txt:'var(--muted)', bar:'var(--bm)' });
-        return `<div style="background:${cc.bg};border:1px solid ${cc.bdr};border-radius:var(--r);padding:10px 13px;">
+          : { bg:'var(--gray)', bdr:'var(--bdr)', txt:'var(--text)', bar:'var(--bm)' };
+        const subTxt = c.ok ? 'var(--gd)' : 'var(--muted)';
+        return `<div style="background:${cc.bg};border:0.5px solid ${cc.bdr};border-radius:var(--r);padding:10px 12px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
-            <span style="font-size:12px;font-weight:700;color:${cc.txt};">${c.label}</span>
-            <span style="font-size:11px;color:${cc.txt};opacity:.7;">${c.detail}</span>
+            <span style="font-size:12px;font-weight:500;color:${cc.txt};">${c.label}</span>
+            <span style="font-size:11px;color:${subTxt};opacity:.8;">${c.detail}</span>
           </div>
-          <div style="background:rgba(0,0,0,.1);border-radius:20px;height:5px;margin-bottom:5px;overflow:hidden;">
+          <div style="background:rgba(0,0,0,.08);border-radius:20px;height:5px;margin-bottom:5px;overflow:hidden;">
             <div style="height:100%;border-radius:20px;background:${cc.bar};width:${pct}%;transition:width .5s;"></div>
           </div>
-          <div style="font-size:12px;font-weight:700;color:${cc.txt};">${display}</div>
+          <div style="font-size:12px;color:${subTxt};">${display}${c.ok?' ✓':''}</div>
         </div>`;
       }).join('');
   } else {
