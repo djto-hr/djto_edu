@@ -1820,7 +1820,7 @@ async function doLookup() {
     el('lu-group-bar').style.width  = Math.min(Math.round(groupMins/GROUP_GOAL_MINS*100),100)+'%';
     el('lu-group-bar').style.background = barColor(groupOk);
     const cdpEl=document.getElementById('lu-cdp-yn');
-    cdpEl.textContent=cdpDone?'✓ 이수':'✗ 미이수'; cdpEl.style.color=cdpDone?'#3B6D11':'#A32D2D';
+    if(cdpEl) { cdpEl.textContent=cdpDone?'✓ 이수':'✗ 미이수'; cdpEl.style.color=cdpDone?'#3B6D11':'#A32D2D'; };
   }
 
   // ── 의무학습 7대 이수조건 체크리스트 (일반직만) ──────────────
