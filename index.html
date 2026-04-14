@@ -1065,12 +1065,12 @@ function updateTimePreview(hId, mId, previewId) {
           <div id="legal-summary-banner" style="margin-bottom:12px;"></div>
           <div id="legal-rate-wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:11px;"></div>
           <!-- 미이수자 패널 -->
-          <div id="legal-not-done-panel" style="display:none;margin-top:14px;background:var(--rl);border:1px solid var(--rm);border-radius:var(--rl2);padding:14px 18px;">
+          <div id="legal-not-done-panel" style="display:none;margin-top:14px;background:var(--rl);border:1px solid var(--rm);border-radius:var(--rl2);padding:14px 18px;overflow:hidden;width:100%;max-width:100%;box-sizing:border-box;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
               <div style="font-size:13px;font-weight:700;color:var(--rd);" id="legal-not-done-title">미이수자</div>
               <button onclick="document.getElementById('legal-not-done-panel').style.display='none'" style="border:none;background:none;font-size:16px;cursor:pointer;color:var(--muted);">✕</button>
             </div>
-            <div id="legal-not-done-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+            <div id="legal-not-done-list" style="display:flex;flex-wrap:wrap;gap:6px;width:100%;overflow:hidden;"></div>
           </div>
         </div>
 
@@ -2425,29 +2425,57 @@ function closeDrillLegalPanel(btn) {
 function showDrillLegal(key) {
   const data = (window._drillLegalData||{})[key];
   if (!data) return;
-  // 패널이 없으면 법정의무 섹션 아래 동적 생성
   const panel = document.getElementById('drill-legal-panel-inline');
-  if (!panel) return; // 드릴다운이 열리지 않은 상태
+  if (!panel) return;
+
   const chip = (s, isDone) =>
-    '<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;background:'
-    +(isDone?'var(--gl)':'var(--gray)')+';color:'+(isDone?'var(--gd)':'var(--text)')+';border:1px solid '+(isDone?'var(--gm)':'var(--bdr)')+';margin:2px;">'
-    +(isDone?'✓ ':'✗ ')+s.name
-    +'<span style="font-size:10px;color:var(--muted);margin-left:2px;">'+s.dept+'</span></span>';
+    '<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:500;background:'
+    +(isDone?'var(--gl)':'var(--gray)')+';color:'+(isDone?'var(--gd)':'var(--text)')+';border:0.5px solid '+(isDone?'var(--gm)':'var(--bdr)')+';margin:2px;white-space:nowrap;">'
+    +(isDone?'✓ ':'')+ s.name +'</span>';
+
+  const allInDept = [...data.notDone, ...data.done];
+  const totalInDept = allInDept.length || 1;
+  const doneN = data.done.length;
+
+  // 미이수/이수 각각 직군별 분류
+  const groupByJobType = (arr) => {
+    const gen = arr.filter(s=>s.jobType==='일반직');
+    const pub = arr.filter(s=>s.jobType!=='일반직');
+    return { gen, pub };
+  };
+
+  const renderGroup = (arr, isDone) => {
+    if (!arr.length) return '';
+    const {gen, pub} = groupByJobType(arr);
+    let html = '';
+    if (gen.length) html += '<div style="margin-bottom:6px;"><span style="font-size:11px;color:var(--muted);margin-right:4px;">일반직</span>'+ gen.map(s=>chip(s,isDone)).join('') +'</div>';
+    if (pub.length) html += '<div><span style="font-size:11px;color:var(--muted);margin-right:4px;">공무직</span>'+ pub.map(s=>chip(s,isDone)).join('') +'</div>';
+    return html;
+  };
+
+  const rate = Math.round(doneN/totalInDept*100);
+  const rc = rate>=80?'var(--gd)':rate>=50?'var(--ad)':'var(--rd)';
 
   panel.style.display = 'block';
   panel.innerHTML =
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'
     +'<span style="font-size:12px;font-weight:700;color:var(--rd);">'+data.title+'</span>'
+    +'<div style="display:flex;align-items:center;gap:8px;">'
+    +'<span style="font-size:12px;font-weight:700;color:'+rc+';">'+rate+'% 이수</span>'
     +'<button onclick="closeDrillLegalInline()" style="border:none;background:none;font-size:14px;cursor:pointer;color:var(--muted);">✕</button>'
-    +'</div>'
+    +'</div></div>'
+    +'<div style="margin-bottom:10px;">'
     +'<div style="font-size:11px;font-weight:700;color:var(--rd);margin-bottom:5px;">✗ 미이수 '+data.notDone.length+'명</div>'
-    +'<div style="display:flex;flex-wrap:wrap;margin-bottom:8px;">'+(data.notDone.length?data.notDone.map(s=>chip(s,false)).join(''):'<span style="font-size:12px;color:var(--muted);">없음</span>')+'</div>'
-    +'<div style="border-top:1px solid var(--rm);padding-top:6px;">'
+    +(data.notDone.length ? renderGroup(data.notDone, false) : '<span style="font-size:12px;color:var(--muted);">없음</span>')
+    +'</div>'
+    +'<div style="border-top:0.5px solid var(--rm);padding-top:8px;">'
     +'<div style="font-size:11px;font-weight:700;color:var(--gd);margin-bottom:5px;">✓ 이수 '+data.done.length+'명</div>'
-    +'<div style="display:flex;flex-wrap:wrap;">'+(data.done.length?data.done.map(s=>chip(s,true)).join(''):'<span style="font-size:12px;color:var(--muted);">없음</span>')+'</div>'
+    +(data.done.length ? renderGroup(data.done, true) : '<span style="font-size:12px;color:var(--muted);">없음</span>')
     +'</div>';
+
   panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
+
 
 // ════════════════════════════════════════════════
 // 통계 다운로드
@@ -2565,8 +2593,15 @@ async function executeDownload() {
     done.filter(r => r.edu_category === '법정의무').forEach(r => {
       (r.legal_types||[]).forEach(t => {
         if (!legalDoneMap[t]) legalDoneMap[t] = new Set();
-        legalDoneMap[t].add(r.empno);
+        legalDoneMap[t].add(String(r.empno));
       });
+    });
+    // 재난·안전 공통필수 → 소방안전화재예방 중복 인정
+    if(!legalDoneMap['소방안전화재예방']) legalDoneMap['소방안전화재예방']=new Set();
+    done.filter(r=>r.edu_category==='공통필수').forEach(r=>{
+      const kws=['재난','산업안전','소방','화재'];
+      if(kws.some(k=>(r.common_type||'').includes(k)||(r.course_name||'').includes(k)))
+        legalDoneMap['소방안전화재예방'].add(String(r.empno));
     });
     const totalStaff = [...new Set(rawDB.map(r => r.empno))].length || 1;
     return LEGAL_LIST.map(t => {
@@ -2796,46 +2831,75 @@ function drillDept(dept) {
 // 법정의무 미이수자 표시
 // ════════════════════════════════════════════════
 function showLegalNotDone(tidxEncoded) {
-  const t           = decodeURIComponent(tidxEncoded);
-  const doneMap     = window._legalDoneMap || {};
-  const staffList   = window._totalStaffList || [];
-  const totalN      = window._totalStaff || staffList.length;
-  const doneSet     = doneMap[t] || new Set();
-  const notDone     = staffList.filter(s => !doneSet.has(String(s.empno)));
-  const done        = staffList.filter(s =>  doneSet.has(String(s.empno)));
+  const t        = decodeURIComponent(tidxEncoded);
+  const doneMap  = window._legalDoneMap || {};
+  const staffList= window._totalStaffList || [];
+  const totalN   = window._totalStaff || staffList.length;
+  const doneSet  = doneMap[t] || new Set();
+  const notDone  = staffList.filter(s => !doneSet.has(String(s.empno)));
+  const done     = staffList.filter(s =>  doneSet.has(String(s.empno)));
 
   const panel  = document.getElementById('legal-not-done-panel');
   const title  = document.getElementById('legal-not-done-title');
   const list   = document.getElementById('legal-not-done-list');
 
-  title.textContent = t + ' — 미이수 ' + notDone.length + '명 / 전체 ' + totalN + '명';
+  title.textContent = t + ' — 이수 ' + done.length + '명 / 전체 ' + totalN + '명 (미이수 ' + notDone.length + '명)';
+
+  // 부서별로 그룹핑
+  const groupByDept = (arr) => {
+    const map = {};
+    arr.forEach(s => {
+      const dept = normalizeDept(s.dept) || s.dept || '기타';
+      if (!map[dept]) map[dept] = [];
+      map[dept].push(s);
+    });
+    return map;
+  };
 
   const chip = (s, isDone) =>
-    '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:'
-    + (isDone?'var(--gl)':'var(--gray)') + ';color:' + (isDone?'var(--gd)':'var(--text)') + ';border:1px solid '
-    + (isDone?'var(--gm)':'var(--bdr)') + ';">'
-    + (isDone?'✓ ':'✗ ') + s.name
-    + '<span style="font-size:10px;color:var(--muted);margin-left:2px;">' + (s.dept||'') + '</span>'
-    + '</span>';
+    '<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:500;background:'
+    +(isDone?'var(--gl)':'var(--gray)')+';color:'+(isDone?'var(--gd)':'var(--text)')+';border:0.5px solid '+(isDone?'var(--gm)':'var(--bdr)')+';margin:2px;white-space:nowrap;">'
+    +(isDone?'✓ ':'')+ s.name +'</span>';
 
-  // 섹션 구분: 미이수 먼저, 이수자는 접어서 표시
+  const renderDeptSection = (groupMap, isDone) => {
+    const depts = Object.keys(groupMap).sort();
+    return depts.map(dept => {
+      const members = groupMap[dept];
+      // 해당 부서 전체 인원 대비 이수/미이수
+      const deptTotal = staffList.filter(s => normalizeDept(s.dept)===dept || s.dept===dept).length;
+      const deptDone  = done.filter(s => normalizeDept(s.dept)===dept || s.dept===dept).length;
+      const deptRate  = deptTotal>0 ? Math.round(deptDone/deptTotal*100) : 0;
+      const rc = deptRate>=80?'var(--gd)':deptRate>=50?'var(--ad)':'var(--rd)';
+      return '<div style="margin-bottom:12px;">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">'
+        + '<span style="font-size:12px;font-weight:700;color:var(--text);">' + dept + '</span>'
+        + '<span style="font-size:11px;font-weight:600;color:'+rc+';background:var(--gray);padding:2px 8px;border-radius:20px;">'
+        + deptDone+'명 이수 / '+deptTotal+'명 ('+deptRate+'%)</span>'
+        + '</div>'
+        + '<div style="display:flex;flex-wrap:wrap;overflow:hidden;width:100%;box-sizing:border-box;">'
+        + members.map(s=>chip(s,isDone)).join('')
+        + '</div>'
+        + '</div>';
+    }).join('');
+  };
+
+  const notDoneByDept = groupByDept(notDone);
+  const doneByDept    = groupByDept(done);
+
   list.innerHTML =
-    '<div style="width:100%;margin-bottom:8px;">'
-    + '<div style="font-size:11px;font-weight:700;color:var(--rd);margin-bottom:6px;">✗ 미이수 ' + notDone.length + '명</div>'
-    + '<div style="display:flex;flex-wrap:wrap;gap:5px;">'
-    + (notDone.length ? notDone.map(s=>chip(s,false)).join('') : '<span style="font-size:12px;color:var(--muted);">없음 (전원 이수)</span>')
+    '<div style="width:100%;margin-bottom:12px;">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--rd);margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid var(--rm);">✗ 미이수 ' + notDone.length + '명</div>'
+    + (notDone.length ? renderDeptSection(notDoneByDept, false) : '<span style="font-size:12px;color:var(--muted);">없음 (전원 이수)</span>')
     + '</div>'
-    + '</div>'
-    + '<div style="width:100%;border-top:1px solid var(--rm);padding-top:8px;margin-top:4px;">'
-    + '<div style="font-size:11px;font-weight:700;color:var(--gd);margin-bottom:6px;">✓ 이수 ' + done.length + '명</div>'
-    + '<div style="display:flex;flex-wrap:wrap;gap:5px;">'
-    + (done.length ? done.map(s=>chip(s,true)).join('') : '<span style="font-size:12px;color:var(--muted);">없음</span>')
-    + '</div>'
+    + '<div style="width:100%;border-top:1px solid var(--bdr);padding-top:12px;">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--gd);margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid var(--gm);">✓ 이수 ' + done.length + '명</div>'
+    + (done.length ? renderDeptSection(doneByDept, true) : '<span style="font-size:12px;color:var(--muted);">없음</span>')
     + '</div>';
 
   panel.style.display = 'block';
   panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
+
 
 // ════════════════════════════════════════════════
 // 통계
@@ -3138,7 +3202,7 @@ async function renderStats(){
   done.filter(r=>r.edu_category==='법정의무').forEach(r=>{
     (r.legal_types||[]).forEach(t=>{
       if(!legalDoneMap[t]) legalDoneMap[t]=new Set();
-      legalDoneMap[t].add(r.empno);
+      legalDoneMap[t].add(String(r.empno));
     });
   });
   // 9종 모두 이수한 직원 수 (탭3 전체 이수율 카드용)
