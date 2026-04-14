@@ -651,6 +651,7 @@ function updateTimePreview(hId, mId, previewId) {
 
       <!-- 공무직 안내 배너 -->
       <div id="lu-gongmu-banner" style="display:none;"></div>
+      <span id="lu-cdp-yn" style="display:none;"></span>
 
       <!-- 의무학습 이수 상태 배너 (일반직) -->
       <div id="lu-completion-section" style="display:none;margin-bottom:14px;">
@@ -2425,14 +2426,8 @@ function showDrillLegal(key) {
   const data = (window._drillLegalData||{})[key];
   if (!data) return;
   // 패널이 없으면 법정의무 섹션 아래 동적 생성
-  let panel = document.getElementById('drill-legal-panel-inline');
-  if (!panel) {
-    panel = document.createElement('div');
-    panel.id = 'drill-legal-panel-inline';
-    panel.style.cssText = 'grid-column:1/-1;background:var(--rl);border:1px solid var(--rm);border-radius:var(--r);padding:12px 16px;margin-top:4px;';
-    const wrap = document.querySelector('#drill-content [style*="grid-template-columns:1fr 1fr;gap:8px"]');
-    if (wrap) wrap.appendChild(panel);
-  }
+  const panel = document.getElementById('drill-legal-panel-inline');
+  if (!panel) return; // 드릴다운이 열리지 않은 상태
   const chip = (s, isDone) =>
     '<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;background:'
     +(isDone?'var(--gl)':'var(--gray)')+';color:'+(isDone?'var(--gd)':'var(--text)')+';border:1px solid '+(isDone?'var(--gm)':'var(--bdr)')+';margin:2px;">'
@@ -2786,9 +2781,10 @@ function drillDept(dept) {
     + '<div style="font-size:13px;font-weight:700;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--bdr);">'
     + '법정의무 교육별 이수율 <span style="font-size:11px;font-weight:400;color:var(--muted);">공무직 포함 전체 '+allCount+'명 기준</span>'
     + '</div>'
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
+    + '<div id="drill-legal-cards-wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
     + legalCards
-    + '</div>';
+    + '</div>'
+    + '<div id="drill-legal-panel-inline" style="display:none;background:var(--rl);border:1px solid var(--rm);border-radius:var(--r);padding:12px 16px;margin-top:8px;"></div>';
 }
 
 
@@ -3149,23 +3145,6 @@ async function renderStats(){
   const allLegalEmpnosFull = new Set(LEGAL_LIST.flatMap(t=>[...(legalDoneMap[t]||new Set())]));
   const legalFullyDone = [...allLegalEmpnosFull].filter(e=>LEGAL_LIST.every(t=>(legalDoneMap[t]||new Set()).has(e))).length;
 
-  // 탭3 전체 이수율 배너
-  const fullRate = totalStaff>0?Math.round(legalFullyDone/totalStaff*100):0;
-  const fColor   = fullRate>=80?'var(--gd)':fullRate>=50?'var(--ad)':'var(--rd)';
-  const fBg      = fullRate>=80?'var(--gl)':fullRate>=50?'var(--al)':'var(--rl)';
-  const fBdr     = fullRate>=80?'var(--gm)':fullRate>=50?'var(--am)':'var(--rm)';
-  document.getElementById('legal-summary-banner').innerHTML = `
-    <div style="background:${fBg};border:1px solid ${fBdr};border-radius:var(--rl2);padding:14px 20px;display:flex;align-items:center;gap:20px;">
-      <div>
-        <div style="font-size:12px;color:${fColor};opacity:.8;margin-bottom:3px;">법정의무 완료율 (9종 전체 이수)</div>
-        <div style="font-size:28px;font-weight:800;color:${fColor};">${fullRate}%</div>
-        <div style="font-size:12px;color:${fColor};opacity:.8;margin-top:2px;">전체 ${totalStaff}명 중 ${legalFullyDone}명 완료</div>
-      </div>
-      <div style="flex:1;background:rgba(0,0,0,.08);border-radius:20px;height:10px;overflow:hidden;">
-        <div style="height:100%;border-radius:20px;background:${fColor};width:${fullRate}%;transition:width .6s;"></div>
-      </div>
-    </div>`;
-
   // 전체 직원 명단 로드 (IS_DEMO면 rawDB에서, 실서버면 getStaff에서 이미 로드됨)
   // totalStaffList: allStaffByDept 값들을 flat하게 합친 것 (이미 로드됨)
   let totalStaffList = [];
@@ -3182,6 +3161,24 @@ async function renderStats(){
   window._legalDoneMap     = legalDoneMap;
   window._totalStaffList   = totalStaffList;
   window._totalStaff       = totalStaff;
+
+    // 탭3 전체 이수율 배너
+  const fullRate = totalStaff>0?Math.round(legalFullyDone/totalStaff*100):0;
+  const fColor   = fullRate>=80?'var(--gd)':fullRate>=50?'var(--ad)':'var(--rd)';
+  const fBg      = fullRate>=80?'var(--gl)':fullRate>=50?'var(--al)':'var(--rl)';
+  const fBdr     = fullRate>=80?'var(--gm)':fullRate>=50?'var(--am)':'var(--rm)';
+  document.getElementById('legal-summary-banner').innerHTML = `
+    <div style="background:${fBg};border:1px solid ${fBdr};border-radius:var(--rl2);padding:14px 20px;display:flex;align-items:center;gap:20px;">
+      <div>
+        <div style="font-size:12px;color:${fColor};opacity:.8;margin-bottom:3px;">법정의무 완료율 (9종 전체 이수)</div>
+        <div style="font-size:28px;font-weight:800;color:${fColor};">${fullRate}%</div>
+        <div style="font-size:12px;color:${fColor};opacity:.8;margin-top:2px;">전체 ${totalStaff}명 중 ${legalFullyDone}명 완료</div>
+      </div>
+      <div style="flex:1;background:rgba(0,0,0,.08);border-radius:20px;height:10px;overflow:hidden;">
+        <div style="height:100%;border-radius:20px;background:${fColor};width:${fullRate}%;transition:width .6s;"></div>
+      </div>
+    </div>`;
+
 
   document.getElementById('legal-rate-wrap').innerHTML = LEGAL_LIST.map(t=>{
     const doneSet = legalDoneMap[t] || new Set();
