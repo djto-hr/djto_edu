@@ -2849,11 +2849,17 @@ function showLegalNotDone(tidxEncoded) {
   const groupByDept = (arr) => {
     const map = {};
     arr.forEach(s => {
-      const dept = normalizeDept(s.dept) || s.dept || '기타';
+      const dept = s.dept || normalizeDept(s.dept) || '기타';
       if (!map[dept]) map[dept] = [];
       map[dept].push(s);
     });
     return map;
+  };
+  // DEPT_ORDER 순서대로 정렬
+  const sortDepts = (depts) => {
+    const ordered = DEPT_ORDER.filter(d => depts.includes(d));
+    const rest    = depts.filter(d => !DEPT_ORDER.includes(d)).sort();
+    return [...ordered, ...rest];
   };
 
   const chip = (s, isDone) =>
@@ -2862,12 +2868,12 @@ function showLegalNotDone(tidxEncoded) {
     +(isDone?'✓ ':'')+ s.name +'</span>';
 
   const renderDeptSection = (groupMap, isDone) => {
-    const depts = Object.keys(groupMap).sort();
+    const depts = sortDepts(Object.keys(groupMap));
     return depts.map(dept => {
       const members = groupMap[dept];
       // 해당 부서 전체 인원 대비 이수/미이수
-      const deptTotal = staffList.filter(s => normalizeDept(s.dept)===dept || s.dept===dept).length;
-      const deptDone  = done.filter(s => normalizeDept(s.dept)===dept || s.dept===dept).length;
+      const deptTotal = staffList.filter(s => s.dept===dept).length;
+      const deptDone  = done.filter(s => s.dept===dept).length;
       const deptRate  = deptTotal>0 ? Math.round(deptDone/deptTotal*100) : 0;
       const rc = deptRate>=80?'var(--gd)':deptRate>=50?'var(--ad)':'var(--rd)';
       return '<div style="margin-bottom:12px;">'
@@ -2966,7 +2972,7 @@ async function renderStats(){
         const nd = normalizeDept(s.dept);
         if(s.jobType==='일반직') staffByDept[nd] = (staffByDept[nd]||0)+1;
         if(!allStaffByDept[nd]) allStaffByDept[nd]=[];
-        allStaffByDept[nd].push({ empno:String(s.empno), name:s.name, jobType:s.jobType||'일반직' });
+        allStaffByDept[nd].push({ empno:String(s.empno), name:s.name, jobType:s.jobType||'일반직', dept:nd });
       });
     }
   } else {
@@ -2977,7 +2983,7 @@ async function renderStats(){
       seen[nd].add(r.empno);
       if(!allStaffByDept[nd]) allStaffByDept[nd]=[];
       if(![...allStaffByDept[nd]].find(x=>x.empno===String(r.empno)))
-        allStaffByDept[nd].push({ empno:String(r.empno), name:r.name, jobType:'일반직' });
+        allStaffByDept[nd].push({ empno:String(r.empno), name:r.name, jobType:'일반직', dept:nd });
     });
     Object.entries(seen).forEach(([d,s])=>{ staffByDept[d]=s.size; });
   }
