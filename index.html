@@ -1782,7 +1782,7 @@ async function doLookup() {
     const instMins=done.filter(r=>r.edu_category==='기관지정').reduce((s,r)=>s+toMins(r.hours),0);
     const groupMins=done.filter(r=>r.edu_method==='집합').reduce((s,r)=>s+toMins(r.hours),0);
     const cdpDone=done.some(r=>r.edu_category==='기관지정'&&r.cdp_yn===true);
-    document.getElementById('lu-stats-grid').style.display='';
+    // lu-stats-grid 숨김 유지 (바 3개 제거됨)
     document.getElementById('lu-summary-row').style.display='';
     document.getElementById('lu-gongmu-section').style.display='none';
     document.getElementById('lu-hrs').textContent=minsToStr(totalMins);
@@ -1847,14 +1847,14 @@ async function doLookup() {
           : { bg:'var(--gray)', bdr:'var(--bdr)', txt:'var(--text)', bar:'var(--bm)' };
         const subTxt = c.ok ? 'var(--gd)' : 'var(--muted)';
         return `<div style="background:${cc.bg};border:0.5px solid ${cc.bdr};border-radius:var(--r);padding:10px 12px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
-            <span style="font-size:12px;font-weight:500;color:${cc.txt};">${c.label}</span>
-            <span style="font-size:11px;color:${subTxt};opacity:.8;">${c.detail}</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:700;color:${cc.txt};">${c.label}</span>
+            <span style="font-size:11px;font-weight:600;color:${subTxt};background:${c.ok?'var(--gm)':'rgba(0,0,0,.06)'};padding:1px 7px;border-radius:20px;">${c.detail}</span>
           </div>
-          <div style="background:rgba(0,0,0,.08);border-radius:20px;height:5px;margin-bottom:5px;overflow:hidden;">
+          <div style="background:rgba(0,0,0,.08);border-radius:20px;height:6px;margin-bottom:6px;overflow:hidden;">
             <div style="height:100%;border-radius:20px;background:${cc.bar};width:${pct}%;transition:width .5s;"></div>
           </div>
-          <div style="font-size:12px;color:${subTxt};">${display}${c.ok?' ✓':''}</div>
+          <div style="font-size:13px;font-weight:700;color:${cc.txt};">${display}${c.ok?' ✓':''}</div>
         </div>`;
       }).join('');
   } else {
