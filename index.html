@@ -696,7 +696,18 @@ function updateTimePreview(hId, mId, previewId) {
 
       <!-- 특수업무 담당자 교육 섹션 -->
       <div id="lu-special-section" style="display:none;margin-bottom:18px;">
-        <div style="font-size:13px;font-weight:700;margin-bottom:6px;margin-top:4px;">특수업무 담당자 교육 <span style="font-size:11px;font-weight:400;color:var(--muted);">연 2시간 이상 필수</span></div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:6px;margin-top:4px;">
+          특수업무 담당자 필수교육
+          <span style="font-size:11px;font-weight:400;color:var(--muted);">담당 직무 관련 교육 연 2시간 이상 의무</span>
+        </div>
+        <!-- 안내 배너 -->
+        <div style="background:var(--bl);border:1px solid var(--bm);border-radius:var(--r);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">📋</span>
+          <div style="font-size:12px;color:var(--bd);">
+            <b>인사·예산·회계 담당자는</b> 각 담당 직무 관련 교육을 <b>연 2시간 이상</b> 이수해야 합니다.<br>
+            <span style="color:var(--muted);">공통필수 또는 기관지정 교육에서 해당 과목 이수 시 자동 반영됩니다.</span>
+          </div>
+        </div>
         <div id="lu-special-check" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"></div>
       </div>
 
@@ -974,7 +985,7 @@ function updateTimePreview(hId, mId, previewId) {
           <div class="sc"><div class="sl">전체 신청</div><div class="sv" id="s-tot">—</div></div>
           <div class="sc"><div class="sl">승인 완료</div><div class="sv green" id="s-don">—</div></div>
           <div class="sc"><div class="sl">총 이수시간</div><div class="sv blue" id="s-hrs">—</div></div>
-          <div class="sc"><div class="sl">전체 이수율</div><div class="sv green" id="s-rat">—</div></div>
+          <div class="sc"><div class="sl" id="s-rat-label">의무학습 이수율</div><div class="sv green" id="s-rat">—</div></div>
         </div>
 
         <!-- 탭 네비게이션 -->
@@ -2862,7 +2873,10 @@ async function renderStats(){
   document.getElementById('s-don').textContent=sm.done;
   const totalStatMins=IS_DEMO?sm.total_hours:toMins(sm.total_hours||0);
   document.getElementById('s-hrs').textContent=minsToStr(IS_DEMO?sm.total_hours:totalStatMins);
-  document.getElementById('s-rat').textContent=sm.total?Math.round(sm.done/sm.total*100)+'%':'0%';
+  // 의무학습 이수율: 7조건 충족 직원 / 일반직 전체
+  // empDoneMap은 아래에서 구성되므로 여기선 placeholder, 탭1 렌더 후 업데이트
+  document.getElementById('s-rat').textContent = '계산 중...';
+  document.getElementById('s-rat-label').textContent = '의무학습 이수율';
 
   // ── 탭1: 부서별 이수현황 ──
   // 직원명단에서 부서별 일반직 인원 (IS_DEMO면 byDept 기준)
@@ -2959,6 +2973,14 @@ async function renderStats(){
   });
 
   window._deptDrillData = deptRankData;
+
+  // 의무학습 이수율 카드 업데이트 (7조건 충족 직원 / 일반직 전체)
+  const totalGeneral  = Object.values(staffByDept).reduce((s,n)=>s+n, 0) || 1;
+  const totalComplete = deptRankData.reduce((s,d)=>s+(d.dc||0), 0);
+  const mandatoryRate = Math.round(totalComplete / totalGeneral * 100);
+  document.getElementById('s-rat').textContent = mandatoryRate + '%';
+  const ratEl = document.getElementById('s-rat-label');
+  if (ratEl) ratEl.textContent = '의무학습 이수율';
 
   document.getElementById('dept-detail-tbody').innerHTML = deptRankData.map(d=>{
     const rc=d.rate>=80?'#3B6D11':d.rate>=50?'#854F0B':'#A32D2D';
