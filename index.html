@@ -2947,7 +2947,7 @@ async function renderStats(){
     const legalRate = Math.round(legalAllDone / allCnt * 100);
     const rate      = sc>0?Math.round(dc/sc*100):0;
     return {
-      dept, sc, dc, ac, rate, legalRate, ld,
+      dept, sc, dc, ac, rate, legalRate,
       hrs: doneByDept[dept]?.hrs||0,
       members: doneByDept[dept]?.members||[],
       allStaff: allStaffByDept[dept]||[],
