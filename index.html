@@ -1849,7 +1849,7 @@ async function doLookup() {
 
     // 7대 조건 체크 카드
     document.getElementById('lu-completion-checklist').innerHTML =
-      Object.values(conds).map(c => {
+      Object.entries(conds).map(([k, c]) => {
         const pct = c.goal > 1
           ? Math.min(Math.round(c.mins / c.goal * 100), 100)
           : (c.ok ? 100 : 0);
