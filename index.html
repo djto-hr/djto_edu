@@ -1467,6 +1467,7 @@ async function init() {
 
   buildChk('legal-grid','lc');
   buildChk('ce-lg','ce-lc');
+  onCatChange();
 
   if (!IS_DEMO) {
     const r = await apiGet({ action: 'getNotices' });
