@@ -221,6 +221,18 @@ tbody td{font-size:14px;padding:11px 14px;vertical-align:middle;white-space:nowr
 .cross-item input{accent-color:var(--blue);width:13px;height:13px;flex-shrink:0;cursor:pointer;}
 .cross-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
 
+
+/* 페이지네이션 */
+.pgn{display:flex;align-items:center;gap:4px;margin-top:11px;justify-content:center;}
+.pgn button{min-width:30px;height:30px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--white);font-size:13px;font-family:inherit;cursor:pointer;color:var(--muted);transition:all .1s;}
+.pgn button:hover{background:var(--gray);}
+.pgn button.active{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:700;}
+.pgn button:disabled{opacity:.4;cursor:not-allowed;}
+.pgn-info{font-size:12px;color:var(--muted);padding:0 6px;}
+/* 선택 카운터 뱃지 */
+.sel-badge{font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;background:var(--bl);color:var(--bd);border:1px solid var(--bm);display:none;white-space:nowrap;}
+.sel-badge.show{display:inline-flex;align-items:center;gap:5px;}
+
 </style>
 </head>
 <body>
@@ -1033,14 +1045,24 @@ function updateTimePreview(hId, mId, previewId) {
           </div>
         </div>
         <div class="toolbar">
-          <select id="a-st" onchange="aRender()"><option value="all">전체 상태</option><option value="대기">승인 대기</option><option value="승인">승인 완료</option><option value="반려">반려</option></select>
-          <select id="a-dp" onchange="aRender()"><option value="all">전체 부서</option></select>
-          <select id="a-ct" onchange="aRender()"><option value="all">전체 구분</option><option value="기관지정">기관지정</option><option value="법정의무">법정의무</option><option value="공통필수">공통필수</option><option value="기타">기타</option></select>
-          <input id="a-q" type="text" placeholder="이름 또는 과정명" oninput="aRender()">
+          <select id="a-st" onchange="aPageReset()"><option value="all">전체 상태</option><option value="대기">승인 대기</option><option value="승인">승인 완료</option><option value="반려">반려</option></select>
+          <select id="a-dp" onchange="aPageReset()"><option value="all">전체 부서</option></select>
+          <select id="a-ct" onchange="aPageReset()"><option value="all">전체 구분</option><option value="기관지정">기관지정</option><option value="법정의무">법정의무</option><option value="공통필수">공통필수</option><option value="기타">기타</option></select>
+          <input id="a-q" type="text" placeholder="이름 또는 과정명" oninput="aPageReset()">
           <div class="spacer"></div>
+          <span class="sel-badge" id="sel-count-badge">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span id="sel-count-text">0명</span> 선택
+          </span>
           <button class="btn btn-gn" onclick="bulkAct('승인')">선택 일괄 승인</button>
           <button class="btn btn-rd" onclick="bulkAct('반려')">선택 일괄 반려</button>
           <button class="btn btn-rd" onclick="bulkDel()">선택 일괄 삭제</button>
+          <select id="a-per-page" onchange="aPageReset()" style="font-size:13px;padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r);font-family:inherit;outline:none;">
+            <option value="20">20건씩</option>
+            <option value="50">50건씩</option>
+            <option value="100">100건씩</option>
+            <option value="9999">전체</option>
+          </select>
           <button class="btn btn-gh" onclick="loadAll()">↻</button>
         </div>
         <div class="tbl-wrap">
@@ -1056,6 +1078,9 @@ function updateTimePreview(hId, mId, previewId) {
             <tbody id="a-tbody"></tbody>
           </table>
         </div>
+        <!-- 페이지네이션 -->
+        <div class="pgn" id="a-pgn"></div>
+        <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:6px;" id="a-pgn-info"></div>
       </div>
 
       <!-- 전체 이력 -->
@@ -2270,9 +2295,22 @@ function getFlt(){
   const ct=document.getElementById('a-ct').value,q=document.getElementById('a-q').value.toLowerCase();
   return DB.filter(r=>{ if(st!=='all'&&r.status!==st)return false; if(dp!=='all'&&r.dept!==dp)return false; if(ct!=='all'&&r.edu_category!==ct)return false; if(q&&!r.name.includes(q)&&!(r.course_name||'').toLowerCase().includes(q))return false; return true; });
 }
+// 페이지네이션 상태
+let aCurrentPage = 1;
+
+function aPageReset(){ aCurrentPage = 1; aRender(); }
+
 function aRender(){
-  document.getElementById('a-tbody').innerHTML=getFlt().map(r=>`<tr>
-    <td><input type="checkbox" class="chk row-chk" data-id="${r.id}" ${r.status!=='대기'?'disabled style="opacity:.3;"':''}></td>
+  const perPage = parseInt(document.getElementById('a-per-page')?.value||'20');
+  const allRows = getFlt();
+  const total = allRows.length;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  if (aCurrentPage > totalPages) aCurrentPage = totalPages;
+  const start = (aCurrentPage - 1) * perPage;
+  const pageRows = allRows.slice(start, start + perPage);
+
+  document.getElementById('a-tbody').innerHTML=pageRows.map(r=>`<tr>
+    <td><input type="checkbox" class="chk row-chk" data-id="${r.id}" onchange="updateSelCount()"></td>
     <td style="color:var(--muted);font-size:12px;">${fmtDate(r.apply_date)}</td>
     <td style="color:var(--muted);font-size:12px;">${r.empno}</td>
     <td style="font-weight:500;white-space:nowrap;">${r.name}</td>
@@ -2287,7 +2325,42 @@ function aRender(){
       ${r.status==='대기'?`<button class="act act-ap" onclick="qAct('${r.id}','승인')">승인</button><button class="act act-rj" onclick="qAct('${r.id}','반려')">반려</button>`:''}
       <button class="act act-del" onclick="delApply('${r.id}')">삭제</button>
     </td>
-  </tr>`).join(''); updStats();
+  </tr>`).join(''); updStats(); updateSelCount(); renderApprovalPagination(total, totalPages, perPage);
+}
+
+function renderApprovalPagination(total, totalPages, perPage) {
+  const pgn = document.getElementById('a-pgn');
+  const info = document.getElementById('a-pgn-info');
+  if (!pgn) return;
+  const start = (aCurrentPage-1)*perPage+1;
+  const end = Math.min(aCurrentPage*perPage, total);
+  if (info) info.textContent = total > 0 ? `전체 ${total}건 중 ${start}–${end}건` : '';
+  if (totalPages <= 1) { pgn.innerHTML=''; return; }
+  let btns = '';
+  btns += `<button onclick="aGoPage(1)" ${aCurrentPage===1?'disabled':''}>«</button>`;
+  btns += `<button onclick="aGoPage(${aCurrentPage-1})" ${aCurrentPage===1?'disabled':''}>‹</button>`;
+  // 페이지 번호 (앞뒤 2개)
+  const s = Math.max(1, aCurrentPage-2), e = Math.min(totalPages, aCurrentPage+2);
+  if (s > 1) btns += `<span class="pgn-info">...</span>`;
+  for (let i = s; i <= e; i++) {
+    btns += `<button class="${i===aCurrentPage?'active':''}" onclick="aGoPage(${i})">${i}</button>`;
+  }
+  if (e < totalPages) btns += `<span class="pgn-info">...</span>`;
+  btns += `<button onclick="aGoPage(${aCurrentPage+1})" ${aCurrentPage===totalPages?'disabled':''}>›</button>`;
+  btns += `<button onclick="aGoPage(${totalPages})" ${aCurrentPage===totalPages?'disabled':''}>»</button>`;
+  pgn.innerHTML = btns;
+}
+
+function aGoPage(n) { aCurrentPage = n; aRender(); }
+
+function updateSelCount() {
+  const checked = [...document.querySelectorAll('.row-chk:checked')];
+  const badge = document.getElementById('sel-count-badge');
+  const text = document.getElementById('sel-count-text');
+  if (badge && text) {
+    text.textContent = checked.length + '명';
+    badge.classList.toggle('show', checked.length > 0);
+  }
 }
 function updStats(){
   document.getElementById('ap-w').textContent=DB.filter(r=>r.status==='대기').length;
@@ -2299,7 +2372,7 @@ async function qAct(id,act){
   if(!IS_DEMO){ showLoad(act+' 처리 중...'); const res=await apiPost({action:'updateStatus',id,status:act,reject_reason:''}); hideLoad(); if(!res?.success){showToast('처리 실패','red');return;} }
   r.status=act==='승인'?'승인':'반려'; aRender(); showToast(act+' 처리되었습니다.',act==='승인'?'green':'red');
 }
-function toggleAll(cb){ document.querySelectorAll('.row-chk:not([disabled])').forEach(c=>c.checked=cb.checked); }
+function toggleAll(cb){ document.querySelectorAll('.row-chk').forEach(c=>c.checked=cb.checked); updateSelCount(); }
 async function bulkAct(act){
   const ids=[...document.querySelectorAll('.row-chk:checked')].map(c=>c.dataset.id);
   if(!ids.length){showToast('선택된 항목 없음','amber');return;}
