@@ -208,6 +208,19 @@ tbody td{font-size:14px;padding:11px 14px;vertical-align:middle;white-space:nowr
 .time-input-row input[type=number]{width:70px!important;text-align:center;padding:9px 8px!important;}
 .time-input-row .time-unit{font-size:13px;color:var(--muted);white-space:nowrap;}
 .time-preview{font-size:12px;font-weight:700;color:var(--blue);padding:4px 10px;background:var(--bl);border-radius:20px;white-space:nowrap;min-width:60px;text-align:center;}
+
+/* ── 중복분류 (cross_categories) ── */
+.cross-box{background:var(--bl);border:1px solid var(--bm);border-radius:var(--r);padding:11px 14px;margin-top:10px;display:none;}
+.cross-box.show{display:block;}
+.cross-title{font-size:11px;font-weight:700;color:var(--bd);margin-bottom:9px;display:flex;align-items:center;gap:5px;}
+.cross-sec-label{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:6px;}
+.cross-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px;}
+.cross-item{display:flex;align-items:center;gap:7px;padding:6px 10px;background:var(--white);border:1px solid var(--bdr);border-radius:var(--r);cursor:pointer;font-size:12px;transition:all .1s;}
+.cross-item:hover{border-color:var(--blue);background:var(--bl);}
+.cross-item.on{border-color:var(--blue);background:var(--bl);}
+.cross-item input{accent-color:var(--blue);width:13px;height:13px;flex-shrink:0;cursor:pointer;}
+.cross-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+
 </style>
 </head>
 <body>
@@ -216,6 +229,115 @@ tbody td{font-size:14px;padding:11px 14px;vertical-align:middle;white-space:nowr
 const SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbzybmAQWXWeT1AwY6BxMoeiXwVrJ0YsrULxJH5KNfvd2AXVvRq-kue_ZabjNqtyCNsmsg/exec';
 const IS_DEMO     = SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL';
 const MAX_FILE_MB = 10;
+
+
+// ════════════════════════════════════════
+// 중복분류 시스템 (기관지정 ↔ 공통필수/법정의무)
+// ════════════════════════════════════════
+const CROSS_COMMON_OPTS = [
+  {id:'xc-ethics',   label:'공직윤리(청렴)',    commonType:'공직윤리(청렴)',  tc:'#534AB7',bg:'#EEEDFE',bd:'#AFA9EC'},
+  {id:'xc-disaster', label:'재난·산업안전',     commonType:'재난·산업안전',  tc:'#534AB7',bg:'#EEEDFE',bd:'#AFA9EC'},
+  {id:'xc-digital',  label:'디지털역량(AI·DX)', commonType:'디지털역량',     tc:'#534AB7',bg:'#EEEDFE',bd:'#AFA9EC'},
+];
+const CROSS_LEGAL_OPTS = [
+  {id:'xl-violence',   label:'4대폭력예방',       legalType:'4대폭력예방',       tc:'#791F1F',bg:'#FCEBEB',bd:'#F7C1C1'},
+  {id:'xl-harass',     label:'직장내괴롭힘예방',  legalType:'직장내괴롭힘예방',  tc:'#791F1F',bg:'#FCEBEB',bd:'#F7C1C1'},
+  {id:'xl-fire',       label:'소방안전화재예방',  legalType:'소방안전화재예방',  tc:'#791F1F',bg:'#FCEBEB',bd:'#F7C1C1'},
+  {id:'xl-privacy',    label:'개인정보보호',      legalType:'개인정보보호교육',  tc:'#791F1F',bg:'#FCEBEB',bd:'#F7C1C1'},
+  {id:'xl-disability', label:'장애인인식개선',    legalType:'장애인인식개선교육',tc:'#791F1F',bg:'#FCEBEB',bd:'#F7C1C1'},
+  {id:'xl-suicide',    label:'자살예방',          legalType:'자살예방교육',      tc:'#791F1F',bg:'#FCEBEB',bd:'#F7C1C1'},
+  {id:'xl-child',      label:'아동학대예방',      legalType:'아동학대예방교육',  tc:'#791F1F',bg:'#FCEBEB',bd:'#F7C1C1'},
+  {id:'xl-pension',    label:'퇴직연금',          legalType:'퇴직연금교육',      tc:'#791F1F',bg:'#FCEBEB',bd:'#F7C1C1'},
+  {id:'xl-info',       label:'정보공개',          legalType:'정보공개교육',      tc:'#791F1F',bg:'#FCEBEB',bd:'#F7C1C1'},
+];
+const ALL_CROSS_OPTS = [...CROSS_COMMON_OPTS, ...CROSS_LEGAL_OPTS];
+
+/** 중복분류 박스 HTML 생성 (pfx = 'f' | 'ce' | 'ea') */
+function buildCrossBox(pfx) {
+  const mkItem = o => `<label class="cross-item" id="${pfx}-xi-${o.id}">
+    <input type="checkbox" class="${pfx}-xchk" value="${o.id}"
+      onchange="onCrossChk('${pfx}','${o.id}',this.checked)"
+    ><span>${o.label}</span></label>`;
+  return `<div class="cross-box" id="${pfx}-cross-box">
+    <div class="cross-title">
+      <svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      이 기관지정 교육이 공통필수·법정의무에도 해당하나요?
+      <span style="font-weight:400;color:var(--muted);">중복 이수 동시 반영</span>
+    </div>
+    <span class="cross-sec-label" style="background:#EEEDFE;color:#534AB7;">공통필수</span>
+    <div class="cross-grid">${CROSS_COMMON_OPTS.map(mkItem).join('')}</div>
+    <span class="cross-sec-label" style="background:#FCEBEB;color:#791F1F;">법정의무</span>
+    <div class="cross-grid">${CROSS_LEGAL_OPTS.map(mkItem).join('')}</div>
+    <div class="cross-tags" id="${pfx}-cross-tags"></div>
+  </div>`;
+}
+
+/** 기관지정 여부에 따라 cross 박스 표시/숨김 */
+function toggleCrossBox(pfx, mainCat) {
+  const box = document.getElementById(pfx + '-cross-box');
+  if (!box) return;
+  if (mainCat === '기관지정') { box.classList.add('show'); }
+  else { box.classList.remove('show'); clearCross(pfx); }
+}
+
+function clearCross(pfx) {
+  document.querySelectorAll('.' + pfx + '-xchk').forEach(cb => {
+    if (cb.checked) { cb.checked = false; const l = document.getElementById(pfx + '-xi-' + cb.value); if (l) l.classList.remove('on'); }
+  });
+  const t = document.getElementById(pfx + '-cross-tags'); if (t) t.innerHTML = '';
+}
+
+function onCrossChk(pfx, id, checked) {
+  const lbl = document.getElementById(pfx + '-xi-' + id);
+  if (lbl) lbl.classList.toggle('on', checked);
+  _updateCrossTags(pfx);
+}
+
+function _updateCrossTags(pfx) {
+  const tags = document.getElementById(pfx + '-cross-tags'); if (!tags) return;
+  const checked = [...document.querySelectorAll('.' + pfx + '-xchk:checked')];
+  tags.innerHTML = checked.map(cb => {
+    const o = ALL_CROSS_OPTS.find(x => x.id === cb.value); if (!o) return '';
+    const cat = o.legalType ? '법정의무' : '공통필수';
+    return `<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:${o.bg};color:${o.tc};border:1px solid ${o.bd};">✓ ${cat} ${o.label}</span>`;
+  }).join('');
+}
+
+/** 체크된 cross 항목 → 배열로 수집 */
+function getCrossCategories(pfx) {
+  const res = [];
+  document.querySelectorAll('.' + pfx + '-xchk:checked').forEach(cb => {
+    const o = ALL_CROSS_OPTS.find(x => x.id === cb.value); if (!o) return;
+    if (o.commonType) res.push({ cat: '공통필수', commonType: o.commonType });
+    if (o.legalType)  res.push({ cat: '법정의무', legalType:  o.legalType  });
+  });
+  return res;
+}
+
+/** 저장된 cross_categories 배열 → UI에 복원 */
+function setCrossCategories(pfx, arr) {
+  if (!Array.isArray(arr) || !arr.length) return;
+  arr.forEach(c => {
+    let o = null;
+    if (c.cat === '공통필수') o = CROSS_COMMON_OPTS.find(x => x.commonType === c.commonType);
+    if (c.cat === '법정의무') o = CROSS_LEGAL_OPTS.find(x => x.legalType  === c.legalType);
+    if (!o) return;
+    const cb = document.querySelector('.' + pfx + '-xchk[value="' + o.id + '"]');
+    if (cb) { cb.checked = true; onCrossChk(pfx, o.id, true); }
+  });
+}
+
+/** 이수 내역 테이블 인라인 태그 렌더 */
+function renderCrossInline(arr) {
+  if (!Array.isArray(arr) || !arr.length) return '';
+  return '<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">' +
+    arr.map(c => {
+      const tc = c.cat === '공통필수' ? '#534AB7' : '#791F1F';
+      const bg = c.cat === '공통필수' ? '#EEEDFE' : '#FCEBEB';
+      const bd = c.cat === '공통필수' ? '#AFA9EC' : '#F7C1C1';
+      return `<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;background:${bg};color:${tc};border:0.5px solid ${bd};">+${c.cat} ${c.commonType||c.legalType||''}</span>`;
+    }).join('') + '</div>';
+}
 
 const LEGAL_TYPES  = ['4대폭력예방','직장내괴롭힘예방','소방안전화재예방','장애인인식개선교육','자살예방교육','퇴직연금교육','아동학대예방교육','개인정보보호교육','정보공개교육'];
 const COMMON_DUTY_TYPES = ['재난안전','디지털역량','공직윤리'];
@@ -277,9 +399,12 @@ function toMins(val) {
 // hours_unit 필드가 'min'이면 이미 분 단위이므로 스킵.
 // 데모 DB는 아래 init()에서 직접 ×60 처리.
 function migrateHours(row) {
-  // 시트 데이터는 이미 분 단위로 저장됨 → 변환 없이 그대로 반환
-  // AS v5 배포 후에는 hours_unit:'min'으로 명시적으로 구분됨
   row.hours_unit = 'min';
+  // cross_categories JSON 파싱
+  if(row.cross_categories&&typeof row.cross_categories==='string'){
+    try{row.cross_categories=JSON.parse(row.cross_categories);}catch(e){row.cross_categories=[];}
+  }
+  if(!Array.isArray(row.cross_categories))row.cross_categories=[];
   return row;
 }
 
@@ -303,11 +428,16 @@ function checkCompleted(doneRows) {
                             .reduce((s,r) => s + toMins(r.hours), 0);
   const cdpDone   = doneRows.some(r => r.edu_category==='기관지정' && r.cdp_yn===true);
 
-  const commonRows = doneRows.filter(r => r.edu_category==='공통필수');
-  const cMins = (kws) => commonRows
-    .filter(r => kws.some(k => (r.common_type||'').includes(k)))
-    .reduce((s,r) => s + toMins(r.hours), 0);
-
+  // 공통필수: 메인 + 기관지정의 cross 공통필수 합산
+  const allCommonEntries = doneRows.flatMap(r => {
+    const e = [];
+    if(r.edu_category==='공통필수') e.push({hours:r.hours, type:r.common_type||''});
+    (r.cross_categories||[]).forEach(c => { if(c.cat==='공통필수') e.push({hours:r.hours, type:c.commonType||''}); });
+    return e;
+  });
+  const cMins = (kws) => allCommonEntries
+    .filter(x => kws.some(k => x.type.includes(k)))
+    .reduce((s,x) => s + toMins(x.hours), 0);
   const disasterMins = cMins(['재난','산업안전']);
   const ethicsMins   = cMins(['공직윤리','청렴']);
   const digitalMins  = cMins(['디지털','AI','DX']);
@@ -597,6 +727,8 @@ function updateTimePreview(hId, mId, previewId) {
             </div>
           </div>
         </div>
+        <!-- 중복분류: 기관지정 선택 시 표시 -->
+        <div id="f-cross-wrapper"></div>
       </div>
       <div class="cat-sec" style="margin-bottom:13px;">
         <div class="cat-sec-title">💰 교육비용 내역 <span style="font-weight:400;color:var(--muted);">— 해당 항목만 입력하세요</span></div>
@@ -1221,6 +1353,7 @@ function updateTimePreview(hId, mId, previewId) {
       <div class="fg" style="margin-bottom:8px;"><label>CDP 연계 여부</label><select id="ce-cdp" onchange="onCeCdpChange()"><option value="false">아니오</option><option value="true">예 — 직무트랙 선택</option></select></div>
       <div id="ce-trk" style="display:none;"><div class="fg" style="margin-bottom:0;"><label>직무트랙</label><select id="ce-track"><option value="">선택하세요</option><option>기획감사</option><option>경영관리</option><option>관광</option><option>MICE</option><option>시설관리</option></select></div></div>
     </div>
+    <div id="ce-cross-wrapper" style="margin-top:8px;"></div>
     <div class="fg" style="margin-top:11px;"><label>수정 사유 <span class="req">*</span></label><textarea class="ri" id="ce-reason" rows="2" placeholder="수정 사유를 반드시 입력하세요..."></textarea></div>
     <div class="ma"><button class="m-sv" onclick="saveCatEdit()">수정 저장</button><button class="m-cl" onclick="closeMo('mo-cat')">취소</button></div>
   </div>
@@ -1266,6 +1399,7 @@ function updateTimePreview(hId, mId, previewId) {
       <div class="fg" style="margin-bottom:8px;"><label>CDP 연계 여부 <span class="req">*</span></label><select id="ea-cdp" onchange="onEaCdpChange()"><option value="false">아니오</option><option value="true">예 — 직무트랙 선택</option></select></div>
       <div id="ea-trk" style="display:none;"><div class="fg" style="margin-bottom:0;"><label>직무트랙 <span class="req">*</span></label><select id="ea-track"><option value="">선택하세요</option><option>기획감사</option><option>경영관리</option><option>관광</option><option>MICE</option><option>시설관리</option></select></div></div>
     </div>
+    <div id="ea-cross-wrapper" style="margin-top:8px;"></div>
     <div class="fg" style="margin-top:4px;"><label>수정 사유 <span class="req">*</span></label><textarea class="ri" id="ea-reason" rows="2" placeholder="수정 사유를 반드시 입력하세요..."></textarea></div>
     <div class="ma"><button class="m-sv" onclick="saveEditApply()">수정 저장</button><button class="m-cl" onclick="closeMo('mo-edit-apply')">취소</button></div>
   </div>
@@ -1601,6 +1735,9 @@ function onCatChange() {
   document.getElementById('sub-legal').classList.toggle('show',c==='법정의무');
   document.getElementById('sub-common').classList.toggle('show',c==='공통필수');
   document.getElementById('sub-inst').classList.toggle('show',c==='기관지정');
+  const fw=document.getElementById('f-cross-wrapper');
+  if(fw&&!fw.querySelector('.cross-box'))fw.innerHTML=buildCrossBox('f');
+  toggleCrossBox('f',c);
 }
 function onDrop(e) {
   e.preventDefault(); document.getElementById('file-drop').classList.remove('drag');
@@ -1644,6 +1781,7 @@ async function submitApply() {
   if(!selFile) missing.push('수료증빙 파일을 첨부해 주세요');
 
   let legalTypes=[],commonType='',cdpYn=false,jobTrack='';
+  const crossCategories=getCrossCategories('f');
   if(cat==='법정의무'){ legalTypes=[...document.querySelectorAll('.lc:checked')].map(c=>c.value); if(!legalTypes.length) missing.push('법정의무 유형을 선택해 주세요'); }
   if(cat==='공통필수'){ commonType=document.getElementById('f-common').value; if(!commonType) missing.push('공통필수 유형을 선택해 주세요'); }
   if(cat==='기관지정'){ cdpYn=document.getElementById('f-cdp').value==='true'; if(cdpYn){jobTrack=document.getElementById('f-track').value; if(!jobTrack) missing.push('직무트랙을 선택해 주세요');} }
@@ -1671,11 +1809,11 @@ async function submitApply() {
     fileId=ur.file_id; fileUrl=ur.file_url; fileName=ur.file_name;
     showLoad('신청 정보 저장 중...');
     // hours를 분 단위로 전송
-    const ar=await apiPost({action:'submitApply',empno,name,dept,course_name:course,hours:totalMins,apply_date:fdate,org:org,note:v('f-note'),duty_hr:document.getElementById('f-duty-hr')?.checked||false,duty_budget:document.getElementById('f-duty-budget')?.checked||false,duty_account:document.getElementById('f-duty-account')?.checked||false,edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,file_id:fileId,file_url:fileUrl,file_name:fileName,train_cost:trainCost,travel_cost:travelCost,cost_detail:costDetail});
+    const ar=await apiPost({action:'submitApply',empno,name,dept,course_name:course,hours:totalMins,apply_date:fdate,org:org,note:v('f-note'),duty_hr:document.getElementById('f-duty-hr')?.checked||false,duty_budget:document.getElementById('f-duty-budget')?.checked||false,duty_account:document.getElementById('f-duty-account')?.checked||false,edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,cross_categories:crossCategories,file_id:fileId,file_url:fileUrl,file_name:fileName,train_cost:trainCost,travel_cost:travelCost,cost_detail:costDetail});
     bar.style.width='100%'; hideLoad();
     if(!ar?.success){ showToast('저장 실패: '+(ar?.error||'오류'),'red'); btn.disabled=false; btn.textContent='신청 제출'; return; }
   } else {
-    DB.unshift({id:'A'+Date.now(),apply_date:fdate,empno,name,dept,course_name:course,hours:totalMins,org:org,note:v('f-note'),edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,file_url:'',file_name:selFile?selFile.name:'',status:'대기',reject_reason:'',train_cost:trainCost,travel_cost:travelCost,cost_detail:costDetail});
+    DB.unshift({id:'A'+Date.now(),apply_date:fdate,empno,name,dept,course_name:course,hours:totalMins,org:org,note:v('f-note'),edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,cross_categories:crossCategories,file_url:'',file_name:selFile?selFile.name:'',status:'대기',reject_reason:'',train_cost:trainCost,travel_cost:travelCost,cost_detail:costDetail});
   }
   btn.disabled=false; btn.textContent='신청 제출'; prog.style.display='none';
   document.getElementById('apply-form-area').style.display='none';
@@ -1688,6 +1826,7 @@ function resetApply(){
   });
   document.getElementById('f-hours-preview').textContent='—';
   document.getElementById('f-dept').value=''; document.getElementById('f-cat').value='기관지정';
+  const _rw=document.getElementById('f-cross-wrapper');if(_rw)_rw.innerHTML='';
   document.getElementById('file-name').textContent=''; document.getElementById('file-sz').textContent='';
   document.querySelectorAll('.lc').forEach(c=>c.checked=false); selFile=null; onCatChange();
   // 중간관리자 체크박스 초기화
@@ -1750,6 +1889,8 @@ async function doLookup() {
   const wait=rows.filter(r=>r.status==='대기');
   const completedLegal=new Set();
   done.filter(r=>r.edu_category==='법정의무').forEach(r=>(r.legal_types||[]).forEach(t=>completedLegal.add(t)));
+  // cross_categories 법정의무 반영
+  done.forEach(r=>(r.cross_categories||[]).forEach(c=>{if(c.cat==='법정의무'&&c.legalType)completedLegal.add(c.legalType);}));
   // 재난·안전 공통필수 → 소방안전화재예방 중복 인정
   done.filter(r=>r.edu_category==='공통필수').forEach(r=>{
     const kws=['재난','산업안전','소방','화재'];
@@ -1888,9 +2029,9 @@ async function doLookup() {
   const completedCommonTypes=done.filter(r=>r.edu_category==='공통필수').map(r=>r.common_type||'');
   // 공통의무 2시간(120분) 충족 여부
   const commonMinsByType={};
-  done.filter(r=>r.edu_category==='공통필수').forEach(r=>{
-    const k=r.common_type||'';
-    commonMinsByType[k]=(commonMinsByType[k]||0)+toMins(r.hours);
+  done.forEach(r=>{
+    if(r.edu_category==='공통필수'){const k=r.common_type||'';commonMinsByType[k]=(commonMinsByType[k]||0)+toMins(r.hours);}
+    (r.cross_categories||[]).forEach(c=>{if(c.cat==='공통필수'&&c.commonType){const k=c.commonType;commonMinsByType[k]=(commonMinsByType[k]||0)+toMins(r.hours);}});
   });
   document.getElementById('lu-common-duty-checklist').innerHTML=COMMON_DUTY_TYPES.map(t=>{
     const aliases=COMMON_DUTY_MAP[t]||[t];
@@ -2046,7 +2187,7 @@ async function doLookup() {
   document.getElementById('lu-tbody').innerHTML = rows.length
     ? rows.map(r=>`<tr>
     <td style="color:var(--muted);font-size:12px;">${fmtDate(r.apply_date)}</td>
-    <td style="font-weight:500;">${r.course_name||''}</td>
+    <td style="font-weight:500;white-space:normal;">${r.course_name||''}${renderCrossInline(r.cross_categories||[])}</td>
     <td>${mBadge(r.edu_method)}</td><td>${cBadge(r.edu_category)}</td>
     <td style="text-align:center;">${minsToStr(toMins(r.hours))}</td><td>${sBadge(r.status)}</td>
   </tr>`).join('')
@@ -2136,7 +2277,7 @@ function aRender(){
     <td style="color:var(--muted);font-size:12px;">${r.empno}</td>
     <td style="font-weight:500;white-space:nowrap;">${r.name}</td>
     <td style="color:var(--muted);font-size:12px;">${r.dept}</td>
-    <td style="font-size:12px;">${r.bulk?'<span style="font-size:10px;font-weight:700;background:#EEEDFE;color:#3C3489;padding:1px 6px;border-radius:20px;margin-right:4px;">단체</span>':''}${r.course_name||''}</td>
+    <td style="font-size:12px;white-space:normal;">${r.bulk?'<span style="font-size:10px;font-weight:700;background:#EEEDFE;color:#3C3489;padding:1px 6px;border-radius:20px;margin-right:4px;">단체</span>':''}${r.course_name||''}${renderCrossInline(r.cross_categories||[])}</td>
     <td>${mBadge(r.edu_method)}</td><td>${cBadge(r.edu_category)}</td>
     <td style="text-align:center;">${minsToStr(toMins(r.hours))}</td><td>${sBadge(r.status)}</td>
     <td>
@@ -2237,6 +2378,8 @@ function openEditApply(id) {
   document.getElementById('ea-cdp').value=r.cdp_yn?'true':'false';
   document.getElementById('ea-track').value=r.job_track||'';
   document.getElementById('ea-trk').style.display=r.cdp_yn?'block':'none';
+  const _eaw=document.getElementById('ea-cross-wrapper');
+  if(_eaw){_eaw.innerHTML=buildCrossBox('ea');toggleCrossBox('ea',r.edu_category||'기관지정');setCrossCategories('ea',r.cross_categories||[]);}
   document.getElementById('mo-edit-apply').classList.add('open');
 }
 function onEaChange() {
@@ -2247,6 +2390,7 @@ function onEaChange() {
   if(c!=='법정의무') document.querySelectorAll('.ea-lc').forEach(ch=>ch.checked=false);
   if(c!=='공통필수') document.getElementById('ea-com').value='';
   if(c!=='기관지정'){ document.getElementById('ea-cdp').value='false'; document.getElementById('ea-trk').style.display='none'; document.getElementById('ea-track').value=''; }
+  toggleCrossBox('ea',c);
 }
 function onEaCdpChange() {
   const v=document.getElementById('ea-cdp').value;
@@ -2278,16 +2422,18 @@ async function saveEditApply() {
   const r=DB.find(d=>d.id===id); if(!r)return;
   if(!IS_DEMO){
     showLoad("수정 저장 중...");
-    const res=await apiPost({action:"editApply",id,dept,course_name:course,org,hours:mins,apply_date:date,edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,reason});
+    const res=await apiPost({action:"editApply",id,dept,course_name:course,org,hours:mins,apply_date:date,edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,cross_categories:getCrossCategories('ea'),reason});
     hideLoad();
     if(!res?.success) showToast("서버 저장 실패: "+(res?.error||"오류"),"red");
   }
+  const _eaCross=getCrossCategories('ea');
   r.dept=dept; r.course_name=course; r.org=org; r.hours=mins;
   r.apply_date=date; r.edu_method=method; r.edu_category=cat;
   r.legal_types=cat==='법정의무'?legalTypes:[];
   r.common_type=cat==='공통필수'?commonType:'';
   r.cdp_yn=cat==='기관지정'?cdpYn:false;
   r.job_track=(cat==='기관지정'&&cdpYn)?jobTrack:'';
+  r.cross_categories=_eaCross;
   closeMo('mo-edit-apply'); aRender(); showToast('수정 완료되었습니다.','green');
 }
 
@@ -2321,6 +2467,7 @@ function onCeChange(){
   if(c!=='법정의무') document.querySelectorAll('.ce-lc').forEach(ch=>ch.checked=false);
   if(c!=='공통필수') document.getElementById('ce-com').value='';
   if(c!=='기관지정'){ document.getElementById('ce-cdp').value='false'; document.getElementById('ce-trk').style.display='none'; document.getElementById('ce-track').value=''; }
+  toggleCrossBox('ce',c);
 }
 function onCeCdpChange(){
   const v=document.getElementById('ce-cdp').value;
@@ -2342,6 +2489,8 @@ function openCatEdit(id){
   document.getElementById('ce-cdp').value=r.cdp_yn?'true':'false';
   document.getElementById('ce-track').value=r.job_track||'';
   document.getElementById('ce-trk').style.display=r.cdp_yn?'block':'none';
+  const _cew=document.getElementById('ce-cross-wrapper');
+  if(_cew){_cew.innerHTML=buildCrossBox('ce');toggleCrossBox('ce',r.edu_category||'기관지정');setCrossCategories('ce',r.cross_categories||[]);}
   document.getElementById('mo-cat').classList.add('open');
 }
 async function saveCatEdit(){
@@ -2359,13 +2508,14 @@ async function saveCatEdit(){
   const before={edu_method:r.edu_method,edu_category:r.edu_category,legal_types:r.legal_types,common_type:r.common_type,cdp_yn:r.cdp_yn,job_track:r.job_track};
   if(!IS_DEMO){
     showLoad("수정 저장 중...");
-    const res=await apiPost({action:"editCategory",apply_id:openId,edu_method:nm,edu_category:nc,legal_types:nl,common_type:ncom,cdp_yn:ncdp,job_track:ntrk,reason});
+    const res=await apiPost({action:"editCategory",apply_id:openId,edu_method:nm,edu_category:nc,legal_types:nl,common_type:ncom,cdp_yn:ncdp,job_track:ntrk,cross_categories:getCrossCategories('ce'),reason});
     hideLoad();
     if(!res?.success) showToast("서버 저장 실패: "+(res?.error||"오류"),"red");
   }
+  const _ceCross=getCrossCategories('ce');
   r.edu_method=nm; r.edu_category=nc; r.legal_types=nc==='법정의무'?nl:[];
   r.common_type=nc==='공통필수'?ncom:''; r.cdp_yn=nc==='기관지정'?ncdp:false;
-  r.job_track=(nc==='기관지정'&&ncdp)?ntrk:'';
+  r.job_track=(nc==='기관지정'&&ncdp)?ntrk:''; r.cross_categories=_ceCross;
   const after={edu_method:r.edu_method,edu_category:r.edu_category,legal_types:r.legal_types,common_type:r.common_type,cdp_yn:r.cdp_yn,job_track:r.job_track};
   CATLOG.unshift({apply_id:openId,name:r.name,course_name:r.course_name||'',changed_at:new Date().toLocaleString('ko'),changed_by:'관리자',before_json:before,after_json:after,reason});
   closeMo('mo-cat'); aRender(); showToast('카테고리가 수정되었습니다.','green');
@@ -2382,7 +2532,7 @@ function hRender(){
     <td style="color:var(--muted);font-size:12px;">${fmtDate(r.apply_date,true)}</td>
     <td style="color:var(--muted);font-size:12px;white-space:nowrap;">${r.empno}</td>
     <td style="font-weight:500;white-space:nowrap;">${r.name}</td><td style="font-size:12px;color:var(--muted);white-space:nowrap;">${r.dept}</td>
-    <td style="font-size:12px;">${r.course_name||''}</td>
+    <td style="font-size:12px;white-space:normal;">${r.course_name||''}${renderCrossInline(r.cross_categories||[])}</td>
     <td>${mBadge(r.edu_method)}</td><td>${cBadge(r.edu_category)}</td>
     <td style="text-align:center;">${minsToStr(toMins(r.hours))}</td><td>${sBadge(r.status)}</td>
   </tr>`).join('');
