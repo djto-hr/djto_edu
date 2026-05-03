@@ -329,13 +329,16 @@ function getCrossCategories(pfx) {
 /** 저장된 cross_categories 배열 → UI에 복원 */
 function setCrossCategories(pfx, arr) {
   if (!Array.isArray(arr) || !arr.length) return;
-  arr.forEach(c => {
-    let o = null;
-    if (c.cat === '공통필수') o = CROSS_COMMON_OPTS.find(x => x.commonType === c.commonType);
-    if (c.cat === '법정의무') o = CROSS_LEGAL_OPTS.find(x => x.legalType  === c.legalType);
-    if (!o) return;
-    const cb = document.querySelector('.' + pfx + '-xchk[value="' + o.id + '"]');
-    if (cb) { cb.checked = true; onCrossChk(pfx, o.id, true); }
+  // DOM이 아직 없을 수 있으므로 requestAnimationFrame으로 지연
+  requestAnimationFrame(() => {
+    arr.forEach(c => {
+      let o = null;
+      if (c.cat === '공통필수') o = CROSS_COMMON_OPTS.find(x => x.commonType === c.commonType);
+      if (c.cat === '법정의무') o = CROSS_LEGAL_OPTS.find(x => x.legalType  === c.legalType);
+      if (!o) return;
+      const cb = document.querySelector('.' + pfx + '-xchk[value="' + o.id + '"]');
+      if (cb && !cb.checked) { cb.checked = true; onCrossChk(pfx, o.id, true); }
+    });
   });
 }
 
@@ -1719,6 +1722,8 @@ async function verifyStaff() {
   document.getElementById('verified-name-display').textContent='✓ 본인 확인 완료 — '+name+' ('+empno+')';
   document.getElementById('f-empno').value=empno;
   document.getElementById('f-name').value=name;
+  // 신청폼이 이제 보이므로 cross box 재초기화
+  onCatChange();
   btn.disabled=false; btn.textContent='본인 확인';
 }
 
@@ -1760,9 +1765,12 @@ function onCatChange() {
   document.getElementById('sub-legal').classList.toggle('show',c==='법정의무');
   document.getElementById('sub-common').classList.toggle('show',c==='공통필수');
   document.getElementById('sub-inst').classList.toggle('show',c==='기관지정');
+  // cross 박스: 항상 재생성 (페이지 숨김 상태에서 init 호출돼도 정상 동작)
   const fw=document.getElementById('f-cross-wrapper');
-  if(fw&&!fw.querySelector('.cross-box'))fw.innerHTML=buildCrossBox('f');
-  toggleCrossBox('f',c);
+  if(fw){
+    if(!fw.querySelector('.cross-box')) fw.innerHTML=buildCrossBox('f');
+    toggleCrossBox('f',c);
+  }
 }
 function onDrop(e) {
   e.preventDefault(); document.getElementById('file-drop').classList.remove('drag');
@@ -2391,6 +2399,9 @@ function openDetail(id){
   if(r.edu_category==='법정의무'&&(r.legal_types||[]).length) catD+=' ('+r.legal_types.join(', ')+')';
   if(r.edu_category==='공통필수'&&r.common_type) catD+=' — '+r.common_type;
   if(r.edu_category==='기관지정'&&r.cdp_yn) catD+=' / CDP: '+r.job_track;
+  if(r.edu_category==='기관지정'&&(r.cross_categories||[]).length) {
+    catD += ' [+' + r.cross_categories.map(c=>c.commonType||c.legalType||'').filter(Boolean).join(', ') + ']';
+  }
   document.getElementById('m-name').textContent=r.name+' ('+r.empno+')';
   document.getElementById('m-dept').textContent=r.dept;
   document.getElementById('m-course').textContent=r.course_name||'';
@@ -2452,7 +2463,12 @@ function openEditApply(id) {
   document.getElementById('ea-track').value=r.job_track||'';
   document.getElementById('ea-trk').style.display=r.cdp_yn?'block':'none';
   const _eaw=document.getElementById('ea-cross-wrapper');
-  if(_eaw){_eaw.innerHTML=buildCrossBox('ea');toggleCrossBox('ea',r.edu_category||'기관지정');setCrossCategories('ea',r.cross_categories||[]);}
+  if(_eaw){
+    _eaw.innerHTML=buildCrossBox('ea');
+    const _eacat = r.edu_category||'기관지정';
+    toggleCrossBox('ea', _eacat);
+    if(_eacat==='기관지정') setCrossCategories('ea', r.cross_categories||[]);
+  }
   document.getElementById('mo-edit-apply').classList.add('open');
 }
 function onEaChange() {
@@ -2563,7 +2579,13 @@ function openCatEdit(id){
   document.getElementById('ce-track').value=r.job_track||'';
   document.getElementById('ce-trk').style.display=r.cdp_yn?'block':'none';
   const _cew=document.getElementById('ce-cross-wrapper');
-  if(_cew){_cew.innerHTML=buildCrossBox('ce');toggleCrossBox('ce',r.edu_category||'기관지정');setCrossCategories('ce',r.cross_categories||[]);}
+  if(_cew){
+    _cew.innerHTML=buildCrossBox('ce');
+    // 기관지정일 때만 cross 복원
+    const _cecat = r.edu_category||'기관지정';
+    toggleCrossBox('ce', _cecat);
+    if(_cecat==='기관지정') setCrossCategories('ce', r.cross_categories||[]);
+  }
   document.getElementById('mo-cat').classList.add('open');
 }
 async function saveCatEdit(){
