@@ -738,9 +738,8 @@ function updateTimePreview(hId, mId, previewId) {
               <select id="f-track"><option value="">선택하세요</option><option>기획감사</option><option>경영관리</option><option>관광</option><option>MICE</option><option>시설관리</option></select>
             </div>
           </div>
+          <div id="f-cross-wrapper" style="margin-top:8px;"></div>
         </div>
-        <!-- 중복분류: 기관지정 선택 시 표시 -->
-        <div id="f-cross-wrapper"></div>
       </div>
       <div class="cat-sec" style="margin-bottom:13px;">
         <div class="cat-sec-title">💰 교육비용 내역 <span style="font-weight:400;color:var(--muted);">— 해당 항목만 입력하세요</span></div>
@@ -1377,8 +1376,8 @@ function updateTimePreview(hId, mId, previewId) {
     <div class="cat-sub2" id="ce-inst">
       <div class="fg" style="margin-bottom:8px;"><label>CDP 연계 여부</label><select id="ce-cdp" onchange="onCeCdpChange()"><option value="false">아니오</option><option value="true">예 — 직무트랙 선택</option></select></div>
       <div id="ce-trk" style="display:none;"><div class="fg" style="margin-bottom:0;"><label>직무트랙</label><select id="ce-track"><option value="">선택하세요</option><option>기획감사</option><option>경영관리</option><option>관광</option><option>MICE</option><option>시설관리</option></select></div></div>
+      <div id="ce-cross-wrapper" style="margin-top:8px;"></div>
     </div>
-    <div id="ce-cross-wrapper" style="margin-top:8px;"></div>
     <div class="fg" style="margin-top:11px;"><label>수정 사유 <span class="req">*</span></label><textarea class="ri" id="ce-reason" rows="2" placeholder="수정 사유를 반드시 입력하세요..."></textarea></div>
     <div class="ma"><button class="m-sv" onclick="saveCatEdit()">수정 저장</button><button class="m-cl" onclick="closeMo('mo-cat')">취소</button></div>
   </div>
@@ -1423,8 +1422,8 @@ function updateTimePreview(hId, mId, previewId) {
     <div class="cat-sub2" id="ea-inst">
       <div class="fg" style="margin-bottom:8px;"><label>CDP 연계 여부 <span class="req">*</span></label><select id="ea-cdp" onchange="onEaCdpChange()"><option value="false">아니오</option><option value="true">예 — 직무트랙 선택</option></select></div>
       <div id="ea-trk" style="display:none;"><div class="fg" style="margin-bottom:0;"><label>직무트랙 <span class="req">*</span></label><select id="ea-track"><option value="">선택하세요</option><option>기획감사</option><option>경영관리</option><option>관광</option><option>MICE</option><option>시설관리</option></select></div></div>
+      <div id="ea-cross-wrapper" style="margin-top:8px;"></div>
     </div>
-    <div id="ea-cross-wrapper" style="margin-top:8px;"></div>
     <div class="fg" style="margin-top:4px;"><label>수정 사유 <span class="req">*</span></label><textarea class="ri" id="ea-reason" rows="2" placeholder="수정 사유를 반드시 입력하세요..."></textarea></div>
     <div class="ma"><button class="m-sv" onclick="saveEditApply()">수정 저장</button><button class="m-cl" onclick="closeMo('mo-edit-apply')">취소</button></div>
   </div>
