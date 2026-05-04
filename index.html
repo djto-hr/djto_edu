@@ -329,16 +329,13 @@ function getCrossCategories(pfx) {
 /** 저장된 cross_categories 배열 → UI에 복원 */
 function setCrossCategories(pfx, arr) {
   if (!Array.isArray(arr) || !arr.length) return;
-  // DOM이 아직 없을 수 있으므로 requestAnimationFrame으로 지연
-  requestAnimationFrame(() => {
-    arr.forEach(c => {
-      let o = null;
-      if (c.cat === '공통필수') o = CROSS_COMMON_OPTS.find(x => x.commonType === c.commonType);
-      if (c.cat === '법정의무') o = CROSS_LEGAL_OPTS.find(x => x.legalType  === c.legalType);
-      if (!o) return;
-      const cb = document.querySelector('.' + pfx + '-xchk[value="' + o.id + '"]');
-      if (cb && !cb.checked) { cb.checked = true; onCrossChk(pfx, o.id, true); }
-    });
+  arr.forEach(c => {
+    let o = null;
+    if (c.cat === '공통필수') o = CROSS_COMMON_OPTS.find(x => x.commonType === c.commonType);
+    if (c.cat === '법정의무') o = CROSS_LEGAL_OPTS.find(x => x.legalType  === c.legalType);
+    if (!o) return;
+    const cb = document.querySelector('.' + pfx + '-xchk[value="' + o.id + '"]');
+    if (cb && !cb.checked) { cb.checked = true; onCrossChk(pfx, o.id, true); }
   });
 }
 
@@ -1908,7 +1905,12 @@ async function doLookup() {
     const r=await apiGet({action:'getApply',empno:empno||'',name:name||''});
     hideLoad();
     if(!r?.success){showToast('조회 오류','red');return;}
-    rows=r.data.map(x=>migrateHours({...x,hours:Number(x.hours),legal_types:Array.isArray(x.legal_types)?x.legal_types:(x.legal_types||'').split(',').filter(Boolean)}));
+    rows=r.data.map(x=>{
+      // cross_categories: 서버에 없으면 로컬 DB 캐시에서 보완 (AS v5 호환)
+      const cached = DB.find(d=>d.id===x.id);
+      if(!x.cross_categories && cached?.cross_categories) x.cross_categories = cached.cross_categories;
+      return migrateHours({...x,hours:Number(x.hours),legal_types:Array.isArray(x.legal_types)?x.legal_types:(x.legal_types||'').split(',').filter(Boolean)});
+    });
   } else{
     hideLoad();
     rows=DB.filter(r=>(!empno||r.empno===empno)&&(!name||r.name.includes(name)));
@@ -2509,13 +2511,14 @@ async function saveEditApply() {
   if(cat==='공통필수'&&!commonType){ showToast('공통필수 유형을 선택하세요.','amber'); return; }
   if(cat==='기관지정'&&cdpYn&&!jobTrack){ showToast('CDP 연계 시 직무트랙을 선택하세요.','amber'); return; }
   const r=DB.find(d=>d.id===id); if(!r)return;
+  // cross_categories를 apiPost 전에 미리 캡처
+  const _eaCross=getCrossCategories('ea');
   if(!IS_DEMO){
     showLoad("수정 저장 중...");
-    const res=await apiPost({action:"editApply",id,dept,course_name:course,org,hours:mins,apply_date:date,edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,cross_categories:getCrossCategories('ea'),reason});
+    const res=await apiPost({action:"editApply",id,dept,course_name:course,org,hours:mins,apply_date:date,edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,cross_categories:_eaCross,reason});
     hideLoad();
     if(!res?.success) showToast("서버 저장 실패: "+(res?.error||"오류"),"red");
   }
-  const _eaCross=getCrossCategories('ea');
   r.dept=dept; r.course_name=course; r.org=org; r.hours=mins;
   r.apply_date=date; r.edu_method=method; r.edu_category=cat;
   r.legal_types=cat==='법정의무'?legalTypes:[];
@@ -2600,14 +2603,15 @@ async function saveCatEdit(){
   if(nc==='법정의무'&&!nl.length){showToast('법정의무 유형을 하나 이상 선택해주세요.','amber');return;}
   if(nc==='공통필수'&&!ncom){showToast('공통필수 유형을 선택해주세요.','amber');return;}
   if(nc==='기관지정'&&ncdp&&!ntrk){showToast('CDP 연계 시 직무트랙을 선택해주세요.','amber');return;}
+  // cross_categories를 apiPost 전에 미리 캡처 (모달 DOM이 살아있는 시점)
+  const _ceCross=getCrossCategories('ce');
   const before={edu_method:r.edu_method,edu_category:r.edu_category,legal_types:r.legal_types,common_type:r.common_type,cdp_yn:r.cdp_yn,job_track:r.job_track};
   if(!IS_DEMO){
     showLoad("수정 저장 중...");
-    const res=await apiPost({action:"editCategory",apply_id:openId,edu_method:nm,edu_category:nc,legal_types:nl,common_type:ncom,cdp_yn:ncdp,job_track:ntrk,cross_categories:getCrossCategories('ce'),reason});
+    const res=await apiPost({action:"editCategory",apply_id:openId,edu_method:nm,edu_category:nc,legal_types:nl,common_type:ncom,cdp_yn:ncdp,job_track:ntrk,cross_categories:_ceCross,reason});
     hideLoad();
     if(!res?.success) showToast("서버 저장 실패: "+(res?.error||"오류"),"red");
   }
-  const _ceCross=getCrossCategories('ce');
   r.edu_method=nm; r.edu_category=nc; r.legal_types=nc==='법정의무'?nl:[];
   r.common_type=nc==='공통필수'?ncom:''; r.cdp_yn=nc==='기관지정'?ncdp:false;
   r.job_track=(nc==='기관지정'&&ncdp)?ntrk:''; r.cross_categories=_ceCross;
@@ -2836,10 +2840,18 @@ async function executeDownload() {
   // 법정의무 이수율 데이터
   const getLegalData = () => {
     const legalDoneMap = {};
-    done.filter(r => r.edu_category === '법정의무').forEach(r => {
-      (r.legal_types||[]).forEach(t => {
-        if (!legalDoneMap[t]) legalDoneMap[t] = new Set();
-        legalDoneMap[t].add(String(r.empno));
+    done.forEach(r => {
+      if(r.edu_category==='법정의무'){
+        (r.legal_types||[]).forEach(t => {
+          if (!legalDoneMap[t]) legalDoneMap[t] = new Set();
+          legalDoneMap[t].add(String(r.empno));
+        });
+      }
+      (r.cross_categories||[]).forEach(c=>{
+        if(c.cat==='법정의무'&&c.legalType){
+          if(!legalDoneMap[c.legalType]) legalDoneMap[c.legalType]=new Set();
+          legalDoneMap[c.legalType].add(String(r.empno));
+        }
       });
     });
     // 재난·안전 공통필수 → 소방안전화재예방 중복 인정
@@ -2936,10 +2948,20 @@ function drillDept(dept) {
 
   // 법정의무 부서별 이수 집계 (공무직 포함)
   const legalByType = {};
-  Object.values(empRowsMap).flat().filter(r=>r.edu_category==='법정의무').forEach(r=>{
-    (r.legal_types||[]).forEach(t=>{
-      if(!legalByType[t]) legalByType[t]=new Set();
-      legalByType[t].add(r.empno);
+  Object.values(empRowsMap).flat().forEach(r=>{
+    // 법정의무 직접 이수
+    if(r.edu_category==='법정의무'){
+      (r.legal_types||[]).forEach(t=>{
+        if(!legalByType[t]) legalByType[t]=new Set();
+        legalByType[t].add(r.empno);
+      });
+    }
+    // 기관지정 교육의 cross 법정의무 반영
+    (r.cross_categories||[]).forEach(c=>{
+      if(c.cat==='법정의무'&&c.legalType){
+        if(!legalByType[c.legalType]) legalByType[c.legalType]=new Set();
+        legalByType[c.legalType].add(r.empno);
+      }
     });
   });
 
@@ -3254,12 +3276,22 @@ async function renderStats(){
   const LEGAL_TYPES_STAT = ['4대폭력예방','직장내괴롭힘예방','소방안전화재예방','장애인인식개선교육','자살예방교육','퇴직연금교육','아동학대예방교육','개인정보보호교육','정보공개교육'];
   // { dept: { type: Set(empno) } }
   const legalTypeByDept = {};
-  done.filter(r=>r.edu_category==='법정의무').forEach(r=>{
+  done.forEach(r=>{
     const nd = normalizeDept(r.dept);
     if(!legalTypeByDept[nd]) legalTypeByDept[nd]={};
-    (r.legal_types||[]).forEach(t=>{
-      if(!legalTypeByDept[nd][t]) legalTypeByDept[nd][t]=new Set();
-      legalTypeByDept[nd][t].add(r.empno);
+    // 법정의무 직접 이수
+    if(r.edu_category==='법정의무'){
+      (r.legal_types||[]).forEach(t=>{
+        if(!legalTypeByDept[nd][t]) legalTypeByDept[nd][t]=new Set();
+        legalTypeByDept[nd][t].add(r.empno);
+      });
+    }
+    // 기관지정 교육의 cross 법정의무 반영
+    (r.cross_categories||[]).forEach(c=>{
+      if(c.cat==='법정의무'&&c.legalType){
+        if(!legalTypeByDept[nd][c.legalType]) legalTypeByDept[nd][c.legalType]=new Set();
+        legalTypeByDept[nd][c.legalType].add(r.empno);
+      }
     });
   });
   // legalDoneByDept: 하위호환 (사용 안함, 아래에서 직접 계산)
@@ -3451,10 +3483,20 @@ async function renderStats(){
 
   // 법정의무 유형별 이수자 집계
   const legalDoneMap = {}; // { type: Set(empno) }
-  done.filter(r=>r.edu_category==='법정의무').forEach(r=>{
-    (r.legal_types||[]).forEach(t=>{
-      if(!legalDoneMap[t]) legalDoneMap[t]=new Set();
-      legalDoneMap[t].add(String(r.empno));
+  done.forEach(r=>{
+    // 법정의무 직접 이수
+    if(r.edu_category==='법정의무'){
+      (r.legal_types||[]).forEach(t=>{
+        if(!legalDoneMap[t]) legalDoneMap[t]=new Set();
+        legalDoneMap[t].add(String(r.empno));
+      });
+    }
+    // 기관지정 cross 법정의무 반영
+    (r.cross_categories||[]).forEach(c=>{
+      if(c.cat==='법정의무'&&c.legalType){
+        if(!legalDoneMap[c.legalType]) legalDoneMap[c.legalType]=new Set();
+        legalDoneMap[c.legalType].add(String(r.empno));
+      }
     });
   });
   // 9종 모두 이수한 직원 수 (탭3 전체 이수율 카드용)
