@@ -2292,7 +2292,7 @@ function fmtDate(d, full) {
   if(!/^\d{4}-\d{2}-\d{2}$/.test(clean)) return String(d).slice(0,10);
   return full?clean:clean.slice(5);
 }
-function sBadge(s){ return s==='대기'?'<span class="badge bd-wait">승인 대기</span>':s==='승인'?'<span class="badge bd-done">승인 완료</span>':'<span class="badge bd-rej">반려</span>'; }
+function sBadge(s){ return s==='대기'?'<span class="badge bd-wait">승인 대기</span>':s==='승인'?'<span class="badge bd-done">승인 완료</span>':s==='반려'?'<span class="badge bd-rej">반려</span>':'<span class="badge bd-rej" style="opacity:.5;">—</span>'; }
 function cBadge(c){ const m={'기관지정':'bd-inst','법정의무':'bd-legal','공통필수':'bd-common','기타':'bd-etc'}; return `<span class="badge ${m[c]||'bd-etc'}">${c||'—'}</span>`; }
 function mBadge(m){ return m==='집합'?'<span class="badge bd-gb">집합</span>':'<span class="badge bd-ol">온라인</span>'; }
 
