@@ -1359,12 +1359,12 @@ function updateTimePreview(hId, mId, previewId) {
         <!-- 탭4: 공통필수 이수율 -->
         <div id="tab-common" class="stats-tab-content" style="display:none;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <div style="font-size:12px;color:var(--muted);">공통필수 3종 각 2시간 이상 이수율 · <b id="common-scope-label">일반직 기준</b></div>
+            <div style="font-size:12px;color:var(--muted);">공통필수 3종 각 2시간 이상 이수율 · <b id="common-scope-label">전체 (공무직 포함) 기준</b></div>
             <div style="display:flex;gap:3px;background:var(--gray);border-radius:8px;padding:3px;border:1px solid var(--bdr);">
               <button id="common-btn-gen" onclick="setCommonScope('일반직')"
-                style="font-size:11px;font-weight:700;font-family:inherit;padding:4px 12px;border:none;border-radius:6px;cursor:pointer;background:var(--navy);color:#fff;transition:all .12s;">일반직</button>
+                style="font-size:11px;font-weight:700;font-family:inherit;padding:4px 12px;border:none;border-radius:6px;cursor:pointer;background:transparent;color:var(--muted);transition:all .12s;">일반직</button>
               <button id="common-btn-all" onclick="setCommonScope('전체')"
-                style="font-size:11px;font-weight:700;font-family:inherit;padding:4px 12px;border:none;border-radius:6px;cursor:pointer;background:transparent;color:var(--muted);transition:all .12s;">전체 (공무직 포함)</button>
+                style="font-size:11px;font-weight:700;font-family:inherit;padding:4px 12px;border:none;border-radius:6px;cursor:pointer;background:var(--navy);color:#fff;transition:all .12s;">전체 (공무직 포함)</button>
             </div>
           </div>
           <div id="common-summary-banner" style="margin-bottom:12px;"></div>
@@ -3407,6 +3407,7 @@ function showCommonNotDone(ckeyEncoded) {
 
 
 function switchStatsTab(tabId, btn) {
+  if (tabId === 'tab-common' && window._commonTabReady) renderCommonTab();
   document.querySelectorAll('.stats-tab-content').forEach(el => el.style.display = 'none');
   document.querySelectorAll('.stats-tab').forEach(b => {
     b.style.background = 'transparent'; b.style.color = 'var(--muted)';
@@ -3791,7 +3792,7 @@ async function renderStats(){
 
   // ── 탭4: 공통필수 이수율 ──
   // 공통필수 현재 scope (일반직 / 전체)
-  window._commonScope = window._commonScope || '일반직';
+  window._commonScope = window._commonScope || '전체';
 
   function setCommonScope(scope) {
     window._commonScope = scope;
@@ -3817,7 +3818,7 @@ async function renderStats(){
     ];
 
     // scope에 따라 대상 직원 선택
-    const scope = window._commonScope || '일반직';
+    const scope = window._commonScope || '전체';
     const targetStaffList = scope === '전체' ? totalStaffList : totalStaffList.filter(s => s.jobType === '일반직');
     const generalStaffList = targetStaffList; // 하위 코드 호환
     const genTotal = targetStaffList.length || 1;
@@ -3910,6 +3911,7 @@ async function renderStats(){
     window._empCommonMins  = empCommonMins;
     window._commonGenList  = generalStaffList;
     window._commonList     = COMMON_LIST;
+    window._commonTabReady = true;
   }
 
   // ── 탭5: 교육구분별 / 방법별 ──
