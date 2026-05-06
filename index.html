@@ -3193,75 +3193,84 @@ function showLegalNotDone(tidxEncoded) {
 // ════════════════════════════════════════════════
 // 통계
 // ════════════════════════════════════════════════
-function showCommonNotDone(ckeyEncoded, cInfo) {
-  const key = decodeURIComponent(ckeyEncoded);
-  const doneMap    = window._commonDoneMap || {};
-  const genList    = window._commonGenList || [];
-  const empMins    = window._empCommonMins || {};
-  const COMMON_LIST = window._commonList || [];
-  const goalMins   = (COMMON_LIST.find(c=>c.key===key)||{}).goalMins || 120;
-
+function showCommonNotDone(ckeyEncoded) {
+  const key      = decodeURIComponent(ckeyEncoded);
+  const doneMap  = window._commonDoneMap || {};
+  const staffList= window._commonGenList || [];   // 일반직
+  const totalN   = staffList.length;
   const doneSet  = doneMap[key] || new Set();
-  const notDone  = genList.filter(s => !doneSet.has(String(s.empno)));
-  const doneList = genList.filter(s =>  doneSet.has(String(s.empno)));
+  const notDone  = staffList.filter(s => !doneSet.has(String(s.empno)));
+  const done     = staffList.filter(s =>  doneSet.has(String(s.empno)));
+
+  // 표시 라벨
+  const label = ((window._commonList||[]).find(c=>c.key===key)||{}).label || key;
 
   const panel = document.getElementById('common-not-done-panel');
   const title = document.getElementById('common-not-done-title');
   const list  = document.getElementById('common-not-done-list');
   if (!panel) return;
 
-  title.textContent = (cInfo?.label||key) + ' — 이수 ' + doneList.length + '명 / 일반직 ' + genList.length + '명 (미이수 ' + notDone.length + '명)';
+  title.textContent = label + ' — 이수 ' + done.length + '명 / 일반직 ' + totalN + '명 (미이수 ' + notDone.length + '명)';
 
-  // 부서별 그룹핑
-  const groupByDept = arr => {
-    const m = {};
-    arr.forEach(s => { const d = s.dept||'기타'; if(!m[d]) m[d]=[]; m[d].push(s); });
-    return m;
+  // 부서별 그룹핑 (showLegalNotDone과 동일)
+  const groupByDept = (arr) => {
+    const map = {};
+    arr.forEach(s => {
+      const dept = s.dept || normalizeDept(s.dept) || '기타';
+      if (!map[dept]) map[dept] = [];
+      map[dept].push(s);
+    });
+    return map;
   };
-  const sortDepts = depts => {
-    const ordered = (window.DEPT_ORDER||[]).filter(d=>depts.includes(d));
-    const rest    = depts.filter(d=>!(window.DEPT_ORDER||[]).includes(d)).sort();
+  const sortDepts = (depts) => {
+    const ordered = DEPT_ORDER.filter(d => depts.includes(d));
+    const rest    = depts.filter(d => !DEPT_ORDER.includes(d)).sort();
     return [...ordered, ...rest];
   };
-  const chip = (s, isDone) => {
-    const mins = empMins[s.empno]?.[key] || 0;
-    const mStr = mins > 0 ? ' ' + minsToStr(mins) : '';
-    return '<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:500;background:'
-      +(isDone?'var(--gl)':'var(--gray)')+';color:'+(isDone?'var(--gd)':'var(--text)')+';border:0.5px solid '+(isDone?'var(--gm)':'var(--bdr)')+';margin:2px;white-space:nowrap;">'
-      +(isDone?'✓ ':'')+s.name+mStr+'</span>';
-  };
+
+  const chip = (s, isDone) =>
+    '<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:500;background:'
+    +(isDone?'var(--gl)':'var(--gray)')+';color:'+(isDone?'var(--gd)':'var(--text)')+';border:0.5px solid '+(isDone?'var(--gm)':'var(--bdr)')+';margin:2px;white-space:nowrap;">'
+    +(isDone?'✓ ':'')+s.name+'</span>';
+
   const renderDeptSection = (groupMap, isDone) => {
-    return sortDepts(Object.keys(groupMap)).map(dept => {
-      const members = groupMap[dept];
-      const deptDone  = doneList.filter(s=>s.dept===dept).length;
-      const deptTotal = genList.filter(s=>s.dept===dept).length;
-      const deptRate  = deptTotal>0 ? Math.round(deptDone/deptTotal*100) : 0;
+    const depts = sortDepts(Object.keys(groupMap));
+    return depts.map(dept => {
+      const members  = groupMap[dept];
+      const deptTotal= staffList.filter(s => s.dept===dept).length;
+      const deptDone = done.filter(s => s.dept===dept).length;
+      const deptRate = deptTotal>0 ? Math.round(deptDone/deptTotal*100) : 0;
       const rc = deptRate>=80?'var(--gd)':deptRate>=50?'var(--ad)':'var(--rd)';
       return '<div style="margin-bottom:12px;">'
-        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">'
-        +'<span style="font-size:12px;font-weight:700;">' + dept + '</span>'
-        +'<span style="font-size:11px;font-weight:600;color:'+rc+';background:var(--gray);padding:2px 8px;border-radius:20px;">'
-        +deptDone+'명 이수 / '+deptTotal+'명 ('+deptRate+'%)</span>'
-        +'</div>'
-        +'<div style="display:flex;flex-wrap:wrap;">'
-        +members.map(s=>chip(s,isDone)).join('')
-        +'</div></div>';
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">'
+        + '<span style="font-size:12px;font-weight:700;color:var(--text);">' + dept + '</span>'
+        + '<span style="font-size:11px;font-weight:600;color:'+rc+';background:var(--gray);padding:2px 8px;border-radius:20px;">'
+        + deptDone+'명 이수 / '+deptTotal+'명 ('+deptRate+'%)</span>'
+        + '</div>'
+        + '<div style="display:flex;flex-wrap:wrap;overflow:hidden;width:100%;box-sizing:border-box;">'
+        + members.map(s=>chip(s,isDone)).join('')
+        + '</div>'
+        + '</div>';
     }).join('');
   };
 
+  const notDoneByDept = groupByDept(notDone);
+  const doneByDept    = groupByDept(done);
+
   list.innerHTML =
     '<div style="width:100%;margin-bottom:12px;">'
-    +'<div style="font-size:12px;font-weight:700;color:var(--rd);margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid var(--rm);">✗ 미이수 '+notDone.length+'명</div>'
-    +(notDone.length ? renderDeptSection(groupByDept(notDone), false) : '<span style="font-size:12px;color:var(--muted);">없음 (전원 이수)</span>')
-    +'</div>'
-    +'<div style="width:100%;border-top:1px solid var(--bdr);padding-top:12px;">'
-    +'<div style="font-size:12px;font-weight:700;color:var(--gd);margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid var(--gm);">✓ 이수 '+doneList.length+'명</div>'
-    +(doneList.length ? renderDeptSection(groupByDept(doneList), true) : '<span style="font-size:12px;color:var(--muted);">없음</span>')
-    +'</div>';
+    + '<div style="font-size:12px;font-weight:700;color:var(--rd);margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid var(--rm);">✗ 미이수 ' + notDone.length + '명</div>'
+    + (notDone.length ? renderDeptSection(notDoneByDept, false) : '<span style="font-size:12px;color:var(--muted);">없음 (전원 이수)</span>')
+    + '</div>'
+    + '<div style="width:100%;border-top:1px solid var(--bdr);padding-top:12px;">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--gd);margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid var(--gm);">✓ 이수 ' + done.length + '명</div>'
+    + (done.length ? renderDeptSection(doneByDept, true) : '<span style="font-size:12px;color:var(--muted);">없음</span>')
+    + '</div>';
 
   panel.style.display = 'block';
   panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
+
 
 function switchStatsTab(tabId, btn) {
   document.querySelectorAll('.stats-tab-content').forEach(el => el.style.display = 'none');
@@ -3728,7 +3737,7 @@ async function renderStats(){
         : 0;
       const ckey = encodeURIComponent(c.key);
       return `<div style="background:${bg};border:1px solid ${border};border-radius:var(--rl2);padding:14px 18px;cursor:pointer;"
-        onclick="showCommonNotDone('${ckey}',${JSON.stringify(c)})"
+        onclick="showCommonNotDone('${ckey}')"
         onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
           <div style="font-size:13px;font-weight:700;color:${color};">${c.label}</div>
