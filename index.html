@@ -1061,6 +1061,7 @@ function updateTimePreview(hId, mId, previewId) {
               <div style="margin-top:5px;"><span class="time-preview" id="bk-hours-preview">—</span></div>
             </div>
             <div class="fg" style="margin:0;"><label>교육기관/주관</label><input type="text" id="bk-org" placeholder="예: 인사노무팀"></div>
+
           </div>
           <div id="bk-sub-legal" style="display:none;margin-top:12px;background:var(--gray);border-radius:var(--r);padding:12px 14px;">
             <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">법정의무 유형 선택 <span class="req">*</span></div>
@@ -1068,6 +1069,26 @@ function updateTimePreview(hId, mId, previewId) {
           </div>
           <div id="bk-sub-common" style="display:none;margin-top:12px;background:var(--gray);border-radius:var(--r);padding:12px 14px;">
             <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">공통필수 유형 <span class="req">*</span></div>
+          <div id="bk-sub-inst" style="display:none;margin-top:12px;background:var(--gray);border-radius:var(--r);padding:12px 14px;border:1px solid var(--bdr);">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:10px;letter-spacing:.04em;">CDP 연계 여부</div>
+            <div class="fg" style="margin-bottom:8px;">
+              <select id="bk-cdp" onchange="onBkCdpChange()">
+                <option value="false">아니오</option>
+                <option value="true">예 — 직무트랙 선택</option>
+              </select>
+            </div>
+            <div id="bk-trk" style="display:none;">
+              <div class="fg" style="margin:0;">
+                <label style="font-size:11px;">직무트랙</label>
+                <select id="bk-track">
+                  <option value="">선택하세요</option>
+                  <option>기획감사</option><option>경영관리</option><option>관광</option><option>MICE</option><option>시설관리</option>
+                </select>
+              </div>
+            </div>
+            <!-- cross 중복분류 -->
+            <div id="bk-cross-wrapper" style="margin-top:8px;"></div>
+          </div>
             <select id="bk-common" style="width:100%;padding:8px 11px;border:1px solid var(--bdr);border-radius:var(--r);font-size:13px;font-family:inherit;outline:none;">
               <option value="">선택</option><option value="디지털역량">디지털역량</option><option value="리더십">리더십</option><option value="직무공통">직무공통</option><option value="소양">소양</option>
             </select>
@@ -1104,8 +1125,9 @@ function updateTimePreview(hId, mId, previewId) {
                 <thead style="position:sticky;top:0;background:#F8F9FB;z-index:1;">
                   <tr>
                     <th style="padding:8px 12px;text-align:center;border-bottom:1px solid var(--bdr);width:36px;">#</th>
-                    <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--bdr);width:100px;">사번</th>
-                    <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--bdr);width:80px;">이름</th>
+                    <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--bdr);width:90px;">사번</th>
+                    <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--bdr);width:70px;">이름</th>
+                    <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--bdr);">부서</th>
                     <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--bdr);">상태</th>
                   </tr>
                 </thead>
@@ -3088,7 +3110,9 @@ function drillDept(dept) {
 
   // 직원별 승인내역 맵
   const empRowsMap = {};
-  DB.filter(r => r.status==='승인' && normalizeDept(r.dept)===dept)
+  // renderStats에서 받은 전체 데이터 우선 사용 (common_type 등 필드 완전성 보장)
+  const _drillSource = window._statsRawDB || DB;
+  _drillSource.filter(r => r.status==='승인' && normalizeDept(r.dept)===dept)
     .forEach(r => {
       if (!empRowsMap[r.empno]) empRowsMap[r.empno] = [];
       empRowsMap[r.empno].push(r);
@@ -3554,6 +3578,7 @@ async function renderStats(){
 
   const done = rawDB.filter(r=>r.status==='승인');
   window._statsDone = done;
+  window._statsRawDB = rawDB; // drillDept에서 사용
 
   // ── 요약 카드 ──
   document.getElementById('s-tot').textContent=sm.total;
@@ -4035,6 +4060,21 @@ function onBkCatChange(){
   const c=document.getElementById('bk-cat').value;
   document.getElementById('bk-sub-legal').style.display=c==='법정의무'?'block':'none';
   document.getElementById('bk-sub-common').style.display=c==='공통필수'?'block':'none';
+  document.getElementById('bk-sub-inst').style.display=c==='기관지정'?'block':'none';
+  // cross box
+  const bw=document.getElementById('bk-cross-wrapper');
+  if(bw){
+    if(c==='기관지정'){
+      if(!bw.querySelector('.cross-box')) bw.innerHTML=buildCrossBox('bk');
+      toggleCrossBox('bk','기관지정');
+    } else {
+      toggleCrossBox('bk','');
+    }
+  }
+}
+function onBkCdpChange(){
+  const v=document.getElementById('bk-cdp').value;
+  document.getElementById('bk-trk').style.display=v==='true'?'block':'none';
 }
 function onBkDrop(e){ e.preventDefault(); document.getElementById('bk-file-drop').classList.remove('drag'); const f=e.dataTransfer.files[0]; if(f)parseBkFile(f); }
 function onBkFileSelect(inp){ const f=inp.files[0]; if(f)parseBkFile(f); }
@@ -4080,7 +4120,7 @@ function renderBkPreview(rows){
   const errRows=rows.filter(r=>r.error), okRows=rows.filter(r=>!r.error);
   document.getElementById('bk-preview-cnt').textContent='총 '+rows.length+'명 (정상 '+okRows.length+'명)';
   document.getElementById('bk-err-cnt').textContent=errRows.length?'오류 '+errRows.length+'행':'';
-  document.getElementById('bk-preview-tbody').innerHTML=rows.map(r=>`<tr style="background:${r.error?'var(--rl)':'transparent'};"><td style="padding:7px 12px;text-align:center;color:var(--muted);font-size:12px;border-bottom:1px solid var(--bdr);">${r.rowNum}</td><td style="padding:7px 12px;border-bottom:1px solid var(--bdr);font-size:13px;">${r.empno||'<span style="color:#A32D2D;">없음</span>'}</td><td style="padding:7px 12px;border-bottom:1px solid var(--bdr);font-size:13px;">${r.name||'<span style="color:#A32D2D;">없음</span>'}</td><td style="padding:7px 12px;border-bottom:1px solid var(--bdr);font-size:12px;color:${r.error?'#A32D2D':'#3B6D11'};">${r.error?'⚠ '+r.error:'✓ 정상'}</td></tr>`).join('');
+  document.getElementById('bk-preview-tbody').innerHTML=rows.map(r=>`<tr style="background:${r.error?'var(--rl)':'transparent'};"><td style="padding:7px 12px;text-align:center;color:var(--muted);font-size:12px;border-bottom:1px solid var(--bdr);">${r.rowNum}</td><td style="padding:7px 12px;border-bottom:1px solid var(--bdr);font-size:13px;">${r.empno||'<span style="color:#A32D2D;">없음</span>'}</td><td style="padding:7px 12px;border-bottom:1px solid var(--bdr);font-size:13px;">${r.name||'<span style="color:#A32D2D;">없음</span>'}</td><td style="padding:7px 12px;border-bottom:1px solid var(--bdr);font-size:12px;color:var(--muted);">${r.dept||'—'}</td><td style="padding:7px 12px;border-bottom:1px solid var(--bdr);font-size:12px;color:${r.error?'#A32D2D':'#3B6D11'};">${r.error?'⚠ '+r.error:'✓ 정상'}</td></tr>`).join('');
   if(errRows.length){ document.getElementById('bk-err-box').style.display='block'; document.getElementById('bk-err-list').innerHTML=errRows.map(r=>`· ${r.rowNum}행: ${r.error} (사번: ${r.empno||'—'}, 이름: ${r.name||'—'})`).join('<br>'); }
   else document.getElementById('bk-err-box').style.display='none';
   document.getElementById('bk-preview-wrap').style.display='block';
@@ -4099,12 +4139,19 @@ async function submitBulk(){
   if(!course){ showToast('과정명을 입력하세요.','amber'); document.getElementById('bk-course').focus(); return; }
   if(!date){ showToast('이수 일자를 선택하세요.','amber'); return; }
   if(!mins){ showToast('이수 시간을 입력하세요.','amber'); return; }
-  let legalTypes=[],commonType='';
+  let legalTypes=[],commonType='',cdpYn=false,jobTrack='',crossCategories=[];
   if(cat==='법정의무'){ legalTypes=[...document.querySelectorAll('.bk-lc:checked')].map(c=>c.value); if(!legalTypes.length){showToast('법정의무 유형을 선택하세요.','amber');return;} }
   if(cat==='공통필수'){ commonType=document.getElementById('bk-common').value; if(!commonType){showToast('공통필수 유형을 선택하세요.','amber');return;} }
+  if(cat==='기관지정'){
+    cdpYn=document.getElementById('bk-cdp')?.value==='true';
+    jobTrack=cdpYn?(document.getElementById('bk-track')?.value||''):'';
+    crossCategories=getCrossCategories('bk');
+  }
   const validRows=bkParsedRows.filter(r=>!r.error);
   if(!validRows.length){ showToast('처리할 명단이 없습니다. 파일을 업로드하세요.','amber'); return; }
-  if(!confirm('총 '+validRows.length+'명의 이수처리를 진행하시겠습니까?\n\n과정: '+course+'\n이수일: '+date+' / '+minsToStr(mins)+' / '+status+(bkProofFile?'\n증빙파일: '+bkProofFile.name:'\n증빙파일: 없음'))) return;
+  const skipRows = bkParsedRows.filter(r=>r.error);
+  const skipMsg = skipRows.length ? '\n\n⚠ 오류 '+skipRows.length+'명 제외:\n'+skipRows.map(r=>`  · ${r.empno} ${r.name} (${r.error})`).join('\n') : '';
+  if(!confirm('총 '+bkParsedRows.length+'명 중 '+validRows.length+'명 이수처리를 진행하시겠습니까?'+skipMsg+'\n\n과정: '+course+'\n이수일: '+date+' / '+minsToStr(mins)+' / '+status+(bkProofFile?'\n증빙파일: '+bkProofFile.name:'\n증빙파일: 없음'))) return;
   const btn=document.getElementById('bk-submit-btn'); btn.disabled=true; btn.textContent='처리 중...';
   showLoad('단체 이수처리 중... (0 / '+validRows.length+'명)');
   let okCount=0,errCount=0; const resultLog=[];
@@ -4112,8 +4159,9 @@ async function submitBulk(){
     const r=validRows[i];
     document.getElementById('lmsg').textContent='단체 이수처리 중... ('+(i+1)+' / '+validRows.length+'명)';
     try{
-      const newRecord={id:'BK'+Date.now()+'_'+i,apply_date:date,empno:r.empno,name:r.name,dept:'—',course_name:course,hours:mins,org:org||'단체교육',edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:false,job_track:'',file_url:'',file_name:bkProofFile?bkProofFile.name:'단체이수처리',status,reject_reason:'',bulk:true};
-      if(!IS_DEMO){ const res=await apiPost({action:'submitApply',...newRecord,legal_types:legalTypes,bulk:true}); if(res?.success){okCount++;resultLog.push({...r,result:'✓ 성공'});}else{errCount++;resultLog.push({...r,result:'✗ 실패: '+(res?.error||'오류')});} }
+      const deptVal = r.dept || '—'; // 파싱 시 인사DB 자동 매핑됨
+      const newRecord={id:'BK'+Date.now()+'_'+i,apply_date:date,empno:r.empno,name:r.name,dept:deptVal,course_name:course,hours:mins,org:org||'단체교육',edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,cross_categories:crossCategories,file_url:'',file_name:bkProofFile?bkProofFile.name:'단체이수처리',status,reject_reason:'',bulk:true};
+      if(!IS_DEMO){ const res=await apiPost({action:'submitApply',...newRecord,legal_types:legalTypes,cross_categories:crossCategories,bulk:true}); if(res?.success){okCount++;resultLog.push({...r,result:'✓ 성공'});}else{errCount++;resultLog.push({...r,result:'✗ 실패: '+(res?.error||'오류')});} }
       else{ DB.unshift(newRecord); okCount++; resultLog.push({...r,result:'✓ 등록 완료'}); }
     }catch(e){ errCount++; resultLog.push({...r,result:'✗ 오류: '+e.message}); }
   }
@@ -4134,6 +4182,9 @@ function resetBulk(){
   document.getElementById('bk-course').value=''; document.getElementById('bk-hours-h').value=''; document.getElementById('bk-hours-m').value='';
   document.getElementById('bk-hours-preview').textContent='—'; document.getElementById('bk-org').value='';
   document.getElementById('bk-cat').value='공통필수'; document.getElementById('bk-method').value='집합'; document.getElementById('bk-status').value='승인';
+  const _bkcdp=document.getElementById('bk-cdp'); if(_bkcdp)_bkcdp.value='false';
+  document.getElementById('bk-trk').style.display='none';
+  const _bkcw=document.getElementById('bk-cross-wrapper'); if(_bkcw)_bkcw.innerHTML='';
   document.getElementById('bk-file-name').textContent=''; document.getElementById('bk-file').value='';
   document.getElementById('bk-preview-wrap').style.display='none'; document.getElementById('bk-result-wrap').style.display='none';
   document.getElementById('bk-result-msg').textContent='';
