@@ -572,12 +572,18 @@ function checkCompleted(doneRows) {
     (r.cross_categories||[]).forEach(c => { if(c.cat==='공통필수') e.push({hours:r.hours, type:c.commonType||''}); });
     return e;
   });
-  const cMins = (kws) => allCommonEntries
-    .filter(x => kws.some(k => x.type.includes(k)))
+  // doLookup과 동일한 양방향 aliases 매칭
+  const DUTY_ALIASES = {
+    disaster: ['재난안전','재난·산업안전','재난','산업안전'],
+    ethics:   ['공직윤리','공직윤리(청렴)','청렴'],
+    digital:  ['디지털역량','디지털','AI','DX'],
+  };
+  const cMins = (aliases) => allCommonEntries
+    .filter(x => aliases.some(a => (x.type||'').includes(a) || a.includes(x.type||'')))
     .reduce((s,x) => s + toMins(x.hours), 0);
-  const disasterMins = cMins(['재난','산업안전']);
-  const ethicsMins   = cMins(['공직윤리','청렴']);
-  const digitalMins  = cMins(['디지털','AI','DX']);
+  const disasterMins = cMins(DUTY_ALIASES.disaster);
+  const ethicsMins   = cMins(DUTY_ALIASES.ethics);
+  const digitalMins  = cMins(DUTY_ALIASES.digital);
 
   return {
     total:   { ok: totalMins >= COMPLETION_CONDS.TOTAL_MINS,  mins: totalMins,    goal: COMPLETION_CONDS.TOTAL_MINS,  label: '전체 이수시간',    detail: '50시간 이상' },
@@ -2230,7 +2236,7 @@ async function doLookup() {
     return '<div style="display:flex;align-items:center;gap:5px;padding:5px 9px;background:'+bg+';border:0.5px solid '+bdr+';border-radius:20px;font-size:11px;font-weight:600;color:'+color+';">'+(ok?'✓ ':'✗ ')+t+'</div>';
   }).join('');
 
-  const COMMON_DUTY_MAP={'재난안전':['재난안전','재난·산업안전'],'디지털역량':['디지털역량'],'공직윤리':['공직윤리','공직윤리(청렴)']};
+  const COMMON_DUTY_MAP={'재난안전':['재난안전','재난·산업안전','재난','산업안전'],'디지털역량':['디지털역량','디지털','AI','DX'],'공직윤리':['공직윤리','공직윤리(청렴)','청렴']};
   const completedCommonTypes=done.filter(r=>r.edu_category==='공통필수').map(r=>r.common_type||'');
   // 공통의무 2시간(120분) 충족 여부
   const commonMinsByType={};
@@ -3453,7 +3459,7 @@ function renderCommonTab() {
   done.forEach(r => {
     if (!empCommonMins[r.empno]) empCommonMins[r.empno] = { '재난안전': 0, '디지털역량': 0, '공직윤리': 0 };
     const addMins = (key, mins) => { if (empCommonMins[r.empno][key] !== undefined) empCommonMins[r.empno][key] += mins; };
-    const match = (aliases, str) => aliases.some(a => (str||'').includes(a));
+    const match = (aliases, str) => aliases.some(a => (str||'').includes(a) || a.includes(str||''));
 
     // 공통필수 직접 이수
     if (r.edu_category === '공통필수') {
