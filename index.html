@@ -4063,10 +4063,13 @@ function buildBkLegalChk(){
   g.innerHTML=LEGAL_TYPES.map(t=>`<label class="chk-item"><input type="checkbox" class="bk-lc" value="${t}"><span>${t}</span></label>`).join('');
 }
 function onBkCatChange(){
-  const c=document.getElementById('bk-cat').value;
-  document.getElementById('bk-sub-legal').style.display=c==='법정의무'?'block':'none';
-  document.getElementById('bk-sub-common').style.display=c==='공통필수'?'block':'none';
-  document.getElementById('bk-sub-inst').style.display=c==='기관지정'?'block':'none';
+  const c=document.getElementById('bk-cat')?.value||'';
+  const _sl=document.getElementById('bk-sub-legal');
+  const _sc=document.getElementById('bk-sub-common');
+  const _si=document.getElementById('bk-sub-inst');
+  if(_sl) _sl.style.display=c==='법정의무'?'block':'none';
+  if(_sc) _sc.style.display=c==='공통필수'?'block':'none';
+  if(_si) _si.style.display=c==='기관지정'?'block':'none';
   // cross box
   const bw=document.getElementById('bk-cross-wrapper');
   if(bw){
