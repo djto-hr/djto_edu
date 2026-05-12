@@ -1075,6 +1075,10 @@ function updateTimePreview(hId, mId, previewId) {
           </div>
           <div id="bk-sub-common" style="display:none;margin-top:12px;background:var(--gray);border-radius:var(--r);padding:12px 14px;">
             <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">공통필수 유형 <span class="req">*</span></div>
+            <select id="bk-common" style="width:100%;padding:8px 11px;border:1px solid var(--bdr);border-radius:var(--r);font-size:13px;font-family:inherit;outline:none;">
+              <option value="">선택</option><option value="공직윤리(청렴)">공직윤리(청렴)</option><option value="재난·산업안전">재난·산업안전</option><option value="디지털역량">디지털역량</option>
+            </select>
+          </div>
           <div id="bk-sub-inst" style="display:none;margin-top:12px;background:var(--gray);border-radius:var(--r);padding:12px 14px;border:1px solid var(--bdr);">
             <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:10px;letter-spacing:.04em;">CDP 연계 여부</div>
             <div class="fg" style="margin-bottom:8px;">
@@ -1092,12 +1096,7 @@ function updateTimePreview(hId, mId, previewId) {
                 </select>
               </div>
             </div>
-            <!-- cross 중복분류 -->
             <div id="bk-cross-wrapper" style="margin-top:8px;"></div>
-          </div>
-            <select id="bk-common" style="width:100%;padding:8px 11px;border:1px solid var(--bdr);border-radius:var(--r);font-size:13px;font-family:inherit;outline:none;">
-              <option value="">선택</option><option value="디지털역량">디지털역량</option><option value="리더십">리더십</option><option value="직무공통">직무공통</option><option value="소양">소양</option>
-            </select>
           </div>
           <div style="margin-top:13px;" class="fg">
             <label>이수 처리 상태 <span class="req">*</span></label>
