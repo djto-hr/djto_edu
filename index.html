@@ -4049,11 +4049,12 @@ function clearBkProof(){
   document.getElementById('bk-proof-ok').style.display='none';
 }
 
-function initBulkPage(){
+async function initBulkPage(){
   const today=new Date().toISOString().split('T')[0];
   const maxDt=today<'2026-12-31'?today:'2026-12-31';
   const dateEl=document.getElementById('bk-date');
   if(dateEl){ dateEl.max=maxDt; if(!dateEl.value)dateEl.value=maxDt; }
+  await loadStaffList();
   buildBkLegalChk(); onBkCatChange();
 }
 function buildBkLegalChk(){
@@ -4102,8 +4103,20 @@ function processBkCSV(text){
   const empnoIdx=findColIdx(header,['사번','empno','직번','사원번호','id']);
   const nameIdx=findColIdx(header,['이름','name','성명']);
   if(empnoIdx<0||nameIdx<0){ showToast('사번/이름 열을 찾을 수 없습니다.','red'); return; }
+  const deptIdx=findColIdx(header,['부서','dept','부서명']);
   const rows=[];
-  for(let i=1;i<lines.length;i++){ const cols=lines[i].split(',').map(c=>c.trim().replace(/^"|"$/g,'')); const empno=cols[empnoIdx]||'',name=cols[nameIdx]||''; rows.push({rowNum:i+1,empno,name,error:!empno?'사번 없음':!name?'이름 없음':''}); }
+  for(let i=1;i<lines.length;i++){
+    const cols=lines[i].split(',').map(c=>c.trim().replace(/^"|"$/g,''));
+    const empno=cols[empnoIdx]||'', name=cols[nameIdx]||'';
+    const fileDept=deptIdx>=0?cols[deptIdx]||'':'';
+    const staff=STAFF_LIST.find(s=>String(s.empno)===String(empno));
+    const dept=fileDept||staff?.dept||'';
+    let error='';
+    if(!empno) error='사번 없음';
+    else if(!name) error='이름 없음';
+    else if(!staff) error='인사DB 미등록';
+    rows.push({rowNum:i+1,empno,name,dept,error});
+  }
   renderBkPreview(rows);
 }
 function processBkXLSX(buffer){
@@ -4115,7 +4128,15 @@ function processBkXLSX(buffer){
     const empnoIdx=findColIdx(header,['사번','empno','직번','사원번호','id']); const nameIdx=findColIdx(header,['이름','name','성명']);
     if(empnoIdx<0||nameIdx<0){ showToast('사번/이름 열을 찾을 수 없습니다.','red'); return; }
     const rows=[];
-    for(let i=1;i<data.length;i++){ const row=data[i]; const empno=String(row[empnoIdx]||'').trim(),name=String(row[nameIdx]||'').trim(); if(!empno&&!name)continue; rows.push({rowNum:i+1,empno,name,error:!empno?'사번 없음':!name?'이름 없음':''}); }
+    for(let i=1;i<data.length;i++){ const row=data[i]; const empno=String(row[empnoIdx]||'').trim(),name=String(row[nameIdx]||'').trim(); if(!empno&&!name)continue;
+      const _staff=STAFF_LIST.find(s=>String(s.empno)===String(empno));
+      const _dept=_staff?.dept||'';
+      let _err='';
+      if(!empno) _err='사번 없음';
+      else if(!name) _err='이름 없음';
+      else if(!_staff) _err='인사DB 미등록';
+      rows.push({rowNum:i+1,empno,name,dept:_dept,error:_err});
+    }
     renderBkPreview(rows);
   }catch(e){ showToast('Excel 파싱 오류: '+e.message,'red'); }
 }
