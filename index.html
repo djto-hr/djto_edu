@@ -1668,6 +1668,13 @@ function updateTimePreview(hId, mId, previewId) {
           <div style="font-size:11px;color:var(--muted);margin-top:2px;">사번 / 이름 / 부서 / 과정명 / 시간 / 상태 등</div>
         </div>
       </label>
+      <label style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:var(--gray);border-radius:var(--r);cursor:pointer;border:2px solid transparent;" id="dl-lbl-personal" onclick="toggleDlCheck('dl-personal','dl-lbl-personal')">
+        <input type="checkbox" id="dl-personal" class="chk" checked style="margin-top:1px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;">개인별 이수현황</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">이름 / 총 이수시간(N/50h) / 기관지정(N/20h) / 집합(N/35h) 등</div>
+        </div>
+      </label>
     </div>
 
     <!-- 형식 선택 -->
@@ -2971,8 +2978,9 @@ async function executeDownload() {
   const dlBudget = document.getElementById('dl-budget').checked;
   const dlLegal  = document.getElementById('dl-legal').checked;
   const dlAll    = document.getElementById('dl-all').checked;
+  const dlPersonal = document.getElementById('dl-personal').checked;
 
-  if (!dlDept && !dlBudget && !dlLegal && !dlAll) {
+  if (!dlDept && !dlBudget && !dlLegal && !dlAll && !dlPersonal) {
     showToast('다운로드할 항목을 선택하세요.', 'amber'); return;
   }
 
@@ -3051,6 +3059,60 @@ async function executeDownload() {
       minsToStr(toMins(r.hours)), r.status, r.reject_reason||''
     ]);
 
+  // 개인별 이수현황 데이터 (전체 직원 기준, 미신청자도 0으로 포함)
+  const getPersonalData = async () => {
+    // 전체 직원 명단 확보
+    let staffList = [];
+    if (!IS_DEMO) {
+      const sr = await apiGet({ action: 'getStaff' });
+      if (sr?.success) {
+        staffList = sr.data.map(s => ({
+          empno: String(s.empno), name: s.name,
+          dept: normalizeDept(s.dept), jobType: s.jobType || '일반직'
+        }));
+      }
+    } else {
+      const seen = {};
+      rawDB.forEach(r => {
+        if (!seen[r.empno]) {
+          seen[r.empno] = true;
+          staffList.push({ empno: String(r.empno), name: r.name, dept: normalizeDept(r.dept), jobType: '일반직' });
+        }
+      });
+    }
+    // 직원별 승인 완료 내역 맵
+    const empRowsMap = {};
+    done.forEach(r => {
+      const empno = String(r.empno);
+      if (!empRowsMap[empno]) empRowsMap[empno] = [];
+      empRowsMap[empno].push(r);
+    });
+    const fmtCond = c => minsToStr(c.mins) + ' / ' + minsToStr(c.goal);
+    return staffList
+      .sort((a, b) => (a.dept || '').localeCompare(b.dept || '') || a.name.localeCompare(b.name))
+      .map(s => {
+        const rows = empRowsMap[s.empno] || [];
+        if (s.jobType === '공무직') {
+          // 공무직: 법정의무 기준이므로 시간 조건 대신 총 이수시간만 표기
+          const totalMins = rows.reduce((sum, r) => sum + toMins(r.hours), 0);
+          return [s.name, s.dept, s.jobType, minsToStr(totalMins), '—', '—', '—', '—', '—', '—', '공무직(법정의무 기준)'];
+        }
+        const c = checkCompleted(rows);
+        const allOk = Object.values(c).every(v => v.ok);
+        return [
+          s.name, s.dept, s.jobType,
+          fmtCond(c.total), fmtCond(c.inst), fmtCond(c.group),
+          c.cdp.ok ? '이수' : '미이수',
+          c.disaster.ok ? '이수' : '미이수',
+          c.ethics.ok ? '이수' : '미이수',
+          c.digital.ok ? '이수' : '미이수',
+          allOk ? '완료' : '미완료'
+        ];
+      });
+  };
+  const PERSONAL_HEADERS = ['이름','부서','직군','총 이수시간(50h)','기관지정(20h)','집합교육(35h)','CDP 직무교육','재난·산업안전(2h)','공직윤리(청렴)(2h)','디지털역량(2h)','이수완료여부'];
+  const personalData = dlPersonal ? await getPersonalData() : null;
+
   if (fmt === 'csv') {
     // 선택된 항목을 하나의 CSV로 합치거나 각각 다운로드
     const sheets = [];
@@ -3058,6 +3120,7 @@ async function executeDownload() {
     if (dlBudget) sheets.push({ name:'예산사용현황',     h:['이름','부서','과정명','교육훈련비','출장비','합계'], rows: getBudgetData() });
     if (dlLegal)  sheets.push({ name:'법정의무이수율',   h:['교육명','이수자','전체인원','이수율'], rows: getLegalData() });
     if (dlAll)    sheets.push({ name:'전체이수이력',     h:['이수일','사번','이름','부서','과정명','방법','구분','시간','상태','반려사유'], rows: getAllData() });
+    if (dlPersonal) sheets.push({ name:'개인별이수현황', h: PERSONAL_HEADERS, rows: personalData });
 
     if (sheets.length === 1) {
       // 단일 선택 → 파일 1개
@@ -3088,6 +3151,7 @@ async function executeDownload() {
     if (dlBudget) XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['이름','부서','과정명','교육훈련비','출장비','합계'], getBudgetData()), '예산사용현황');
     if (dlLegal)  XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['교육명','이수자','전체인원','이수율'], getLegalData()), '법정의무이수율');
     if (dlAll)    XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['이수일','사번','이름','부서','과정명','방법','구분','시간','상태','반려사유'], getAllData()), '전체이수이력');
+    if (dlPersonal) XLSX.utils.book_append_sheet(wb, makeXlsxSheet(PERSONAL_HEADERS, personalData), '개인별이수현황');
     XLSX.writeFile(wb, `교육훈련통계_${today}.xlsx`);
     showToast('Excel 다운로드 완료', 'green');
   }
