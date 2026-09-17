@@ -548,22 +548,50 @@ function migrateHours(row) {
 // ════════════════════════════════════════════════
 // 의무학습제 이수 완료 조건 판별
 // 7가지 조건 모두 충족 시에만 이수 완료
+// 그룹(임원/임금피크제/일반직=중간관리자·실무자 공통)별로 목표시간이 다름
 // ════════════════════════════════════════════════
-const COMPLETION_CONDS = {
-  TOTAL_MINS:   3000, // 전체 50시간
-  INST_MINS:    1200, // 기관지정 20시간 (40%)
-  GROUP_MINS:   2100, // 집합교육 35시간 (70%)
-  COMMON_MINS:   120, // 공통필수 각 항목 2시간
+const GRADE_GROUP_TARGETS = {
+  // 임원: 21시간, 전부 집합교육 — CDP 직무교육 조건 면제, 기관지정 조건 없음
+  '임원': {
+    TOTAL_MINS: 1260, INST_MINS: 0, GROUP_MINS: 1260, COMMON_MINS: 120, cdpExempt: true,
+    totalLabel: '21시간 이상', groupLabel: '21시간 이상 (전부 집합)',
+  },
+  // 임금피크제: 25시간 (집합 18h / 기관지정 10h)
+  '임금피크제': {
+    TOTAL_MINS: 1500, INST_MINS: 600, GROUP_MINS: 1080, COMMON_MINS: 120, cdpExempt: false,
+    totalLabel: '25시간 이상', instLabel: '10시간 이상 (40%)', groupLabel: '18시간 이상 (70%)',
+  },
+  // 일반직(중간관리자·실무자 공통): 50시간 (집합 35h / 기관지정 20h)
+  '일반직': {
+    TOTAL_MINS: 3000, INST_MINS: 1200, GROUP_MINS: 2100, COMMON_MINS: 120, cdpExempt: false,
+    totalLabel: '50시간 이상', instLabel: '20시간 이상 (40%)', groupLabel: '35시간 이상 (70%)',
+  },
 };
+// 하위호환용 기본값(일반직 기준) — 그룹을 지정하지 않고 호출되는 코드는 이 기준을 그대로 사용
+const COMPLETION_CONDS = GRADE_GROUP_TARGETS['일반직'];
+
+// 비고란 텍스트 + 부서명으로 교육목표 그룹 판별
+// ※ 직원명단 시트의 '비고' 컬럼에 '임원' 또는 '임금피크(제)' 문자열이 있으면 해당 그룹으로 인식.
+//   임원은 부서명(사장/상임이사 → normalizeDept가 '임원'으로 정규화)으로도 보조 판별.
+//   그 외(중간관리자·실무자)는 목표시간이 동일(50h/35h/20h)하므로 모두 '일반직' 그룹으로 처리.
+//   인사/예산/회계 등 특수업무 담당자 지정은 이 함수와 무관 — 기존 '특수업무 담당자 관리' 화면에서 별도 관리.
+function resolveGradeGroup(note, dept) {
+  const n = (note || '').trim();
+  if (n.includes('임원') || normalizeDept(dept) === '임원') return '임원';
+  if (n.includes('임금피크')) return '임금피크제';
+  return '일반직';
+}
 
 // 직원의 승인완료 내역 배열로 7조건 충족 여부 반환
-function checkCompleted(doneRows) {
+// targets: GRADE_GROUP_TARGETS의 항목(미지정 시 일반직 기준) — resolveGradeGroup() 결과로 선택
+function checkCompleted(doneRows, targets) {
+  const T = targets || COMPLETION_CONDS;
   const totalMins = doneRows.reduce((s,r) => s + toMins(r.hours), 0);
   const instMins  = doneRows.filter(r => r.edu_category==='기관지정')
                             .reduce((s,r) => s + toMins(r.hours), 0);
   const groupMins = doneRows.filter(r => r.edu_method==='집합')
                             .reduce((s,r) => s + toMins(r.hours), 0);
-  const cdpDone   = doneRows.some(r => r.edu_category==='기관지정' && r.cdp_yn===true);
+  const cdpDone   = T.cdpExempt ? true : doneRows.some(r => r.edu_category==='기관지정' && r.cdp_yn===true);
 
   // 공통필수: 메인 + 기관지정의 cross 공통필수 합산
   const allCommonEntries = doneRows.flatMap(r => {
@@ -586,18 +614,21 @@ function checkCompleted(doneRows) {
   const digitalMins  = cMins(DUTY_ALIASES.digital);
 
   return {
-    total:   { ok: totalMins >= COMPLETION_CONDS.TOTAL_MINS,  mins: totalMins,    goal: COMPLETION_CONDS.TOTAL_MINS,  label: '전체 이수시간',    detail: '50시간 이상' },
-    inst:    { ok: instMins  >= COMPLETION_CONDS.INST_MINS,   mins: instMins,     goal: COMPLETION_CONDS.INST_MINS,   label: '기관지정 교육',    detail: '20시간 이상 (40%)' },
-    group:   { ok: groupMins >= COMPLETION_CONDS.GROUP_MINS,  mins: groupMins,    goal: COMPLETION_CONDS.GROUP_MINS,  label: '집합교육',         detail: '35시간 이상 (70%)' },
-    cdp:     { ok: cdpDone,                                   mins: cdpDone?1:0,  goal: 1,                            label: 'CDP 직무교육',     detail: '1회 이상' },
-    disaster:{ ok: disasterMins >= COMPLETION_CONDS.COMMON_MINS, mins: disasterMins, goal: COMPLETION_CONDS.COMMON_MINS, label: '재난·산업안전',  detail: '2시간 이상' },
-    ethics:  { ok: ethicsMins   >= COMPLETION_CONDS.COMMON_MINS, mins: ethicsMins,   goal: COMPLETION_CONDS.COMMON_MINS, label: '공직윤리(청렴)', detail: '2시간 이상' },
-    digital: { ok: digitalMins  >= COMPLETION_CONDS.COMMON_MINS, mins: digitalMins,  goal: COMPLETION_CONDS.COMMON_MINS, label: 'AI·디지털역량',  detail: '2시간 이상' },
+    total:   { ok: totalMins >= T.TOTAL_MINS,  mins: totalMins,    goal: T.TOTAL_MINS,  label: '전체 이수시간', detail: T.totalLabel },
+    // 기관지정 목표가 0인 그룹(임원)은 항상 충족 처리 — goal:1로 두어 '완료/미완료' 표기로 통일
+    inst:    T.INST_MINS === 0
+      ? { ok: true, mins: instMins, goal: 1, label: '기관지정 교육 (임원 해당없음)', detail: '해당없음' }
+      : { ok: instMins >= T.INST_MINS, mins: instMins, goal: T.INST_MINS, label: '기관지정 교육', detail: T.instLabel },
+    group:   { ok: groupMins >= T.GROUP_MINS,  mins: groupMins,    goal: T.GROUP_MINS,  label: '집합교육',      detail: T.groupLabel },
+    cdp:     { ok: cdpDone, mins: cdpDone?1:0, goal: 1, label: 'CDP 직무교육'+(T.cdpExempt?' (임원 면제)':''), detail: T.cdpExempt?'해당없음':'1회 이상' },
+    disaster:{ ok: disasterMins >= T.COMMON_MINS, mins: disasterMins, goal: T.COMMON_MINS, label: '재난·산업안전',  detail: '2시간 이상' },
+    ethics:  { ok: ethicsMins   >= T.COMMON_MINS, mins: ethicsMins,   goal: T.COMMON_MINS, label: '공직윤리(청렴)', detail: '2시간 이상' },
+    digital: { ok: digitalMins  >= T.COMMON_MINS, mins: digitalMins,  goal: T.COMMON_MINS, label: 'AI·디지털역량',  detail: '2시간 이상' },
   };
 }
 
-function isFullyCompleted(doneRows) {
-  const c = checkCompleted(doneRows);
+function isFullyCompleted(doneRows, targets) {
+  const c = checkCompleted(doneRows, targets);
   return Object.values(c).every(v => v.ok);
 }
 
@@ -1736,6 +1767,7 @@ let CATLOG = [];
 let openId = null;
 let selFile = null;
 let staffJobType = '일반직';
+let staffNote = ''; // 비고란 원문 (임원/임금피크제 판별용)
 let staffIsPromotion = false; // 승진자 과정 대상 여부
 let staffPromoData   = null;
 let staffSpecialDuty = { hr: false, budget: false, account: false }; // 담당자 여부
@@ -2073,8 +2105,9 @@ async function doLookup() {
     if(empno || name) {
       const sr=await apiGet({action:'checkStaff',empno:empno||'',name:name||''});
       if(sr?.success){
-        staffInfo = { empno: sr.empno||empno, name: sr.name||name, dept: sr.dept||'' };
+        staffInfo = { empno: sr.empno||empno, name: sr.name||name, dept: sr.dept||'', note: sr.note||'' };
         staffJobType=sr.jobType||'일반직';
+        staffNote=sr.note||''; // 비고란 원문(임원/임금피크제 판별용) — Apps Script getStaff/checkStaff가 'note' 필드로 내려줘야 함
         staffIsPromotion=sr.isPromotion===true;
         staffPromoData=sr.isPromotion?{promoDt:sr.promoDt||'',deadlineDt:sr.deadlineDt||'',mgrDone:sr.mgrDone===true}:null;
         staffSpecialDuty={hr:sr.dutyHr===true,budget:sr.dutyBudget===true,account:sr.dutyAccount===true};
@@ -2096,10 +2129,11 @@ async function doLookup() {
   } else{
     hideLoad();
     rows=DB.filter(r=>(!empno||r.empno===empno)&&(!name||r.name.includes(name)));
-    if(rows.length) staffInfo = { empno: rows[0].empno, name: rows[0].name, dept: rows[0].dept };
+    if(rows.length) staffInfo = { empno: rows[0].empno, name: rows[0].name, dept: rows[0].dept, note: rows[0].note||'' };
     // 데모: 이수 내역 없어도 staffInfo가 있으면 표시 (실제로는 직원명단에서 확인)
-    else staffInfo = empno ? { empno, name: name||empno, dept: '' } : null;
+    else staffInfo = empno ? { empno, name: name||empno, dept: '', note: '' } : null;
     if(!staffInfo){ showToast('결과 없음','amber'); return; }
+    staffNote = staffInfo.note || '';
   }
 
   const done=rows.filter(r=>r.status==='승인');
@@ -2120,8 +2154,12 @@ async function doLookup() {
   const staffName  = staffInfo?.name  || (rows[0]?.name  || '');
   const staffEmpno = staffInfo?.empno || (rows[0]?.empno || empno);
   const staffDept  = staffInfo?.dept  || (rows[0]?.dept  || '');
+  const staffNoteVal = staffInfo?.note || staffNote || '';
+  // 교육목표 그룹(임원/임금피크제/일반직) 판별 — 비고란 + 부서명 기준
+  const staffGradeGroup = resolveGradeGroup(staffNoteVal, staffDept);
+  const gradeTargets = GRADE_GROUP_TARGETS[staffGradeGroup];
   document.getElementById('lu-head').textContent=staffName+' ('+staffEmpno+')';
-  document.getElementById('lu-dept').textContent=staffDept+(isGongmu?' · 공무직':' · 일반직');
+  document.getElementById('lu-dept').textContent=staffDept+(isGongmu?' · 공무직':' · '+staffGradeGroup);
   // 공무직 배너 초기화
   const _gb = document.getElementById('lu-gongmu-banner');
   if (_gb) _gb.style.display = 'none';
@@ -2130,7 +2168,8 @@ async function doLookup() {
 
   // 분 단위로 합산
   const totalMins=done.reduce((s,r)=>s+toMins(r.hours),0);
-  const TOTAL_GOAL_MINS=50*60, INST_GOAL_MINS=20*60, GROUP_GOAL_MINS=35*60;
+  // ※ 그룹별 목표시간 — GRADE_GROUP_TARGETS 참조(임원 21h / 임금피크제 25h / 일반직 50h 등)
+  const TOTAL_GOAL_MINS=gradeTargets.TOTAL_MINS, INST_GOAL_MINS=gradeTargets.INST_MINS, GROUP_GOAL_MINS=gradeTargets.GROUP_MINS;
 
   if(isGongmu){
     document.getElementById('lu-stats-grid').style.display='none';
@@ -2147,20 +2186,20 @@ async function doLookup() {
     document.getElementById('lu-gongmu-section').style.display='none';
     document.getElementById('lu-hrs').textContent=minsToStr(totalMins);
     const totalOk = totalMins >= TOTAL_GOAL_MINS;
-    const instOk  = instMins  >= INST_GOAL_MINS;
+    const instOk  = instMins  >= INST_GOAL_MINS; // INST_GOAL_MINS=0(임원)이면 항상 true
     const groupOk = groupMins >= GROUP_GOAL_MINS;
     const barColor = (ok) => ok ? 'var(--gd)' : 'var(--blue)';
     const progColor= (ok) => ok ? 'var(--gd)' : 'var(--rd)';
     const el = (id) => document.getElementById(id);
-    el('lu-total-prog').textContent = minsToStr(totalMins)+' / 50시간';
+    el('lu-total-prog').textContent = minsToStr(totalMins)+' / '+minsToStr(TOTAL_GOAL_MINS);
     el('lu-total-prog').style.color = progColor(totalOk);
     el('lu-total-bar').style.width  = Math.min(Math.round(totalMins/TOTAL_GOAL_MINS*100),100)+'%';
     el('lu-total-bar').style.background = barColor(totalOk);
-    el('lu-inst-prog').textContent  = minsToStr(instMins)+' / 20시간';
+    el('lu-inst-prog').textContent  = minsToStr(instMins)+' / '+minsToStr(INST_GOAL_MINS);
     el('lu-inst-prog').style.color  = progColor(instOk);
-    el('lu-inst-bar').style.width   = Math.min(Math.round(instMins/INST_GOAL_MINS*100),100)+'%';
+    el('lu-inst-bar').style.width   = Math.min(Math.round(instMins/Math.max(INST_GOAL_MINS,1)*100),100)+'%'; // 0으로 나누기 방지(임원)
     el('lu-inst-bar').style.background = barColor(instOk);
-    el('lu-group-prog').textContent = minsToStr(groupMins)+' / 35시간';
+    el('lu-group-prog').textContent = minsToStr(groupMins)+' / '+minsToStr(GROUP_GOAL_MINS);
     el('lu-group-prog').style.color = progColor(groupOk);
     el('lu-group-bar').style.width  = Math.min(Math.round(groupMins/GROUP_GOAL_MINS*100),100)+'%';
     el('lu-group-bar').style.background = barColor(groupOk);
@@ -2172,7 +2211,7 @@ async function doLookup() {
   const completionSec = document.getElementById('lu-completion-section');
   if (!isGongmu) {
     completionSec.style.display = 'block';
-    const conds = checkCompleted(done);
+    const conds = checkCompleted(done, gradeTargets);
     const allOk = Object.values(conds).every(v => v.ok);
 
     // 상단 배너
@@ -2333,11 +2372,24 @@ async function doLookup() {
     const promoRows = done.filter(r =>
       (r.course_name||'').includes('중간관리자') || r.is_mgr === true
     );
-    // 관리자 직접 처리 OR 과정 이수 완료
-    const mgrDone = mgrDoneByAdmin || promoRows.length > 0;
-    const promoHrs  = promoRows.reduce((s,r) => s + toMins(r.hours), 0);
-    // 이수 완료 판단: 관리자 직접 처리 OR 과정 이수 내역 있음 (시간 무관)
-    const promoOk = mgrDoneByAdmin || promoRows.length > 0;
+    const promoHrs = promoRows.reduce((s,r) => s + toMins(r.hours), 0);
+    const PROMO_TARGET_MINS = GROUP_GOAL_MINS; // 계획서 기준: 35시간
+
+    // 이수 완료 판단: 관리자 직접 처리 OR 목표시간(35h) 이상 누적 이수
+    const promoOk = mgrDoneByAdmin || promoHrs >= PROMO_TARGET_MINS;
+    // 부분이수(진행중) 판단: 완료는 아니지만 이수 내역은 있는 경우
+    const promoPartial = !promoOk && promoRows.length > 0;
+    const promoRemainMins = Math.max(0, PROMO_TARGET_MINS - promoHrs);
+
+    // 상태별 색상 테마 (완료: green / 진행중: amber / 미이수: red)
+    const pTheme = promoOk
+      ? { l:'var(--gl)', m:'var(--gm)', d:'var(--gd)', txt:'#3B6D11', listBg:'rgba(234,243,222,.5)' }
+      : promoPartial
+      ? { l:'var(--al)', m:'var(--am)', d:'var(--ad)', txt:'var(--ad)', listBg:'rgba(255,251,235,.5)' }
+      : { l:'var(--rl)', m:'var(--rm)', d:'var(--rd)', txt:'#A32D2D', listBg:'rgba(252,235,235,.5)' };
+    const pIcon       = promoOk ? '✓' : promoPartial ? '●' : '✗';
+    const pStatusText  = promoOk ? '이수 완료' : promoPartial ? '이수 진행중 (부분이수)' : '미이수';
+    const pBadgeText   = promoOk ? '완료' : promoPartial ? '진행중' : '필수';
 
     // 기관지정으로 중복 인정된 시간 (중간관리자 과정 중 기관지정인 것)
     const promoInstHrs = promoRows
@@ -2349,51 +2401,51 @@ async function doLookup() {
     // 이수한 중간관리자 과정 목록 (표시용)
     const promoListHtml = promoRows.length
       ? promoRows.map(r => `
-          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid ${promoOk?'var(--gm)':'var(--rm)'};">
-            <span style="font-size:12px;color:${promoOk?'#3B6D11':'#A32D2D'};">✓</span>
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid ${pTheme.m};">
+            <span style="font-size:12px;color:${pTheme.txt};">✓</span>
             <span style="font-size:13px;flex:1;">${r.course_name||''}</span>
             <span style="font-size:12px;color:var(--muted);">${fmtDate(r.apply_date,true)}</span>
-            <span style="font-size:12px;font-weight:700;color:${promoOk?'var(--gd)':'var(--rd)'};">${minsToStr(toMins(r.hours))}</span>
+            <span style="font-size:12px;font-weight:700;color:${pTheme.d};">${minsToStr(toMins(r.hours))}</span>
             ${r.edu_category==='기관지정'?`<span style="font-size:10px;padding:1px 6px;border-radius:20px;background:var(--al);color:var(--ad);">기관지정 중복</span>`:''}
           </div>`).join('')
       : `<div style="font-size:13px;color:var(--muted);padding:8px 0;">이수한 중간관리자 과정이 없습니다.</div>`;
 
     promoChk.innerHTML = `
-      <div style="background:${promoOk?'var(--gl)':'var(--rl)'};border:1px solid ${promoOk?'var(--gm)':'var(--rm)'};border-radius:var(--rl2);overflow:hidden;">
+      <div style="background:${pTheme.l};border:1px solid ${pTheme.m};border-radius:var(--rl2);overflow:hidden;">
         <!-- 상단 요약 -->
         <div style="padding:16px 20px;">
           <div style="display:flex;align-items:center;gap:14px;margin-bottom:${(promoDt||deadlineDt)?'12px':'0'};">
-            <span style="font-size:26px;">${promoOk ? '✓' : '✗'}</span>
+            <span style="font-size:26px;">${pIcon}</span>
             <div style="flex:1;">
-              <div style="font-size:14px;font-weight:700;color:${promoOk?'var(--gd)':'var(--rd)'};">
-                중간관리자 과정 ${promoOk?'이수 완료':'미이수'}
+              <div style="font-size:14px;font-weight:700;color:${pTheme.d};">
+                중간관리자 과정 ${pStatusText}
               </div>
-              <div style="font-size:12px;color:${promoOk?'#3B6D11':'#A32D2D'};margin-top:3px;">
+              <div style="font-size:12px;color:${pTheme.txt};margin-top:3px;">
                 ${promoHrs > 0
-                  ? `이수 ${minsToStr(promoHrs)}${promoInstHrs>0?' &nbsp;|&nbsp; 기관지정 '+minsToStr(promoInstHrs)+' 자동 중복 반영':''}`
+                  ? `이수 ${minsToStr(promoHrs)} / 목표 ${minsToStr(PROMO_TARGET_MINS)}${promoOk?'':' &nbsp;(남은 시간 '+minsToStr(promoRemainMins)+')'}${promoInstHrs>0?' &nbsp;|&nbsp; 기관지정 '+minsToStr(promoInstHrs)+' 자동 중복 반영':''}`
                   : '미이수 — 승진 1년 이내 반드시 이수하세요 (목표: 35시간)'}
               </div>
             </div>
             <div style="text-align:right;">
-              <span style="font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;background:${promoOk?'var(--gm)':'var(--rm)'};color:${promoOk?'var(--gd)':'var(--rd)'};">
-                ${promoOk?'완료':'필수'}
+              <span style="font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;background:${pTheme.m};color:${pTheme.d};">
+                ${pBadgeText}
               </span>
             </div>
           </div>
           ${(promoDt || deadlineDt) ? `
-          <div style="border-top:1px solid ${promoOk?'var(--gm)':'var(--rm)'};padding-top:10px;display:flex;gap:20px;flex-wrap:wrap;">
-            ${promoDt ? `<div style="font-size:12px;color:${promoOk?'var(--gd)':'var(--rd)'};">
+          <div style="border-top:1px solid ${pTheme.m};padding-top:10px;display:flex;gap:20px;flex-wrap:wrap;">
+            ${promoDt ? `<div style="font-size:12px;color:${pTheme.d};">
               <span style="opacity:.7;">이수 시작일</span> &nbsp;<b>${promoDt}</b>
             </div>` : ''}
-            ${deadlineDt ? `<div style="font-size:12px;color:${promoOk?'var(--gd)':'var(--rd)'};">
+            ${deadlineDt ? `<div style="font-size:12px;color:${pTheme.d};">
               <span style="opacity:.7;">이수 마감</span> &nbsp;<b>${deadlineDt}</b>
               ${ddayLabel ? `&nbsp;<span style="font-weight:700;color:${ddayColor};">(${ddayLabel})</span>` : ''}
             </div>` : ''}
           </div>` : ''}
         </div>
         <!-- 이수 과정 목록 -->
-        <div style="background:${promoOk?'rgba(234,243,222,.5)':'rgba(252,235,235,.5)'};border-top:1px solid ${promoOk?'var(--gm)':'var(--rm)'};padding:10px 20px;">
-          <div style="font-size:12px;font-weight:700;color:${promoOk?'var(--gd)':'var(--rd)'};margin-bottom:6px;">이수 과정 내역</div>
+        <div style="background:${pTheme.listBg};border-top:1px solid ${pTheme.m};padding:10px 20px;">
+          <div style="font-size:12px;font-weight:700;color:${pTheme.d};margin-bottom:6px;">이수 과정 내역</div>
           ${promoListHtml}
         </div>
       </div>`;
@@ -2990,8 +3042,16 @@ async function executeDownload() {
   const today  = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const LEGAL_LIST = ['4대폭력예방','직장내괴롭힘예방','소방안전화재예방','장애인인식개선교육','자살예방교육','퇴직연금교육','아동학대예방교육','개인정보보호교육','정보공개교육'];
 
-  // 부서별 이수현황 데이터 — 7조건 충족 기준
-  const getDeptData = () => {
+  // 부서별 이수현황 데이터 — 7조건 충족 기준 (그룹별 목표시간 반영)
+  const getDeptData = async () => {
+    // empno별 비고(임원/임금피크제 판별용) 조회
+    const noteByEmpno = {};
+    if (!IS_DEMO) {
+      const sr = await apiGet({ action: 'getStaff' });
+      if (sr?.success) sr.data.forEach(s => { noteByEmpno[String(s.empno)] = s.note || ''; });
+    } else {
+      rawDB.forEach(r => { if (!(String(r.empno) in noteByEmpno)) noteByEmpno[String(r.empno)] = r.note || ''; });
+    }
     const empMap = {};
     done.forEach(r => {
       if (!empMap[r.empno]) empMap[r.empno] = { dept: r.dept, rows: [] };
@@ -3002,7 +3062,8 @@ async function executeDownload() {
       if (!deptMap[dept]) deptMap[dept] = { applied: new Set(), completed: new Set(), hrs: 0 };
       deptMap[dept].applied.add(empno);
       deptMap[dept].hrs += rows.reduce((s,r) => s + toMins(r.hours), 0);
-      if (isFullyCompleted(rows)) deptMap[dept].completed.add(empno);
+      const gradeGroup = resolveGradeGroup(noteByEmpno[empno], dept);
+      if (isFullyCompleted(rows, GRADE_GROUP_TARGETS[gradeGroup])) deptMap[dept].completed.add(empno);
     });
     return Object.entries(deptMap).sort(([a],[b])=>a.localeCompare(b)).map(([dept,d]) => [
       dept, d.applied.size, d.completed.size,
@@ -3068,7 +3129,8 @@ async function executeDownload() {
       if (sr?.success) {
         staffList = sr.data.map(s => ({
           empno: String(s.empno), name: s.name,
-          dept: normalizeDept(s.dept), jobType: s.jobType || '일반직'
+          dept: normalizeDept(s.dept), jobType: s.jobType || '일반직',
+          note: s.note || '' // 비고란(임원/임금피크제 판별용) — Apps Script getStaff가 'note' 필드로 내려줘야 함
         }));
       }
     } else {
@@ -3076,7 +3138,7 @@ async function executeDownload() {
       rawDB.forEach(r => {
         if (!seen[r.empno]) {
           seen[r.empno] = true;
-          staffList.push({ empno: String(r.empno), name: r.name, dept: normalizeDept(r.dept), jobType: '일반직' });
+          staffList.push({ empno: String(r.empno), name: r.name, dept: normalizeDept(r.dept), jobType: '일반직', note: r.note || '' });
         }
       });
     }
@@ -3095,12 +3157,15 @@ async function executeDownload() {
         if (s.jobType === '공무직') {
           // 공무직: 법정의무 기준이므로 시간 조건 대신 총 이수시간만 표기
           const totalMins = rows.reduce((sum, r) => sum + toMins(r.hours), 0);
-          return [s.name, s.dept, s.jobType, minsToStr(totalMins), '—', '—', '—', '—', '—', '—', '공무직(법정의무 기준)'];
+          return [s.name, s.dept, s.jobType, '—', minsToStr(totalMins), '—', '—', '—', '—', '—', '—', '공무직(법정의무 기준)'];
         }
-        const c = checkCompleted(rows);
+        // 교육목표 그룹(임원/임금피크제/일반직)별로 다른 목표시간 적용
+        const gradeGroup = resolveGradeGroup(s.note, s.dept);
+        const targets = GRADE_GROUP_TARGETS[gradeGroup];
+        const c = checkCompleted(rows, targets);
         const allOk = Object.values(c).every(v => v.ok);
         return [
-          s.name, s.dept, s.jobType,
+          s.name, s.dept, s.jobType, gradeGroup,
           fmtCond(c.total), fmtCond(c.inst), fmtCond(c.group),
           c.cdp.ok ? '이수' : '미이수',
           c.disaster.ok ? '이수' : '미이수',
@@ -3110,13 +3175,14 @@ async function executeDownload() {
         ];
       });
   };
-  const PERSONAL_HEADERS = ['이름','부서','직군','총 이수시간(50h)','기관지정(20h)','집합교육(35h)','CDP 직무교육','재난·산업안전(2h)','공직윤리(청렴)(2h)','디지털역량(2h)','이수완료여부'];
+  const PERSONAL_HEADERS = ['이름','부서','직군','교육그룹','총 이수시간','기관지정','집합교육','CDP 직무교육','재난·산업안전','공직윤리(청렴)','디지털역량','이수완료여부'];
   const personalData = dlPersonal ? await getPersonalData() : null;
+  const deptData = dlDept ? await getDeptData() : null;
 
   if (fmt === 'csv') {
     // 선택된 항목을 하나의 CSV로 합치거나 각각 다운로드
     const sheets = [];
-    if (dlDept)   sheets.push({ name:'부서별이수현황',   h:['부서','신청자','이수완료자(7조건)','이수율','총이수시간'], rows: getDeptData() });
+    if (dlDept)   sheets.push({ name:'부서별이수현황',   h:['부서','신청자','이수완료자(7조건)','이수율','총이수시간'], rows: deptData });
     if (dlBudget) sheets.push({ name:'예산사용현황',     h:['이름','부서','과정명','교육훈련비','출장비','합계'], rows: getBudgetData() });
     if (dlLegal)  sheets.push({ name:'법정의무이수율',   h:['교육명','이수자','전체인원','이수율'], rows: getLegalData() });
     if (dlAll)    sheets.push({ name:'전체이수이력',     h:['이수일','사번','이름','부서','과정명','방법','구분','시간','상태','반려사유'], rows: getAllData() });
@@ -3147,7 +3213,7 @@ async function executeDownload() {
       return;
     }
     const wb = XLSX.utils.book_new();
-    if (dlDept)   XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['부서','신청자','이수완료자(7조건)','이수율','총이수시간'], getDeptData()), '부서별이수현황');
+    if (dlDept)   XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['부서','신청자','이수완료자(7조건)','이수율','총이수시간'], deptData), '부서별이수현황');
     if (dlBudget) XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['이름','부서','과정명','교육훈련비','출장비','합계'], getBudgetData()), '예산사용현황');
     if (dlLegal)  XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['교육명','이수자','전체인원','이수율'], getLegalData()), '법정의무이수율');
     if (dlAll)    XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['이수일','사번','이름','부서','과정명','방법','구분','시간','상태','반려사유'], getAllData()), '전체이수이력');
@@ -3212,10 +3278,11 @@ function drillDept(dept) {
   const allCount     = allStaff.length || 1;
   const genCount     = generalStaff.length || 1;
 
-  // 일반직 전원 7조건 판단
+  // 일반직 전원 7조건 판단 (교육목표 그룹별 목표시간 반영)
   const generalRows = generalStaff.map(s=>{
     const rows = empRowsMap[s.empno] || [];
-    const conds = checkCompleted(rows);
+    const gradeGroup = resolveGradeGroup(s.note, s.dept);
+    const conds = checkCompleted(rows, GRADE_GROUP_TARGETS[gradeGroup]);
     const completed = Object.values(conds).every(v=>v.ok);
     const hrs = rows.reduce((sum,r)=>sum+toMins(r.hours),0);
     return { ...s, completed, applied:rows.length>0, hrs, conds };
@@ -3663,7 +3730,8 @@ async function renderStats(){
   // 직원명단에서 부서별 일반직 인원 (IS_DEMO면 byDept 기준)
   const staffByDept = {}; // { dept: 일반직 인원 수 }
   // 부서별 전체 직원 목록 (일반직/공무직 모두)
-  const allStaffByDept = {}; // { dept: [{empno, name, jobType}] }
+  const allStaffByDept = {}; // { dept: [{empno, name, jobType, note}] }
+  const noteByEmpno = {}; // empno별 비고(임원/임금피크제 판별용) — 그룹별 목표시간 적용에 사용
   if (!IS_DEMO) {
     const sr = await apiGet({action:'getStaff'});
     if (sr?.success) {
@@ -3671,7 +3739,8 @@ async function renderStats(){
         const nd = normalizeDept(s.dept);
         if(s.jobType==='일반직') staffByDept[nd] = (staffByDept[nd]||0)+1;
         if(!allStaffByDept[nd]) allStaffByDept[nd]=[];
-        allStaffByDept[nd].push({ empno:String(s.empno), name:s.name, jobType:s.jobType||'일반직', dept:nd });
+        allStaffByDept[nd].push({ empno:String(s.empno), name:s.name, jobType:s.jobType||'일반직', dept:nd, note:s.note||'' });
+        noteByEmpno[String(s.empno)] = s.note || '';
       });
     }
   } else {
@@ -3682,7 +3751,8 @@ async function renderStats(){
       seen[nd].add(r.empno);
       if(!allStaffByDept[nd]) allStaffByDept[nd]=[];
       if(![...allStaffByDept[nd]].find(x=>x.empno===String(r.empno)))
-        allStaffByDept[nd].push({ empno:String(r.empno), name:r.name, jobType:'일반직', dept:nd });
+        allStaffByDept[nd].push({ empno:String(r.empno), name:r.name, jobType:'일반직', dept:nd, note:r.note||'' });
+      noteByEmpno[String(r.empno)] = r.note || '';
     });
     Object.entries(seen).forEach(([d,s])=>{ staffByDept[d]=s.size; });
   }
@@ -3696,7 +3766,9 @@ async function renderStats(){
   const doneByDept = {};
   Object.entries(empDoneMap).forEach(([empno, {dept, name, rows}]) => {
     if (!doneByDept[dept]) doneByDept[dept] = { empnos:new Set(), completedEmpnos:new Set(), hrs:0, members:[] };
-    const completed = isFullyCompleted(rows);
+    // 교육목표 그룹(임원/임금피크제/일반직)별 목표시간 적용
+    const gradeGroup = resolveGradeGroup(noteByEmpno[empno], dept);
+    const completed = isFullyCompleted(rows, GRADE_GROUP_TARGETS[gradeGroup]);
     doneByDept[dept].empnos.add(empno);
     doneByDept[dept].hrs += rows.reduce((s,r)=>s+toMins(r.hours),0);
     if (completed) doneByDept[dept].completedEmpnos.add(empno);
