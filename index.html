@@ -851,7 +851,7 @@ function updateTimePreview(hId, mId, previewId) {
         </div>
         <div class="fg"><label>이수 일자 <span class="req">*</span></label><input type="date" id="f-date" max="" onchange="checkDate(this)"></div>
       </div>
-      <div class="fg"><label>교육기관 <span class="req">*</span></label><input type="text" id="f-org" placeholder="예: 행정안전부 / 사내교육"></div>
+      <div class="fg"><label>교육기관 <span class="req">*</span></label><input type="text" id="f-org" placeholder="예: ○○○○평가원"></div>
       <div class="cat-sec">
         <div class="cat-sec-title">📋 교육 분류 <span style="font-weight:400;color:var(--muted);">— 아래 구분에 맞게 선택해 주세요</span></div>
         <div class="fg2">
@@ -1105,7 +1105,7 @@ function updateTimePreview(hId, mId, previewId) {
               </div>
               <div style="margin-top:5px;"><span class="time-preview" id="bk-hours-preview">—</span></div>
             </div>
-            <div class="fg" style="margin:0;"><label>교육기관/주관</label><input type="text" id="bk-org" placeholder="예: 인사노무팀"></div>
+            <div class="fg" style="margin:0;"><label>교육기관/주관 <span class="req">*</span></label><input type="text" id="bk-org" placeholder="예: ○○○○평가원"></div>
 
           </div>
           <div id="bk-sub-legal" style="display:none;margin-top:12px;background:var(--gray);border-radius:var(--r);padding:12px 14px;">
@@ -1610,7 +1610,7 @@ function updateTimePreview(hId, mId, previewId) {
     </div>
     <div class="fg2">
       <div class="fg"><label>과정명 <span class="req">*</span></label><input type="text" id="ea-course" placeholder="과정명"></div>
-      <div class="fg"><label>교육기관</label><input type="text" id="ea-org" placeholder="예: 행정안전부 / 사내교육"></div>
+      <div class="fg"><label>교육기관</label><input type="text" id="ea-org" placeholder="예: ○○○○평가원"></div>
     </div>
     <!-- 교육비용 수정 -->
     <div class="fg2">
@@ -4411,6 +4411,7 @@ async function submitBulk(){
   if(!course){ showToast('과정명을 입력하세요.','amber'); document.getElementById('bk-course').focus(); return; }
   if(!date){ showToast('이수 일자를 선택하세요.','amber'); return; }
   if(!mins){ showToast('이수 시간을 입력하세요.','amber'); return; }
+  if(!org){ showToast('교육기관/주관을 입력하세요.','amber'); document.getElementById('bk-org').focus(); return; }
   let legalTypes=[],commonType='',cdpYn=false,jobTrack='',crossCategories=[];
   if(cat==='법정의무'){ legalTypes=[...document.querySelectorAll('.bk-lc:checked')].map(c=>c.value); if(!legalTypes.length){showToast('법정의무 유형을 선택하세요.','amber');return;} }
   if(cat==='공통필수'){ commonType=document.getElementById('bk-common').value; if(!commonType){showToast('공통필수 유형을 선택하세요.','amber');return;} }
@@ -4423,7 +4424,7 @@ async function submitBulk(){
   if(!validRows.length){ showToast('처리할 명단이 없습니다. 파일을 업로드하세요.','amber'); return; }
   const skipRows = bkParsedRows.filter(r=>r.error);
   const skipMsg = skipRows.length ? '\n\n⚠ 오류 '+skipRows.length+'명 제외:\n'+skipRows.map(r=>`  · ${r.empno} ${r.name} (${r.error})`).join('\n') : '';
-  if(!confirm('총 '+bkParsedRows.length+'명 중 '+validRows.length+'명 이수처리를 진행하시겠습니까?'+skipMsg+'\n\n과정: '+course+'\n이수일: '+date+' / '+minsToStr(mins)+' / '+status+(bkProofFile?'\n증빙파일: '+bkProofFile.name:'\n증빙파일: 없음'))) return;
+  if(!confirm('총 '+bkParsedRows.length+'명 중 '+validRows.length+'명 이수처리를 진행하시겠습니까?'+skipMsg+'\n\n과정: '+course+'\n교육기관: '+org+'\n이수일: '+date+' / '+minsToStr(mins)+' / '+status+(bkProofFile?'\n증빙파일: '+bkProofFile.name:'\n증빙파일: 없음'))) return;
   const btn=document.getElementById('bk-submit-btn'); btn.disabled=true; btn.textContent='처리 중...';
   showLoad('단체 이수처리 중... (0 / '+validRows.length+'명)');
   let okCount=0,errCount=0; const resultLog=[];
@@ -4444,7 +4445,7 @@ async function submitBulk(){
     document.getElementById('lmsg').textContent='단체 이수처리 중... ('+(i+1)+' / '+validRows.length+'명)';
     try{
       const deptVal = r.dept || '—'; // 파싱 시 인사DB 자동 매핑됨
-      const newRecord={id:'BK'+Date.now()+'_'+i,apply_date:date,empno:r.empno,name:r.name,dept:deptVal,course_name:course,hours:mins,org:org||'단체교육',edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,cross_categories:crossCategories,...bkFile,status,reject_reason:'',bulk:true};
+      const newRecord={id:'BK'+Date.now()+'_'+i,apply_date:date,empno:r.empno,name:r.name,dept:deptVal,course_name:course,hours:mins,org:org,edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,cross_categories:crossCategories,...bkFile,status,reject_reason:'',bulk:true};
       if(!IS_DEMO){ const res=await apiPost({action:'submitApply',...newRecord,legal_types:legalTypes,cross_categories:crossCategories,bulk:true}); if(res?.success){okCount++;savedIds.push(res.id);resultLog.push({...r,result:'✓ 성공'});}else{errCount++;resultLog.push({...r,result:'✗ 실패: '+(res?.error||'오류')});} }
       else{ DB.unshift(newRecord); okCount++; resultLog.push({...r,result:'✓ 등록 완료'}); }
     }catch(e){ errCount++; resultLog.push({...r,result:'✗ 오류: '+e.message}); }
