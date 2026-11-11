@@ -354,6 +354,14 @@ tbody td{font-size:13px;padding:11px 14px;vertical-align:middle;white-space:nowr
 .sel-badge{font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;background:var(--bl);color:var(--bd);border:1px solid var(--bm);display:none;white-space:nowrap;}
 .sel-badge.show{display:inline-flex;align-items:center;gap:5px;}
 
+/* ── 정렬 가능한 표 헤더 ── */
+th.sortable{cursor:pointer;user-select:none;white-space:nowrap;}
+th.sortable:hover{color:var(--blue);}
+th.sortable .sort-ic{display:inline-block;margin-left:3px;font-size:10px;color:var(--bdr);}
+th.sortable .sort-ic::after{content:'⇅';}
+th.sortable.asc .sort-ic,th.sortable.desc .sort-ic{color:var(--blue);}
+th.sortable.asc .sort-ic::after{content:'▲';}
+th.sortable.desc .sort-ic::after{content:'▼';}
 /* ── 통계 탭 ── */
 .stats-tab{transition:all .12s;}
 .stats-tab.active{background:var(--white)!important;color:var(--navy)!important;font-weight:700!important;box-shadow:var(--shadow-sm);}
@@ -1187,7 +1195,7 @@ function updateTimePreview(hId, mId, previewId) {
             <input type="file" id="bk-proof-file" accept=".pdf,.jpg,.jpeg,.png,.hwp,.zip,.xlsx,.xls,.doc,.docx" onchange="onBkProofSelect(this)">
             <svg width="22" height="22" fill="none" viewBox="0 0 24 24" style="margin:0 auto 8px;display:block;opacity:.4;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round"/><polyline points="14 2 14 8 20 8" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round"/></svg>
             <div style="font-size:13px;color:var(--muted);">클릭 또는 파일을 드래그 (PDF, JPG, PNG, HWP, ZIP 등)</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:4px;">최대 20MB</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">최대 10MB</div>
             <div id="bk-proof-name" style="font-size:12px;color:var(--blue);margin-top:6px;font-weight:500;"></div>
             <div id="bk-proof-sz" style="font-size:11px;color:var(--muted);"></div>
           </div>
@@ -1251,11 +1259,11 @@ function updateTimePreview(hId, mId, previewId) {
           <table>
             <thead><tr>
               <th style="width:32px;"><input type="checkbox" class="chk" id="chk-all" onchange="toggleAll(this)"></th>
-              <th style="width:72px;">이수일</th><th style="width:90px;">사번</th>
-              <th style="width:80px;">이름</th><th style="width:100px;">부서</th>
-              <th>과정명</th><th style="width:60px;">방법</th>
-              <th style="width:72px;">구분</th><th style="width:80px;">시간</th>
-              <th style="width:80px;">상태</th><th style="width:220px;">처리</th>
+              <th class="sortable" data-tbl="a" data-key="apply_date" style="width:72px;" onclick="setSort('a','apply_date')">이수일<span class="sort-ic"></span></th><th class="sortable" data-tbl="a" data-key="empno" style="width:90px;" onclick="setSort('a','empno')">사번<span class="sort-ic"></span></th>
+              <th class="sortable" data-tbl="a" data-key="name" style="width:80px;" onclick="setSort('a','name')">이름<span class="sort-ic"></span></th><th class="sortable" data-tbl="a" data-key="dept" style="width:100px;" onclick="setSort('a','dept')">부서<span class="sort-ic"></span></th>
+              <th class="sortable" data-tbl="a" data-key="course_name" style="" onclick="setSort('a','course_name')">과정명<span class="sort-ic"></span></th><th class="sortable" data-tbl="a" data-key="edu_method" style="width:60px;" onclick="setSort('a','edu_method')">방법<span class="sort-ic"></span></th>
+              <th class="sortable" data-tbl="a" data-key="edu_category" style="width:72px;" onclick="setSort('a','edu_category')">구분<span class="sort-ic"></span></th><th class="sortable" data-tbl="a" data-key="hours" style="width:80px;" onclick="setSort('a','hours')">시간<span class="sort-ic"></span></th>
+              <th class="sortable" data-tbl="a" data-key="status" style="width:80px;" onclick="setSort('a','status')">상태<span class="sort-ic"></span></th><th style="width:220px;">처리</th>
             </tr></thead>
             <tbody id="a-tbody"></tbody>
           </table>
@@ -1279,11 +1287,11 @@ function updateTimePreview(hId, mId, previewId) {
         <div class="tbl-wrap">
           <table>
             <thead><tr>
-              <th style="width:80px;">이수일</th><th style="width:90px;">사번</th>
-              <th style="width:80px;">이름</th><th style="width:100px;">부서</th>
-              <th>과정명</th><th style="width:60px;">방법</th>
-              <th style="width:72px;">구분</th><th style="width:80px;">시간</th>
-              <th style="width:80px;">상태</th>
+              <th class="sortable" data-tbl="h" data-key="apply_date" style="width:80px;" onclick="setSort('h','apply_date')">이수일<span class="sort-ic"></span></th><th class="sortable" data-tbl="h" data-key="empno" style="width:90px;" onclick="setSort('h','empno')">사번<span class="sort-ic"></span></th>
+              <th class="sortable" data-tbl="h" data-key="name" style="width:80px;" onclick="setSort('h','name')">이름<span class="sort-ic"></span></th><th class="sortable" data-tbl="h" data-key="dept" style="width:100px;" onclick="setSort('h','dept')">부서<span class="sort-ic"></span></th>
+              <th class="sortable" data-tbl="h" data-key="course_name" style="" onclick="setSort('h','course_name')">과정명<span class="sort-ic"></span></th><th class="sortable" data-tbl="h" data-key="edu_method" style="width:60px;" onclick="setSort('h','edu_method')">방법<span class="sort-ic"></span></th>
+              <th class="sortable" data-tbl="h" data-key="edu_category" style="width:72px;" onclick="setSort('h','edu_category')">구분<span class="sort-ic"></span></th><th class="sortable" data-tbl="h" data-key="hours" style="width:80px;" onclick="setSort('h','hours')">시간<span class="sort-ic"></span></th>
+              <th class="sortable" data-tbl="h" data-key="status" style="width:80px;" onclick="setSort('h','status')">상태<span class="sort-ic"></span></th>
             </tr></thead>
             <tbody id="h-tbody"></tbody>
           </table>
@@ -1604,6 +1612,18 @@ function updateTimePreview(hId, mId, previewId) {
       <div class="fg"><label>과정명 <span class="req">*</span></label><input type="text" id="ea-course" placeholder="과정명"></div>
       <div class="fg"><label>교육기관</label><input type="text" id="ea-org" placeholder="예: 행정안전부 / 사내교육"></div>
     </div>
+    <!-- 교육비용 수정 -->
+    <div class="fg2">
+      <div class="fg"><label>교육훈련비 (원)</label><input type="number" id="ea-train-cost" min="0" placeholder="0"></div>
+      <div class="fg"><label>출장비 (원)</label><input type="number" id="ea-travel-cost" min="0" placeholder="0"></div>
+    </div>
+    <div class="fg"><label>비용 상세 내역</label><input type="text" id="ea-cost-detail" placeholder="예: 교재비 30,000원 + 수강료 120,000원"></div>
+    <!-- 증빙파일 첨부/교체 (선택 시에만 반영) -->
+    <div class="fg">
+      <label>증빙파일 <span style="font-weight:400;color:var(--muted);">— 새 파일을 선택하면 교체됩니다 (10MB 이하)</span></label>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;" id="ea-file-cur"></div>
+      <input type="file" id="ea-file" style="font-size:12px;">
+    </div>
     <div class="fg2">
       <!-- 수정 모달 이수시간 -->
       <div class="fg">
@@ -1696,7 +1716,7 @@ function updateTimePreview(hId, mId, previewId) {
         <input type="checkbox" id="dl-all" class="chk" checked style="margin-top:1px;">
         <div>
           <div style="font-size:13px;font-weight:700;">전체 이수 이력</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">사번 / 이름 / 부서 / 과정명 / 시간 / 상태 등</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">사번 / 이름 / 부서 / 과정명 / 교육기관 / 시간 / 예산사용(교육훈련비·출장비) / 상태 등</div>
         </div>
       </label>
       <label style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:var(--gray);border-radius:var(--r);cursor:pointer;border:2px solid transparent;" id="dl-lbl-personal" onclick="toggleDlCheck('dl-personal','dl-lbl-personal')">
@@ -1785,6 +1805,18 @@ async function apiGet(p) {
   const q=Object.entries(p).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
   try{ const r=await fetch(SCRIPT_URL+'?'+q); return await r.json(); }catch(e){ return null; }
 }
+// 파일을 base64로 읽어 Drive에 업로드 (단체이수 증빙 / 수정모달 증빙 교체 공용)
+async function uploadProofFile(file, empno, name, courseName, isBulk) {
+  const base64 = await new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = e => res(e.target.result.split(',')[1]);
+    fr.onerror = rej;
+    fr.readAsDataURL(file);
+  });
+  return apiPost({ action:'uploadFile', base64, mimeType:file.type, fileName:file.name,
+                   empno, name, course_name:courseName, bulk:!!isBulk });
+}
+
 async function apiPost(d) {
   if(IS_DEMO) return null;
   try{
@@ -2539,6 +2571,49 @@ function getFlt(){
   const ct=document.getElementById('a-ct').value,q=document.getElementById('a-q').value.toLowerCase();
   return DB.filter(r=>{ if(st!=='all'&&r.status!==st)return false; if(dp!=='all'&&r.dept!==dp)return false; if(ct!=='all'&&r.edu_category!==ct)return false; if(q&&!r.name.includes(q)&&!(r.course_name||'').toLowerCase().includes(q))return false; return true; });
 }
+// ════════════════════════════════════════════════
+// 표 정렬 (a: 신청 승인 처리 / h: 전체 이수 이력)
+// - 헤더 클릭: 같은 열이면 오름↔내림 전환, 다른 열이면 오름차순부터 (이수일은 최신순부터)
+// - 부서는 가나다순이 아닌 조직도 순서(DEPTS)로 정렬
+// - 값이 같으면 이수일 최신순으로 2차 정렬
+// ════════════════════════════════════════════════
+const SORT_STATE = { a:{key:'apply_date',dir:'desc'}, h:{key:'apply_date',dir:'desc'} };
+const STATUS_ORDER = { '대기':0, '승인':1, '반려':2 };
+function sortVal(r, key){
+  switch(key){
+    case 'hours':  return toMins(r.hours);
+    case 'empno':  return Number(r.empno) || String(r.empno||'');
+    case 'dept':   { const i = DEPTS.indexOf(r.dept); return i >= 0 ? i : 999; }
+    case 'status': return STATUS_ORDER[r.status] ?? 9;
+    case 'apply_date': return String(r.apply_date||'').slice(0,10);
+    default:       return String(r[key]||'');
+  }
+}
+function cmpVal(x, y){
+  if (typeof x === 'number' && typeof y === 'number') return x - y;
+  return String(x).localeCompare(String(y), 'ko', { numeric:true });
+}
+function sortRows(rows, tbl){
+  const { key, dir } = SORT_STATE[tbl];
+  const sign = dir === 'asc' ? 1 : -1;
+  return [...rows].sort((a, b) =>
+    (cmpVal(sortVal(a,key), sortVal(b,key)) * sign) ||
+    cmpVal(sortVal(b,'apply_date'), sortVal(a,'apply_date'))
+  );
+}
+function setSort(tbl, key){
+  const st = SORT_STATE[tbl];
+  if (st.key === key) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
+  else { st.key = key; st.dir = key === 'apply_date' ? 'desc' : 'asc'; }
+  if (tbl === 'a') { aCurrentPage = 1; aRender(); } else hRender();
+}
+function paintSortHeaders(tbl){
+  document.querySelectorAll(`th.sortable[data-tbl="${tbl}"]`).forEach(th => {
+    th.classList.remove('asc','desc');
+    if (th.dataset.key === SORT_STATE[tbl].key) th.classList.add(SORT_STATE[tbl].dir);
+  });
+}
+
 // 페이지네이션 상태
 let aCurrentPage = 1;
 
@@ -2546,7 +2621,8 @@ function aPageReset(){ aCurrentPage = 1; aRender(); }
 
 function aRender(){
   const perPage = parseInt(document.getElementById('a-per-page')?.value||'20');
-  const allRows = getFlt();
+  const allRows = sortRows(getFlt(), 'a');
+  paintSortHeaders('a');
   const total = allRows.length;
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   if (aCurrentPage > totalPages) aCurrentPage = totalPages;
@@ -2646,7 +2722,7 @@ function openDetail(id){
   document.getElementById('m-hours').textContent=minsToStr(toMins(r.hours));
   document.getElementById('m-date').textContent=fmtDate(r.apply_date,true);
   document.getElementById('m-org').textContent=r.org||'—';
-  document.getElementById('m-file').textContent=r.file_name?'📎 '+r.file_name:'첨부파일 없음';
+  document.getElementById('m-file').textContent=r.file_url?'📎 '+(r.file_name||'첨부파일'):'첨부파일 없음';
   const bulkRow=document.getElementById('m-bulk-row');
   if(r.bulk){ bulkRow.style.display='flex'; }else{ bulkRow.style.display='none'; }
   document.getElementById('m-train-cost').textContent=r.train_cost?Number(r.train_cost).toLocaleString()+'원':'없음';
@@ -2657,7 +2733,7 @@ function openDetail(id){
   document.getElementById('m-remark').value=r.reject_reason||'';
   document.getElementById('mo-detail').classList.add('open');
 }
-function openFile(){ const u=document.getElementById('m-file')._url; if(u)window.open(u,'_blank'); else showToast('파일 없음','amber'); }
+function openFile(){ const u=document.getElementById('m-file')._url; if(u)window.open(u,'_blank'); else showToast('첨부된 증빙파일이 없습니다. [수정]에서 증빙파일을 첨부할 수 있습니다.','amber'); }
 async function modalAct(act){
   if(!openId)return;
   const remark=document.getElementById('m-remark').value;
@@ -2681,6 +2757,12 @@ function openEditApply(id) {
   document.getElementById('ea-dept').value=r.dept||'';
   document.getElementById('ea-course').value=r.course_name||'';
   document.getElementById('ea-org').value=r.org||'';
+  document.getElementById('ea-train-cost').value=Number(r.train_cost)||'';
+  document.getElementById('ea-travel-cost').value=Number(r.travel_cost)||'';
+  document.getElementById('ea-cost-detail').value=r.cost_detail||'';
+  document.getElementById('ea-file').value='';
+  document.getElementById('ea-file-cur').textContent = r.file_url
+    ? '현재: 📎 '+(r.file_name||'첨부파일') : '현재: 첨부된 증빙파일 없음';
   // 분 단위 복원
   const mins=toMins(r.hours);
   setInputMins('ea-hours-h','ea-hours-m',mins);
@@ -2736,6 +2818,12 @@ async function saveEditApply() {
   const commonType=document.getElementById('ea-com').value;
   const cdpYn=document.getElementById('ea-cdp').value==='true';
   const jobTrack=document.getElementById('ea-track').value;
+  const trainCost=Number(document.getElementById('ea-train-cost').value)||0;
+  const travelCost=Number(document.getElementById('ea-travel-cost').value)||0;
+  const costDetail=document.getElementById('ea-cost-detail').value.trim();
+  const eaFile=document.getElementById('ea-file').files[0]||null;
+  if(trainCost<0||travelCost<0){ showToast('교육비는 0 이상으로 입력하세요.','amber'); return; }
+  if(eaFile && eaFile.size>10*1048576){ showToast('증빙파일은 10MB 이하만 첨부할 수 있습니다.','red'); return; }
   if(!dept){ showToast('부서를 선택하세요.','amber'); return; }
   if(!course){ showToast('과정명을 입력하세요.','amber'); return; }
   if(!mins){ showToast('이수 시간을 입력하세요.','amber'); return; }
@@ -2747,12 +2835,22 @@ async function saveEditApply() {
   const r=DB.find(d=>d.id===id); if(!r)return;
   // cross_categories를 apiPost 전에 미리 캡처
   const _eaCross=getCrossCategories('ea');
+  // 증빙파일을 새로 선택한 경우에만 업로드 후 교체
+  let fileFields={};
   if(!IS_DEMO){
+    if(eaFile){
+      showLoad("증빙파일 업로드 중...");
+      const ur=await uploadProofFile(eaFile, r.empno, r.name, course, false);
+      if(!ur?.success){ hideLoad(); showToast('파일 업로드 실패: '+(ur?.error||'오류'),'red'); return; }
+      fileFields={file_id:ur.file_id,file_url:ur.file_url,file_name:ur.file_name};
+    }
     showLoad("수정 저장 중...");
-    const res=await apiPost({action:"editApply",id,dept,course_name:course,org,hours:mins,apply_date:date,edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,cross_categories:_eaCross,reason});
+    const res=await apiPost({action:"editApply",id,dept,course_name:course,org,hours:mins,apply_date:date,edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,cross_categories:_eaCross,train_cost:trainCost,travel_cost:travelCost,cost_detail:costDetail,...fileFields,reason});
     hideLoad();
-    if(!res?.success) showToast("서버 저장 실패: "+(res?.error||"오류"),"red");
+    if(!res?.success){ showToast("서버 저장 실패: "+(res?.error||"오류"),"red"); return; }
   }
+  r.train_cost=trainCost; r.travel_cost=travelCost; r.cost_detail=costDetail;
+  Object.assign(r,fileFields);
   r.dept=dept; r.course_name=course; r.org=org; r.hours=mins;
   r.apply_date=date; r.edu_method=method; r.edu_category=cat;
   r.legal_types=cat==='법정의무'?legalTypes:[];
@@ -2860,7 +2958,8 @@ async function saveCatEdit(){
 function hRender(){
   const dp=document.getElementById('h-dp').value,st=document.getElementById('h-st').value;
   const ct=document.getElementById('h-ct').value,q=document.getElementById('h-q').value.toLowerCase();
-  const rows=DB.filter(r=>{ if(dp!=='all'&&r.dept!==dp)return false; if(st!=='all'&&r.status!==st)return false; if(ct!=='all'&&r.edu_category!==ct)return false; if(q&&!r.name.includes(q)&&!(r.course_name||'').toLowerCase().includes(q))return false; return true; });
+  const rows=sortRows(DB.filter(r=>{ if(dp!=='all'&&r.dept!==dp)return false; if(st!=='all'&&r.status!==st)return false; if(ct!=='all'&&r.edu_category!==ct)return false; if(q&&!r.name.includes(q)&&!(r.course_name||'').toLowerCase().includes(q))return false; return true; }), 'h');
+  paintSortHeaders('h');
   document.getElementById('h-tbody').innerHTML=rows.map(r=>`<tr>
     <td style="color:var(--muted);font-size:12px;">${fmtDate(r.apply_date,true)}</td>
     <td style="color:var(--muted);font-size:12px;white-space:nowrap;">${r.empno}</td>
@@ -3113,12 +3212,20 @@ async function executeDownload() {
   };
 
   // 전체 이수 이력 데이터
+  // 교육기관 + 예산사용 내역(교육훈련비/출장비/합계/사용여부/비용상세) 포함
+  const ALL_HEADERS = ['이수일','사번','이름','부서','과정명','교육기관','방법','구분','시간',
+                       '교육훈련비','출장비','예산합계','예산사용','비용상세','상태','반려사유'];
   const getAllData = () =>
-    rawDB.map(r => [
-      r.apply_date||'', r.empno, r.name, r.dept,
-      r.course_name||'', r.edu_method, r.edu_category,
-      minsToStr(toMins(r.hours)), r.status, r.reject_reason||''
-    ]);
+    rawDB.map(r => {
+      const tc = Number(r.train_cost) || 0, tv = Number(r.travel_cost) || 0;
+      return [
+        r.apply_date||'', r.empno, r.name, r.dept,
+        r.course_name||'', r.org||'', r.edu_method, r.edu_category,
+        minsToStr(toMins(r.hours)),
+        tc, tv, tc + tv, (tc + tv) > 0 ? '사용' : '미사용', r.cost_detail||'',
+        r.status, r.reject_reason||''
+      ];
+    });
 
   // 개인별 이수현황 데이터 (전체 직원 기준, 미신청자도 0으로 포함)
   const getPersonalData = async () => {
@@ -3185,7 +3292,7 @@ async function executeDownload() {
     if (dlDept)   sheets.push({ name:'부서별이수현황',   h:['부서','신청자','이수완료자(7조건)','이수율','총이수시간'], rows: deptData });
     if (dlBudget) sheets.push({ name:'예산사용현황',     h:['이름','부서','과정명','교육훈련비','출장비','합계'], rows: getBudgetData() });
     if (dlLegal)  sheets.push({ name:'법정의무이수율',   h:['교육명','이수자','전체인원','이수율'], rows: getLegalData() });
-    if (dlAll)    sheets.push({ name:'전체이수이력',     h:['이수일','사번','이름','부서','과정명','방법','구분','시간','상태','반려사유'], rows: getAllData() });
+    if (dlAll)    sheets.push({ name:'전체이수이력',     h: ALL_HEADERS, rows: getAllData() });
     if (dlPersonal) sheets.push({ name:'개인별이수현황', h: PERSONAL_HEADERS, rows: personalData });
 
     if (sheets.length === 1) {
@@ -3216,7 +3323,7 @@ async function executeDownload() {
     if (dlDept)   XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['부서','신청자','이수완료자(7조건)','이수율','총이수시간'], deptData), '부서별이수현황');
     if (dlBudget) XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['이름','부서','과정명','교육훈련비','출장비','합계'], getBudgetData()), '예산사용현황');
     if (dlLegal)  XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['교육명','이수자','전체인원','이수율'], getLegalData()), '법정의무이수율');
-    if (dlAll)    XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['이수일','사번','이름','부서','과정명','방법','구분','시간','상태','반려사유'], getAllData()), '전체이수이력');
+    if (dlAll)    XLSX.utils.book_append_sheet(wb, makeXlsxSheet(ALL_HEADERS, getAllData()), '전체이수이력');
     if (dlPersonal) XLSX.utils.book_append_sheet(wb, makeXlsxSheet(PERSONAL_HEADERS, personalData), '개인별이수현황');
     XLSX.writeFile(wb, `교육훈련통계_${today}.xlsx`);
     showToast('Excel 다운로드 완료', 'green');
@@ -4167,7 +4274,7 @@ function onBkProofDrop(e){ e.preventDefault(); document.getElementById('bk-proof
 function onBkProofSelect(inp){ const f=inp.files[0]; if(f)setBkProof(f); }
 function setBkProof(f){
   const mb=f.size/1048576;
-  if(mb>20){ showToast('20MB를 초과하는 파일은 첨부할 수 없습니다.','red'); return; }
+  if(mb>10){ showToast('10MB를 초과하는 파일은 첨부할 수 없습니다.','red'); return; }
   bkProofFile=f;
   document.getElementById('bk-proof-name').textContent=f.name;
   document.getElementById('bk-proof-sz').textContent=mb.toFixed(1)+'MB';
@@ -4320,15 +4427,33 @@ async function submitBulk(){
   const btn=document.getElementById('bk-submit-btn'); btn.disabled=true; btn.textContent='처리 중...';
   showLoad('단체 이수처리 중... (0 / '+validRows.length+'명)');
   let okCount=0,errCount=0; const resultLog=[];
+  // ① 증빙파일을 Drive에 한 번만 업로드하고, 그 링크를 명단 전원의 이수건에 연결
+  let bkFile={file_id:'',file_url:'',file_name:'단체이수처리'};
+  if(bkProofFile && !IS_DEMO){
+    document.getElementById('lmsg').textContent='증빙파일 업로드 중...';
+    const ur=await uploadProofFile(bkProofFile, validRows[0].empno, validRows[0].name, course, true);
+    if(!ur?.success){
+      hideLoad(); btn.disabled=false; btn.textContent='일괄 이수처리 실행';
+      showToast('증빙파일 업로드 실패: '+(ur?.error||'오류')+' — 이수처리를 중단했습니다.','red'); return;
+    }
+    bkFile={file_id:ur.file_id,file_url:ur.file_url,file_name:ur.file_name};
+  } else if(bkProofFile){ bkFile.file_name=bkProofFile.name; }
+  const savedIds=[];
   for(let i=0;i<validRows.length;i++){
     const r=validRows[i];
     document.getElementById('lmsg').textContent='단체 이수처리 중... ('+(i+1)+' / '+validRows.length+'명)';
     try{
       const deptVal = r.dept || '—'; // 파싱 시 인사DB 자동 매핑됨
-      const newRecord={id:'BK'+Date.now()+'_'+i,apply_date:date,empno:r.empno,name:r.name,dept:deptVal,course_name:course,hours:mins,org:org||'단체교육',edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,cross_categories:crossCategories,file_url:'',file_name:bkProofFile?bkProofFile.name:'단체이수처리',status,reject_reason:'',bulk:true};
-      if(!IS_DEMO){ const res=await apiPost({action:'submitApply',...newRecord,legal_types:legalTypes,cross_categories:crossCategories,bulk:true}); if(res?.success){okCount++;resultLog.push({...r,result:'✓ 성공'});}else{errCount++;resultLog.push({...r,result:'✗ 실패: '+(res?.error||'오류')});} }
+      const newRecord={id:'BK'+Date.now()+'_'+i,apply_date:date,empno:r.empno,name:r.name,dept:deptVal,course_name:course,hours:mins,org:org||'단체교육',edu_method:method,edu_category:cat,legal_types:legalTypes,common_type:commonType,cdp_yn:cdpYn,job_track:jobTrack,cross_categories:crossCategories,...bkFile,status,reject_reason:'',bulk:true};
+      if(!IS_DEMO){ const res=await apiPost({action:'submitApply',...newRecord,legal_types:legalTypes,cross_categories:crossCategories,bulk:true}); if(res?.success){okCount++;savedIds.push(res.id);resultLog.push({...r,result:'✓ 성공'});}else{errCount++;resultLog.push({...r,result:'✗ 실패: '+(res?.error||'오류')});} }
       else{ DB.unshift(newRecord); okCount++; resultLog.push({...r,result:'✓ 등록 완료'}); }
     }catch(e){ errCount++; resultLog.push({...r,result:'✗ 오류: '+e.message}); }
+  }
+  // ② 서버 submitApply는 항상 '대기'로 저장하므로, '승인' 선택 시 저장된 건을 일괄 승인
+  if(!IS_DEMO && status!=='대기' && savedIds.length){
+    document.getElementById('lmsg').textContent='승인 상태 반영 중...';
+    const sr=await apiPost({action:'bulkStatus',ids:savedIds,status});
+    if(!sr?.success) showToast('등록은 됐지만 승인 반영에 실패했습니다. 승인관리에서 일괄 승인해 주세요.','amber');
   }
   hideLoad(); btn.disabled=false; btn.textContent='일괄 이수처리 실행';
   document.getElementById('bk-res-ok').textContent=okCount+'명';
