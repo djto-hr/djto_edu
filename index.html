@@ -381,13 +381,12 @@ const MAX_FILE_MB = 10;
 // ════════════════════════════════════════
 const CROSS_COMMON_OPTS = [
   {id:'xc-ethics',   label:'공직윤리(청렴)',    commonType:'공직윤리(청렴)',  tc:'#534AB7',bg:'#EEEDFE',bd:'#AFA9EC'},
-  {id:'xc-disaster', label:'재난·산업안전',     commonType:'재난·산업안전',  tc:'#534AB7',bg:'#EEEDFE',bd:'#AFA9EC'},
+  {id:'xc-disaster', label:'재난·산업안전(소방 포함)', commonType:'재난·산업안전',  tc:'#534AB7',bg:'#EEEDFE',bd:'#AFA9EC'},
   {id:'xc-digital',  label:'디지털역량(AI·DX)', commonType:'디지털역량',     tc:'#534AB7',bg:'#EEEDFE',bd:'#AFA9EC'},
 ];
 const CROSS_LEGAL_OPTS = [
   {id:'xl-violence',   label:'4대폭력예방',       legalType:'4대폭력예방',       tc:'#791F1F',bg:'#FCEBEB',bd:'#F7C1C1'},
   {id:'xl-harass',     label:'직장내괴롭힘예방',  legalType:'직장내괴롭힘예방',  tc:'#791F1F',bg:'#FCEBEB',bd:'#F7C1C1'},
-  {id:'xl-fire',       label:'소방안전화재예방',  legalType:'소방안전화재예방',  tc:'#791F1F',bg:'#FCEBEB',bd:'#F7C1C1'},
   {id:'xl-privacy',    label:'개인정보보호',      legalType:'개인정보보호교육',  tc:'#791F1F',bg:'#FCEBEB',bd:'#F7C1C1'},
   {id:'xl-disability', label:'장애인인식개선',    legalType:'장애인인식개선교육',tc:'#791F1F',bg:'#FCEBEB',bd:'#F7C1C1'},
   {id:'xl-suicide',    label:'자살예방',          legalType:'자살예방교육',      tc:'#791F1F',bg:'#FCEBEB',bd:'#F7C1C1'},
@@ -484,7 +483,8 @@ function renderCrossInline(arr) {
     }).join('') + '</div>';
 }
 
-const LEGAL_TYPES  = ['4대폭력예방','직장내괴롭힘예방','소방안전화재예방','장애인인식개선교육','자살예방교육','퇴직연금교육','아동학대예방교육','개인정보보호교육','정보공개교육'];
+// [2026.11] 소방안전화재예방은 공통필수 '재난·산업안전'으로 통합 운영 → 법정의무 8종
+const LEGAL_TYPES  = ['4대폭력예방','직장내괴롭힘예방','장애인인식개선교육','자살예방교육','퇴직연금교육','아동학대예방교육','개인정보보호교육','정보공개교육'];
 const COMMON_DUTY_TYPES = ['재난안전','디지털역량','공직윤리'];
 const COMMON_TYPES = ['공직윤리(청렴)','재난·산업안전','디지털역량','인사교육','예산·회계'];
 const JOB_TRACKS   = ['기획감사','경영관리','관광','MICE','시설관리'];
@@ -729,7 +729,7 @@ function updateTimePreview(hId, mId, previewId) {
       <div class="cat-card" style="background:#FCEBEB;border-color:#F7C1C1;">
         <span class="cat-tag" style="background:#F7C1C1;color:#501313;">법정의무</span>
         <div class="cn" style="color:#501313;">법으로 정해진 필수 교육</div>
-        <div class="cd" style="color:#791F1F;">4대 폭력 예방<br>개인정보보호·정보공개<br>재난안전·산업안전보건<br>소방·청렴윤리 등 12종</div>
+        <div class="cd" style="color:#791F1F;">4대 폭력 예방<br>개인정보보호·정보공개<br>장애인인식개선·자살예방<br>청렴윤리·퇴직연금 등</div>
       </div>
       <div class="cat-card" style="background:#EEEDFE;border-color:#AFA9EC;">
         <span class="cat-tag" style="background:#AFA9EC;color:#26215C;">공통필수</span>
@@ -785,19 +785,18 @@ function updateTimePreview(hId, mId, previewId) {
       <tbody>
         <tr><td style="color:var(--muted);">1</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">4대 폭력 예방 교육</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 강사초청(관리자)</td><td style="font-size:11px;color:var(--muted);">안전감사팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
         <tr><td style="color:var(--muted);">2</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">직장 내 괴롭힘 예방</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 강사초청(관리자)</td><td style="font-size:11px;color:var(--muted);">안전감사팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">3</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">소방안전 · 화재예방 교육</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">자체교육 / 전문기관</td><td style="font-size:11px;color:var(--muted);">시설운영팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">4</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">청렴 · 윤리교육</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 청렴연수원</td><td style="font-size:11px;color:var(--muted);">안전감사팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">5</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">개인정보보호 · 정보공개</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 행안부</td><td style="font-size:11px;color:var(--muted);">총무회계팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">6</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">장애인인식개선 · 자살예방 · 아동학대예방</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">7</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">퇴직연금 교육</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">8</td><td><span class="rq-c">공통필수</span></td><td style="font-weight:500;">재난안전 · 산업안전보건교육</td><td style="text-align:center;"><span class="hc">2h↑</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 전문교육기관</td><td style="font-size:11px;color:var(--muted);">안전감사팀</td><td style="text-align:center;color:#3C3489;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">9</td><td><span class="rq-c">공통필수</span></td><td style="font-weight:500;">공직윤리(청렴) 역량강화</td><td style="text-align:center;"><span class="hc">2h↑</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 집합</td><td style="font-size:11px;color:var(--muted);">안전감사팀</td><td style="text-align:center;color:#3C3489;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">10</td><td><span class="rq-c">공통필수</span></td><td style="font-weight:500;">디지털역량 강화 (AI · DX)</td><td style="text-align:center;"><span class="hc">2h↑</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">집합 / 온라인</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#3C3489;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">11</td><td><span class="rq-c">공통필수</span></td><td style="font-weight:500;">인사교육 (직무중심인사관리)</td><td style="text-align:center;"><span class="hc">2h↑</span></td><td style="font-size:11px;"><span style="background:#FAEEDA;color:#633806;padding:2px 6px;border-radius:20px;">인사담당자</span></td><td style="font-size:11px;color:var(--muted);">집합 / 위탁</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#3C3489;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">12</td><td><span class="rq-c">공통필수</span></td><td style="font-weight:500;">예산 · 회계교육 (재무건전성)</td><td style="text-align:center;"><span class="hc">2h↑</span></td><td style="font-size:11px;"><span style="background:#FAEEDA;color:#633806;padding:2px 6px;border-radius:20px;">예·회계담당자</span></td><td style="font-size:11px;color:var(--muted);">집합 / 위탁</td><td style="font-size:11px;color:var(--muted);">총무회계팀</td><td style="text-align:center;color:#3C3489;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">13</td><td><span class="rq-i">기관지정</span></td><td style="font-weight:500;">CDP 기반 직무교육 (5대 트랙)</td><td style="text-align:center;"><span class="hc">1회↑</span></td><td style="font-size:11px;">일반직</td><td style="font-size:11px;color:var(--muted);">집합 / 온라인</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#854F0B;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">14</td><td><span class="rq-i">기관지정</span></td><td style="font-weight:500;">신입직원과정 (입사 1년 이내)</td><td style="text-align:center;"><span class="hc">1주</span></td><td style="font-size:11px;">신규입사자</td><td style="font-size:11px;color:var(--muted);">집합 (인재개발원)</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#854F0B;font-weight:700;">●</td></tr>
-        <tr><td style="color:var(--muted);">15</td><td><span class="rq-i">기관지정</span></td><td style="font-weight:500;">중간관리자과정 (승진 1년 이내)</td><td style="text-align:center;"><span class="hc">1주</span></td><td style="font-size:11px;">신규보직자</td><td style="font-size:11px;color:var(--muted);">집합 (인재개발원)</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#854F0B;font-weight:700;">●</td></tr>
+        <tr><td style="color:var(--muted);">3</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">청렴 · 윤리교육</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 청렴연수원</td><td style="font-size:11px;color:var(--muted);">안전감사팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
+        <tr><td style="color:var(--muted);">4</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">개인정보보호 · 정보공개</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 행안부</td><td style="font-size:11px;color:var(--muted);">총무회계팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
+        <tr><td style="color:var(--muted);">5</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">장애인인식개선 · 자살예방 · 아동학대예방</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
+        <tr><td style="color:var(--muted);">6</td><td><span class="rq-y">법정의무</span></td><td style="font-weight:500;">퇴직연금 교육</td><td style="text-align:center;"><span class="hc">—h</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#A32D2D;font-weight:700;">●</td></tr>
+        <tr><td style="color:var(--muted);">7</td><td><span class="rq-c">공통필수</span></td><td style="font-weight:500;">재난안전 · 산업안전보건교육<br><span style="font-size:11px;color:var(--muted);font-weight:400;">소방안전·화재예방 교육 포함</span></td><td style="text-align:center;"><span class="hc">2h↑</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 전문교육기관 / 자체교육</td><td style="font-size:11px;color:var(--muted);">안전감사팀<br>시설운영팀</td><td style="text-align:center;color:#3C3489;font-weight:700;">●</td></tr>
+        <tr><td style="color:var(--muted);">8</td><td><span class="rq-c">공통필수</span></td><td style="font-weight:500;">공직윤리(청렴) 역량강화</td><td style="text-align:center;"><span class="hc">2h↑</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">온라인 / 집합</td><td style="font-size:11px;color:var(--muted);">안전감사팀</td><td style="text-align:center;color:#3C3489;font-weight:700;">●</td></tr>
+        <tr><td style="color:var(--muted);">9</td><td><span class="rq-c">공통필수</span></td><td style="font-weight:500;">디지털역량 강화 (AI · DX)</td><td style="text-align:center;"><span class="hc">2h↑</span></td><td style="font-size:11px;">전 임직원</td><td style="font-size:11px;color:var(--muted);">집합 / 온라인</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#3C3489;font-weight:700;">●</td></tr>
+        <tr><td style="color:var(--muted);">10</td><td><span class="rq-c">공통필수</span></td><td style="font-weight:500;">인사교육 (직무중심인사관리)</td><td style="text-align:center;"><span class="hc">2h↑</span></td><td style="font-size:11px;"><span style="background:#FAEEDA;color:#633806;padding:2px 6px;border-radius:20px;">인사담당자</span></td><td style="font-size:11px;color:var(--muted);">집합 / 위탁</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#3C3489;font-weight:700;">●</td></tr>
+        <tr><td style="color:var(--muted);">11</td><td><span class="rq-c">공통필수</span></td><td style="font-weight:500;">예산 · 회계교육 (재무건전성)</td><td style="text-align:center;"><span class="hc">2h↑</span></td><td style="font-size:11px;"><span style="background:#FAEEDA;color:#633806;padding:2px 6px;border-radius:20px;">예·회계담당자</span></td><td style="font-size:11px;color:var(--muted);">집합 / 위탁</td><td style="font-size:11px;color:var(--muted);">총무회계팀</td><td style="text-align:center;color:#3C3489;font-weight:700;">●</td></tr>
+        <tr><td style="color:var(--muted);">12</td><td><span class="rq-i">기관지정</span></td><td style="font-weight:500;">CDP 기반 직무교육 (5대 트랙)</td><td style="text-align:center;"><span class="hc">1회↑</span></td><td style="font-size:11px;">일반직</td><td style="font-size:11px;color:var(--muted);">집합 / 온라인</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#854F0B;font-weight:700;">●</td></tr>
+        <tr><td style="color:var(--muted);">13</td><td><span class="rq-i">기관지정</span></td><td style="font-weight:500;">신입직원과정 (입사 1년 이내)</td><td style="text-align:center;"><span class="hc">1주</span></td><td style="font-size:11px;">신규입사자</td><td style="font-size:11px;color:var(--muted);">집합 (인재개발원)</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#854F0B;font-weight:700;">●</td></tr>
+        <tr><td style="color:var(--muted);">14</td><td><span class="rq-i">기관지정</span></td><td style="font-weight:500;">중간관리자과정 (승진 1년 이내)</td><td style="text-align:center;"><span class="hc">1주</span></td><td style="font-size:11px;">신규보직자</td><td style="font-size:11px;color:var(--muted);">집합 (인재개발원)</td><td style="font-size:11px;color:var(--muted);">인사노무팀</td><td style="text-align:center;color:#854F0B;font-weight:700;">●</td></tr>
       </tbody>
     </table>
     </div>
@@ -868,7 +867,7 @@ function updateTimePreview(hId, mId, previewId) {
         </div>
         <div class="cat-sub" id="sub-common">
           <div class="fg" style="margin-bottom:0;"><label>공통필수 유형 <span class="req">*</span></label>
-            <select id="f-common"><option value="">선택하세요</option><option>공직윤리(청렴)</option><option>재난·산업안전</option><option>디지털역량</option><option>인사교육</option><option>예산·회계</option></select>
+            <select id="f-common"><option value="">선택하세요</option><option>공직윤리(청렴)</option><option value="재난·산업안전">재난·산업안전(소방·화재예방 포함)</option><option>디지털역량</option><option>인사교육</option><option>예산·회계</option></select>
           </div>
         </div>
         <div class="cat-sub" id="sub-inst">
@@ -981,7 +980,7 @@ function updateTimePreview(hId, mId, previewId) {
 
       <!-- 법정의무 체크리스트 -->
       <div style="font-size:13px;font-weight:700;margin-bottom:6px;">법정의무교육
-        <span style="font-size:11px;font-weight:400;color:var(--muted);">9종 이수 여부</span>
+        <span style="font-size:11px;font-weight:400;color:var(--muted);">8종 이수 여부</span>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px;" id="lu-legal-checklist"></div>
 
@@ -1115,7 +1114,7 @@ function updateTimePreview(hId, mId, previewId) {
           <div id="bk-sub-common" style="display:none;margin-top:12px;background:var(--gray);border-radius:var(--r);padding:12px 14px;">
             <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">공통필수 유형 <span class="req">*</span></div>
             <select id="bk-common" style="width:100%;padding:8px 11px;border:1px solid var(--bdr);border-radius:var(--r);font-size:13px;font-family:inherit;outline:none;">
-              <option value="">선택</option><option value="공직윤리(청렴)">공직윤리(청렴)</option><option value="재난·산업안전">재난·산업안전</option><option value="디지털역량">디지털역량</option>
+              <option value="">선택</option><option value="공직윤리(청렴)">공직윤리(청렴)</option><option value="재난·산업안전">재난·산업안전(소방·화재예방 포함)</option><option value="디지털역량">디지털역량</option>
             </select>
           </div>
           <div id="bk-sub-inst" style="display:none;margin-top:12px;background:var(--gray);border-radius:var(--r);padding:12px 14px;border:1px solid var(--bdr);">
@@ -1409,7 +1408,7 @@ function updateTimePreview(hId, mId, previewId) {
 
         <!-- 탭3: 법정의무 이수율 -->
         <div id="tab-legal" class="stats-tab-content" style="display:none;">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">공무직 포함 전 직원 대비 교육별 이수율 · <b>법정의무 완료</b> = 9종 모두 이수</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">공무직 포함 전 직원 대비 교육별 이수율 · <b>법정의무 완료</b> = 8종 모두 이수</div>
           <div id="legal-summary-banner" style="margin-bottom:12px;"></div>
           <div id="legal-rate-wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:11px;"></div>
           <!-- 미이수자 패널 -->
@@ -1587,7 +1586,7 @@ function updateTimePreview(hId, mId, previewId) {
       <div class="fg"><label>교육구분 <span class="req">*</span></label><select id="ce-cat" onchange="onCeChange()"><option value="기관지정">기관지정</option><option value="법정의무">법정의무</option><option value="공통필수">공통필수</option><option value="기타">기타</option></select></div>
     </div>
     <div class="cat-sub2" id="ce-legal"><div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px;">법정의무 유형</div><div class="chk-grid" id="ce-lg"></div></div>
-    <div class="cat-sub2" id="ce-common"><div class="fg" style="margin-bottom:0;"><label>공통필수 유형</label><select id="ce-com"><option value="">선택하세요</option><option>공직윤리(청렴)</option><option>재난·산업안전</option><option>디지털역량</option><option>인사교육</option><option>예산·회계</option></select></div></div>
+    <div class="cat-sub2" id="ce-common"><div class="fg" style="margin-bottom:0;"><label>공통필수 유형</label><select id="ce-com"><option value="">선택하세요</option><option>공직윤리(청렴)</option><option value="재난·산업안전">재난·산업안전(소방·화재예방 포함)</option><option>디지털역량</option><option>인사교육</option><option>예산·회계</option></select></div></div>
     <div class="cat-sub2" id="ce-inst">
       <div class="fg" style="margin-bottom:8px;"><label>CDP 연계 여부</label><select id="ce-cdp" onchange="onCeCdpChange()"><option value="false">아니오</option><option value="true">예 — 직무트랙 선택</option></select></div>
       <div id="ce-trk" style="display:none;"><div class="fg" style="margin-bottom:0;"><label>직무트랙</label><select id="ce-track"><option value="">선택하세요</option><option>기획감사</option><option>경영관리</option><option>관광</option><option>MICE</option><option>시설관리</option></select></div></div>
@@ -1645,7 +1644,7 @@ function updateTimePreview(hId, mId, previewId) {
       <div class="fg"><label>교육구분 <span class="req">*</span></label><select id="ea-cat" onchange="onEaChange()"><option value="기관지정">기관지정</option><option value="법정의무">법정의무</option><option value="공통필수">공통필수</option><option value="기타">기타</option></select></div>
     </div>
     <div class="cat-sub2" id="ea-legal"><div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px;">법정의무 유형 <span class="req">*</span></div><div class="chk-grid" id="ea-lg"></div></div>
-    <div class="cat-sub2" id="ea-common"><div class="fg" style="margin-bottom:0;"><label>공통필수 유형 <span class="req">*</span></label><select id="ea-com"><option value="">선택하세요</option><option>공직윤리(청렴)</option><option>재난·산업안전</option><option>디지털역량</option><option>인사교육</option><option>예산·회계</option></select></div></div>
+    <div class="cat-sub2" id="ea-common"><div class="fg" style="margin-bottom:0;"><label>공통필수 유형 <span class="req">*</span></label><select id="ea-com"><option value="">선택하세요</option><option>공직윤리(청렴)</option><option value="재난·산업안전">재난·산업안전(소방·화재예방 포함)</option><option>디지털역량</option><option>인사교육</option><option>예산·회계</option></select></div></div>
     <div class="cat-sub2" id="ea-inst">
       <div class="fg" style="margin-bottom:8px;"><label>CDP 연계 여부 <span class="req">*</span></label><select id="ea-cdp" onchange="onEaCdpChange()"><option value="false">아니오</option><option value="true">예 — 직무트랙 선택</option></select></div>
       <div id="ea-trk" style="display:none;"><div class="fg" style="margin-bottom:0;"><label>직무트랙 <span class="req">*</span></label><select id="ea-track"><option value="">선택하세요</option><option>기획감사</option><option>경영관리</option><option>관광</option><option>MICE</option><option>시설관리</option></select></div></div>
@@ -1774,7 +1773,7 @@ let DB = [
   {id:'A004',apply_date:'2026-03-08',empno:'20170009',name:'강나래',dept:'관광사업팀',course_name:'관광해설사 역량 향상',hours:960,hours_unit:'min',org:'대전관광공사',edu_method:'집합',edu_category:'기관지정',legal_types:[],common_type:'',cdp_yn:true,job_track:'관광',file_url:'',file_name:'수료증.pdf',status:'승인',reject_reason:''},
   {id:'A005',apply_date:'2026-03-07',empno:'20200038',name:'윤도현',dept:'시설운영팀',course_name:'생성형 AI 활용 역량강화',hours:90,hours_unit:'min',org:'외부기관',edu_method:'집합',edu_category:'공통필수',legal_types:[],common_type:'디지털역량',cdp_yn:false,job_track:'',file_url:'',file_name:'수료증.pdf',status:'승인',reject_reason:''},
   {id:'A006',apply_date:'2026-03-06',empno:'20210045',name:'김민준',dept:'경영기획팀',course_name:'리더십 아카데미 과정',hours:1440,hours_unit:'min',org:'행정연수원',edu_method:'집합',edu_category:'기관지정',legal_types:[],common_type:'',cdp_yn:true,job_track:'기획감사',file_url:'',file_name:'수료증.pdf',status:'승인',reject_reason:''},
-  {id:'A007',apply_date:'2026-03-04',empno:'20220044',name:'오지민',dept:'관광사업팀',course_name:'소방안전관리 기초',hours:120,hours_unit:'min',org:'시설운영팀',edu_method:'집합',edu_category:'법정의무',legal_types:['소방안전화재예방'],common_type:'',cdp_yn:false,job_track:'',file_url:'',file_name:'수료증.pdf',status:'반려',reject_reason:'증빙 불일치'},
+  {id:'A007',apply_date:'2026-03-04',empno:'20220044',name:'오지민',dept:'관광사업팀',course_name:'소방안전관리 기초',hours:120,hours_unit:'min',org:'시설운영팀',edu_method:'집합',edu_category:'공통필수',legal_types:[],common_type:'재난·산업안전',cdp_yn:false,job_track:'',file_url:'',file_name:'수료증.pdf',status:'반려',reject_reason:'증빙 불일치'},
 ];
 let NOTICES = [
   {id:'N000',reg_date:'2026-04-01',title:'교육훈련 이수 관리 시스템 오픈 안내',content:'안녕하세요, 인사노무팀입니다.\n\n2026년부터 교육훈련 이수 신청 및 현황 관리를 본 시스템을 통해 운영합니다.\n\n교육 이수 후 수료증빙 파일과 함께 신청서를 제출해 주시면 담당자 검토 후 승인 처리됩니다.\n기존에 서면으로 제출하시던 분들도 반드시 시스템을 통해 신청해 주시기 바랍니다.\n\n신청 전 본인 확인(사번 + 이름)이 필요하오니 참고하시기 바랍니다.\n\n■ 시스템 이용 방법\n1. 상단 메뉴 [교육 신청] 클릭\n2. 사번 · 이름으로 본인 확인\n3. 교육 정보 및 수료증빙 파일 첨부 후 제출\n4. 관리자 검토 후 승인 처리 (결과는 [이수 현황 조회]에서 확인)\n\n문의사항은 담당자에게 연락 주시기 바랍니다.\n인사노무팀 최두원 (내선 1207)',level:'일반',status:'게시'},
@@ -2174,12 +2173,6 @@ async function doLookup() {
   done.filter(r=>r.edu_category==='법정의무').forEach(r=>(r.legal_types||[]).forEach(t=>completedLegal.add(t)));
   // cross_categories 법정의무 반영
   done.forEach(r=>(r.cross_categories||[]).forEach(c=>{if(c.cat==='법정의무'&&c.legalType)completedLegal.add(c.legalType);}));
-  // 재난·안전 공통필수 → 소방안전화재예방 중복 인정
-  done.filter(r=>r.edu_category==='공통필수').forEach(r=>{
-    const kws=['재난','산업안전','소방','화재'];
-    if(kws.some(k=>(r.common_type||'').includes(k)||(r.course_name||'').includes(k)))
-      completedLegal.add('소방안전화재예방');
-  });
   const isGongmu=(staffJobType==='공무직');
 
   // 직원 기본정보: staffInfo 우선, 없으면 rows[0]
@@ -2299,7 +2292,7 @@ async function doLookup() {
         + '<span style="font-size:20px;">📋</span>'
         + '<div style="font-size:13px;color:var(--bd);">'
         + '<b>공무직 직원의 이수 기준은 법정의무교육입니다.</b><br>'
-        + '<span style="color:var(--muted);font-size:12px;">아래에서 9종 법정의무교육 이수 여부를 확인하세요.</span>'
+        + '<span style="color:var(--muted);font-size:12px;">아래에서 8종 법정의무교육과 공통의무(재난·산업안전 등) 이수 여부를 확인하세요.</span>'
         + '</div>'
         + '</div>';
     }
@@ -3139,7 +3132,7 @@ async function executeDownload() {
   const done   = DB.filter(r => r.status === '승인');
   const rawDB  = DB;
   const today  = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const LEGAL_LIST = ['4대폭력예방','직장내괴롭힘예방','소방안전화재예방','장애인인식개선교육','자살예방교육','퇴직연금교육','아동학대예방교육','개인정보보호교육','정보공개교육'];
+  const LEGAL_LIST = LEGAL_TYPES; // 법정의무 목록 단일화
 
   // 부서별 이수현황 데이터 — 7조건 충족 기준 (그룹별 목표시간 반영)
   const getDeptData = async () => {
@@ -3196,13 +3189,6 @@ async function executeDownload() {
           legalDoneMap[c.legalType].add(String(r.empno));
         }
       });
-    });
-    // 재난·안전 공통필수 → 소방안전화재예방 중복 인정
-    if(!legalDoneMap['소방안전화재예방']) legalDoneMap['소방안전화재예방']=new Set();
-    done.filter(r=>r.edu_category==='공통필수').forEach(r=>{
-      const kws=['재난','산업안전','소방','화재'];
-      if(kws.some(k=>(r.common_type||'').includes(k)||(r.course_name||'').includes(k)))
-        legalDoneMap['소방안전화재예방'].add(String(r.empno));
     });
     const totalStaff = [...new Set(rawDB.map(r => r.empno))].length || 1;
     return LEGAL_LIST.map(t => {
@@ -3347,7 +3333,7 @@ function drillDept(dept) {
   panel.style.display = 'block';
   panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
 
-  const LEGAL_LIST_DRILL = ['4대폭력예방','직장내괴롭힘예방','소방안전화재예방','장애인인식개선교육','자살예방교육','퇴직연금교육','아동학대예방교육','개인정보보호교육','정보공개교육'];
+  const LEGAL_LIST_DRILL = LEGAL_TYPES; // 법정의무 목록 단일화
   const COND_LABELS = ['전체 50h','기관지정 20h','집합 35h','CDP 1회','재난안전 2h','공직윤리 2h','디지털 2h'];
 
   // 직원별 승인내역 맵
@@ -3882,8 +3868,8 @@ async function renderStats(){
     doneByDept[dept].members.push({ empno, name, completed, hrs: rows.reduce((s,r)=>s+toMins(r.hours),0) });
   });
 
-  // 법정의무 부서별 — 9종 각각의 이수율 평균으로 계산
-  const LEGAL_TYPES_STAT = ['4대폭력예방','직장내괴롭힘예방','소방안전화재예방','장애인인식개선교육','자살예방교육','퇴직연금교육','아동학대예방교육','개인정보보호교육','정보공개교육'];
+  // 법정의무 부서별 — 8종 각각의 이수율 평균으로 계산
+  const LEGAL_TYPES_STAT = LEGAL_TYPES; // 법정의무 목록 단일화
   // { dept: { type: Set(empno) } }
   const legalTypeByDept = {};
   done.forEach(r=>{
@@ -3917,14 +3903,14 @@ async function renderStats(){
     const sc  = staffByDept[dept]||0;
     const dc  = doneByDept[dept]?.completedEmpnos?.size||0;
     const ac  = doneByDept[dept]?.empnos?.size||0;
-    // 법정의무: 9종 모두 이수한 직원 수 / 전체 직원 수
+    // 법정의무: 8종 모두 이수한 직원 수 / 전체 직원 수
     const typeMap  = legalTypeByDept[dept] || {};
     const allCnt   = (allStaffByDept[dept]||[]).length || sc || 1;
-    // 9종 중 한 건이라도 이수한 직원 전체 empno 수집
+    // 8종 중 한 건이라도 이수한 직원 전체 empno 수집
     const allLegalEmpnos = new Set(
       LEGAL_TYPES_STAT.flatMap(t => [...(typeMap[t]||new Set())])
     );
-    // 9종 모두 이수한 직원 수
+    // 8종 모두 이수한 직원 수
     const legalAllDone = [...allLegalEmpnos].filter(empno =>
       LEGAL_TYPES_STAT.every(t => (typeMap[t]||new Set()).has(empno))
     ).length;
@@ -3986,7 +3972,7 @@ async function renderStats(){
   const totTc  = deptRankData.reduce((s,d)=>s+(d.tc||0), 0);
   const totHrs = deptRankData.reduce((s,d)=>s+(d.hrs||0), 0);
   const totRate     = totSc>0 ? Math.round(totDc/totSc*100) : 0;
-  // 합계 법정의무 이수율: 9종 모두 이수한 직원 / 전체
+  // 합계 법정의무 이수율: 8종 모두 이수한 직원 / 전체
   const allLegalEmpnosTotal = new Set(
     LEGAL_TYPES_STAT.flatMap(t =>
       Object.values(legalTypeByDept).flatMap(m => [...(m[t]||new Set())])
@@ -4077,7 +4063,7 @@ async function renderStats(){
     : '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--muted);">예산 사용 내역이 없습니다.</td></tr>';
 
   // ── 탭3: 법정의무 이수율 ──
-  const LEGAL_LIST = ['4대폭력예방','직장내괴롭힘예방','소방안전화재예방','장애인인식개선교육','자살예방교육','퇴직연금교육','아동학대예방교육','개인정보보호교육','정보공개교육'];
+  const LEGAL_LIST = LEGAL_TYPES; // 법정의무 목록 단일화
   // 법정의무: 공무직 포함 전 직원 기준
   let totalAllStaff = 0;
   if (!IS_DEMO && Object.keys(staffByDept).length > 0) {
@@ -4109,7 +4095,7 @@ async function renderStats(){
       }
     });
   });
-  // 9종 모두 이수한 직원 수 (탭3 전체 이수율 카드용)
+  // 8종 모두 이수한 직원 수 (탭3 전체 이수율 카드용)
   const allLegalEmpnosFull = new Set(LEGAL_LIST.flatMap(t=>[...(legalDoneMap[t]||new Set())]));
   const legalFullyDone = [...allLegalEmpnosFull].filter(e=>LEGAL_LIST.every(t=>(legalDoneMap[t]||new Set()).has(e))).length;
 
@@ -4139,7 +4125,7 @@ async function renderStats(){
   document.getElementById('legal-summary-banner').innerHTML = `
     <div style="background:${fBg};border:1px solid ${fBdr};border-radius:var(--rl2);padding:14px 20px;display:flex;align-items:center;gap:20px;">
       <div>
-        <div style="font-size:12px;color:${fColor};opacity:.8;margin-bottom:3px;">법정의무 완료율 (9종 전체 이수)</div>
+        <div style="font-size:12px;color:${fColor};opacity:.8;margin-bottom:3px;">법정의무 완료율 (8종 전체 이수)</div>
         <div style="font-size:28px;font-weight:800;color:${fColor};">${fullRate}%</div>
         <div style="font-size:12px;color:${fColor};opacity:.8;margin-top:2px;">전체 ${totalStaff}명 중 ${legalFullyDone}명 완료</div>
       </div>
