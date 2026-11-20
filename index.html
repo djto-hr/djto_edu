@@ -3170,7 +3170,7 @@ async function executeDownload() {
         .sort((a,b) => ((Number(b.train_cost)||0)+(Number(b.travel_cost)||0)) - ((Number(a.train_cost)||0)+(Number(a.travel_cost)||0)))
         .map(r => {
           const tc = Number(r.train_cost)||0, tv = Number(r.travel_cost)||0;
-          return [r.name, r.dept, r.course_name||'', tc, tv, tc+tv];
+          return [String(r.empno||''), r.name, r.dept, r.course_name||'', tc, tv, tc+tv];
         });
 
   // 법정의무 이수율 데이터
@@ -3215,7 +3215,7 @@ async function executeDownload() {
     rawDB.map(r => {
       const tc = Number(r.train_cost) || 0, tv = Number(r.travel_cost) || 0;
       return [
-        r.apply_date||'', r.empno, r.name, r.dept,
+        r.apply_date||'', String(r.empno||''), r.name, r.dept,
         r.course_name||'', r.org||'', r.edu_method, r.edu_category,
         subTypeOf(r), crossOf(r),
         minsToStr(toMins(r.hours)),
@@ -3261,7 +3261,7 @@ async function executeDownload() {
         if (s.jobType === '공무직') {
           // 공무직: 법정의무 기준이므로 시간 조건 대신 총 이수시간만 표기
           const totalMins = rows.reduce((sum, r) => sum + toMins(r.hours), 0);
-          return [s.name, s.dept, s.jobType, '—', minsToStr(totalMins), '—', '—', '—', '—', '—', '—', '공무직(법정의무 기준)'];
+          return [String(s.empno||''), s.name, s.dept, s.jobType, '—', minsToStr(totalMins), '—', '—', '—', '—', '—', '—', '공무직(법정의무 기준)'];
         }
         // 교육목표 그룹(임원/임금피크제/일반직)별로 다른 목표시간 적용
         const gradeGroup = resolveGradeGroup(s.note, s.dept);
@@ -3269,7 +3269,7 @@ async function executeDownload() {
         const c = checkCompleted(rows, targets);
         const allOk = Object.values(c).every(v => v.ok);
         return [
-          s.name, s.dept, s.jobType, gradeGroup,
+          String(s.empno||''), s.name, s.dept, s.jobType, gradeGroup,
           fmtCond(c.total), fmtCond(c.inst), fmtCond(c.group),
           c.cdp.ok ? '이수' : '미이수',
           c.disaster.ok ? '이수' : '미이수',
@@ -3279,7 +3279,7 @@ async function executeDownload() {
         ];
       });
   };
-  const PERSONAL_HEADERS = ['이름','부서','직군','교육그룹','총 이수시간','기관지정','집합교육','CDP 직무교육','재난·산업안전','공직윤리(청렴)','디지털역량','이수완료여부'];
+  const PERSONAL_HEADERS = ['사번','이름','부서','직군','교육그룹','총 이수시간','기관지정','집합교육','CDP 직무교육','재난·산업안전','공직윤리(청렴)','디지털역량','이수완료여부'];
   const personalData = dlPersonal ? await getPersonalData() : null;
   const deptData = dlDept ? await getDeptData() : null;
 
@@ -3287,7 +3287,7 @@ async function executeDownload() {
     // 선택된 항목을 하나의 CSV로 합치거나 각각 다운로드
     const sheets = [];
     if (dlDept)   sheets.push({ name:'부서별이수현황',   h:['부서','신청자','이수완료자(7조건)','이수율','총이수시간'], rows: deptData });
-    if (dlBudget) sheets.push({ name:'예산사용현황',     h:['이름','부서','과정명','교육훈련비','출장비','합계'], rows: getBudgetData() });
+    if (dlBudget) sheets.push({ name:'예산사용현황',     h:['사번','이름','부서','과정명','교육훈련비','출장비','합계'], rows: getBudgetData() });
     if (dlLegal)  sheets.push({ name:'법정의무이수율',   h:['교육명','이수자','전체인원','이수율'], rows: getLegalData() });
     if (dlAll)    sheets.push({ name:'전체이수이력',     h: ALL_HEADERS, rows: getAllData() });
     if (dlPersonal) sheets.push({ name:'개인별이수현황', h: PERSONAL_HEADERS, rows: personalData });
@@ -3318,7 +3318,7 @@ async function executeDownload() {
     }
     const wb = XLSX.utils.book_new();
     if (dlDept)   XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['부서','신청자','이수완료자(7조건)','이수율','총이수시간'], deptData), '부서별이수현황');
-    if (dlBudget) XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['이름','부서','과정명','교육훈련비','출장비','합계'], getBudgetData()), '예산사용현황');
+    if (dlBudget) XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['사번','이름','부서','과정명','교육훈련비','출장비','합계'], getBudgetData()), '예산사용현황');
     if (dlLegal)  XLSX.utils.book_append_sheet(wb, makeXlsxSheet(['교육명','이수자','전체인원','이수율'], getLegalData()), '법정의무이수율');
     if (dlAll)    XLSX.utils.book_append_sheet(wb, makeXlsxSheet(ALL_HEADERS, getAllData()), '전체이수이력');
     if (dlPersonal) XLSX.utils.book_append_sheet(wb, makeXlsxSheet(PERSONAL_HEADERS, personalData), '개인별이수현황');
