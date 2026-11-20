@@ -590,6 +590,61 @@ function resolveGradeGroup(note, dept) {
   return '일반직';
 }
 
+// ════════════════════════════════════════════════
+// 휴직자 의무학습시간 안분 (2026 운영계획 13쪽 '1년 미만 근무자 인정 기준')
+//  - 직원명단 시트의 '휴직시작일' / '휴직종료일' 열에 기간 입력 (종료일 비우면 연말까지 휴직으로 계산)
+//  - 근무일수 = 연간 일수 − 해당 연도 내 휴직일수
+//  - 근무 2개월(59일) 미만 → 의무학습제도 대상 제외 (통계 제외)
+//  - 근무 2개월 이상 → 목표시간·충족요건(기관지정·집합·공통이수)을 근무일 비율로 안분
+//    예) 휴직 90일: (365−90)/365 = 0.75 → 50시간 × 0.75 = 37.5시간
+// ════════════════════════════════════════════════
+const EDU_YEAR = 2026;            // 교육훈련 운영 연도 (매년 변경)
+const LEAVE_MIN_WORK_DAYS = 59;   // '2개월 미만 근무' 판단 기준 일수 — 가장 짧은 2개월(1~2월 = 59일)도 2개월로 인정
+let LEAVE_MAP = {};               // { empno: { start:'yyyy-MM-dd', end:'yyyy-MM-dd' } }
+
+function setLeave(empno, start, end) {
+  if (!empno) return;
+  if (start) LEAVE_MAP[String(empno)] = { start: String(start).slice(0,10), end: end ? String(end).slice(0,10) : '' };
+  else delete LEAVE_MAP[String(empno)];
+}
+// 해당 연도 안에서 휴직일수·근무일수·비율 계산 (휴직 정보 없으면 null)
+function calcLeave(empno) {
+  const lv = LEAVE_MAP[String(empno)];
+  if (!lv || !lv.start) return null;
+  const DAY = 86400000;
+  const yS = Date.UTC(EDU_YEAR, 0, 1), yE = Date.UTC(EDU_YEAR, 11, 31);
+  const yearDays = Math.round((yE - yS) / DAY) + 1;
+  const toUTC = str => { const [y,m,d] = str.split('-').map(Number); return Date.UTC(y, m-1, d); };
+  const ls = Math.max(toUTC(lv.start), yS);
+  const le = Math.min(lv.end ? toUTC(lv.end) : yE, yE);
+  const leaveDays = le >= ls ? Math.round((le - ls) / DAY) + 1 : 0;
+  const workDays = yearDays - leaveDays;
+  return { leaveDays, workDays, yearDays, ratio: workDays / yearDays, start: lv.start, end: lv.end };
+}
+// 직원별 최종 목표시간 (그룹 기준 × 휴직 안분)
+function getTargets(empno, note, dept) {
+  const base = GRADE_GROUP_TARGETS[resolveGradeGroup(note, dept)];
+  const lv = calcLeave(empno);
+  if (!lv || lv.leaveDays === 0 || lv.workDays < LEAVE_MIN_WORK_DAYS) return base;
+  const k = lv.ratio, sc = m => Math.round(m * k);
+  const pct = Math.round(k * 100) + '%';
+  const T = { ...base,
+    TOTAL_MINS: sc(base.TOTAL_MINS), INST_MINS: sc(base.INST_MINS),
+    GROUP_MINS: sc(base.GROUP_MINS), COMMON_MINS: sc(base.COMMON_MINS),
+    prorate: { ...lv, pct } };
+  T.totalLabel = minsToStr(T.TOTAL_MINS) + ' 이상 (안분 ' + pct + ')';
+  if (base.instLabel) T.instLabel = minsToStr(T.INST_MINS) + ' 이상 (안분 ' + pct + ')';
+  T.groupLabel = minsToStr(T.GROUP_MINS) + ' 이상 (안분 ' + pct + ')';
+  return T;
+}
+// 안분 표시 문구 (엑셀·화면용)
+function leaveText(empno) {
+  const lv = calcLeave(empno);
+  if (!lv || lv.leaveDays === 0) return '';
+  if (lv.workDays < LEAVE_MIN_WORK_DAYS) return '휴직 ' + lv.leaveDays + '일 · 근무 2개월 미만(대상 제외)';
+  return '휴직 ' + lv.leaveDays + '일 · 안분 ' + Math.round(lv.ratio * 100) + '%';
+}
+
 // 직원의 승인완료 내역 배열로 7조건 충족 여부 반환
 // targets: GRADE_GROUP_TARGETS의 항목(미지정 시 일반직 기준) — resolveGradeGroup() 결과로 선택
 function checkCompleted(doneRows, targets) {
@@ -629,9 +684,9 @@ function checkCompleted(doneRows, targets) {
       : { ok: instMins >= T.INST_MINS, mins: instMins, goal: T.INST_MINS, label: '기관지정 교육', detail: T.instLabel },
     group:   { ok: groupMins >= T.GROUP_MINS,  mins: groupMins,    goal: T.GROUP_MINS,  label: '집합교육',      detail: T.groupLabel },
     cdp:     { ok: cdpDone, mins: cdpDone?1:0, goal: 1, label: 'CDP 직무교육'+(T.cdpExempt?' (임원 면제)':''), detail: T.cdpExempt?'해당없음':'1회 이상' },
-    disaster:{ ok: disasterMins >= T.COMMON_MINS, mins: disasterMins, goal: T.COMMON_MINS, label: '재난·산업안전',  detail: '2시간 이상' },
-    ethics:  { ok: ethicsMins   >= T.COMMON_MINS, mins: ethicsMins,   goal: T.COMMON_MINS, label: '공직윤리(청렴)', detail: '2시간 이상' },
-    digital: { ok: digitalMins  >= T.COMMON_MINS, mins: digitalMins,  goal: T.COMMON_MINS, label: 'AI·디지털역량',  detail: '2시간 이상' },
+    disaster:{ ok: disasterMins >= T.COMMON_MINS, mins: disasterMins, goal: T.COMMON_MINS, label: '재난·산업안전',  detail: minsToStr(T.COMMON_MINS)+' 이상' },
+    ethics:  { ok: ethicsMins   >= T.COMMON_MINS, mins: ethicsMins,   goal: T.COMMON_MINS, label: '공직윤리(청렴)', detail: minsToStr(T.COMMON_MINS)+' 이상' },
+    digital: { ok: digitalMins  >= T.COMMON_MINS, mins: digitalMins,  goal: T.COMMON_MINS, label: 'AI·디지털역량',  detail: minsToStr(T.COMMON_MINS)+' 이상' },
   };
 }
 
@@ -2138,6 +2193,7 @@ async function doLookup() {
       if(sr?.success){
         staffInfo = { empno: sr.empno||empno, name: sr.name||name, dept: sr.dept||'', note: sr.note||'' };
         staffJobType=sr.jobType||'일반직';
+        setLeave(sr.empno||empno, sr.leaveStart, sr.leaveEnd); // 휴직기간(안분용)
         staffNote=sr.note||''; // 비고란 원문(임원/임금피크제 판별용) — Apps Script getStaff/checkStaff가 'note' 필드로 내려줘야 함
         staffIsPromotion=sr.isPromotion===true;
         staffPromoData=sr.isPromotion?{promoDt:sr.promoDt||'',deadlineDt:sr.deadlineDt||'',mgrDone:sr.mgrDone===true}:null;
@@ -2182,9 +2238,10 @@ async function doLookup() {
   const staffNoteVal = staffInfo?.note || staffNote || '';
   // 교육목표 그룹(임원/임금피크제/일반직) 판별 — 비고란 + 부서명 기준
   const staffGradeGroup = resolveGradeGroup(staffNoteVal, staffDept);
-  const gradeTargets = GRADE_GROUP_TARGETS[staffGradeGroup];
+  const gradeTargets = getTargets(staffEmpno, staffNoteVal, staffDept); // 그룹 기준 × 휴직 안분
+  const _lvTxt = leaveText(staffEmpno);
   document.getElementById('lu-head').textContent=staffName+' ('+staffEmpno+')';
-  document.getElementById('lu-dept').textContent=staffDept+(isGongmu?' · 공무직':' · '+staffGradeGroup);
+  document.getElementById('lu-dept').textContent=staffDept+(isGongmu?' · 공무직':' · '+staffGradeGroup)+(_lvTxt?' · '+_lvTxt:'');
   // 공무직 배너 초기화
   const _gb = document.getElementById('lu-gongmu-banner');
   if (_gb) _gb.style.display = 'none';
@@ -2317,10 +2374,11 @@ async function doLookup() {
   document.getElementById('lu-common-duty-checklist').innerHTML=COMMON_DUTY_TYPES.map(t=>{
     const aliases=COMMON_DUTY_MAP[t]||[t];
     const totalTypeMin=Object.entries(commonMinsByType).filter(([k])=>aliases.some(a=>k.includes(a)||a.includes(k))).reduce((s,[,v])=>s+v,0);
-    const ok=totalTypeMin>=120; // 2시간=120분
+    const goalMin=gradeTargets.COMMON_MINS; // 기본 2시간(120분), 휴직 시 안분
+    const ok=totalTypeMin>=goalMin;
     return `<div style="display:flex;align-items:center;gap:7px;padding:7px 10px;background:${ok?'#EEEDFE':'var(--gray)'};border-radius:var(--r);font-size:12px;">
       <span style="font-size:14px;color:${ok?'#534AB7':'#A32D2D'};">${ok?'✓':'✗'}</span>
-      <span style="color:${ok?'#3C3489':'var(--text)'};">${t} <span style="font-size:11px;opacity:.7;">(2h↑ · ${minsToStr(totalTypeMin)})</span></span>
+      <span style="color:${ok?'#3C3489':'var(--text)'};">${t} <span style="font-size:11px;opacity:.7;">(${minsToStr(goalMin)}↑ · ${minsToStr(totalTypeMin)})</span></span>
     </div>`;
   }).join('');
 
@@ -3101,18 +3159,35 @@ function downloadBlob(blob, filename) {
 
 // Excel 시트 생성 (SheetJS)
 // ════════════════════════════════════════════════
-// 퇴직자·휴직자 통계 제외
-// 직원명단 '비고'란에 '퇴직' 또는 '휴직'이 들어간 직원은 모든 통계(통계 화면·엑셀 통계 시트)에서 제외한다.
+// 퇴직자·휴직자 통계 제외 (판정 기준은 아래 isStatExcluded 참고)
 // 이수 자료 자체는 그대로 보존 → 신청내역·전체이수이력에는 계속 표시됨.
 // ※ '퇴직연금' 같은 단어와 헷갈리지 않도록 비고란에는 '퇴직'만 적는 것을 권장
 // ════════════════════════════════════════════════
 let RETIRED_EMPNOS = new Set();
-const STAT_EXCLUDE_KEYWORDS = ['퇴직', '휴직']; // 비고란에 이 단어가 있으면 통계 제외
-function isRetiredNote(note) { const n = String(note || ''); return STAT_EXCLUDE_KEYWORDS.some(k => n.includes(k)); }
+// 통계 제외 기준
+//  ① 비고란에 '퇴직'
+//  ② 비고란에 '휴직'이 있으나 휴직기간(휴직시작일)이 입력되지 않은 경우 (기존 방식 유지)
+//  ③ 휴직기간 입력 결과 해당 연도 근무일수가 2개월(59일) 미만인 경우 (운영계획: 의무학습 대상 제외)
+//  ※ 휴직기간이 입력되고 2개월 이상 근무했다면 제외하지 않고 목표시간을 안분 적용
+function isStatExcluded(s) {
+  const n = String(s.note || '');
+  if (n.includes('퇴직')) return true;
+  const lv = calcLeave(s.empno);
+  if (lv) return lv.leaveDays > 0 && lv.workDays < LEAVE_MIN_WORK_DAYS;
+  return n.includes('휴직');
+}
+// 직원명단 행 → 휴직기간 등록 후 제외 여부 판정 (staff: getStaff 결과 1건)
+function isRetiredNote(note, staff) {
+  if (staff) { setLeave(staff.empno, staff.leaveStart, staff.leaveEnd); return isStatExcluded(staff); }
+  return isStatExcluded({ note });
+}
 async function loadRetiredEmpnos() {
   if (IS_DEMO) { RETIRED_EMPNOS = new Set(); return; }
   const sr = await apiGet({ action: 'getStaff' });
-  if (sr?.success) RETIRED_EMPNOS = new Set(sr.data.filter(x => isRetiredNote(x.note)).map(x => String(x.empno)));
+  if (sr?.success) {
+    LEAVE_MAP = {};
+    RETIRED_EMPNOS = new Set(sr.data.filter(x => isRetiredNote(x.note, x)).map(x => String(x.empno)));
+  }
 }
 function excludeRetired(rows) { return (rows || []).filter(r => !RETIRED_EMPNOS.has(String(r.empno))); }
 
@@ -3158,7 +3233,7 @@ async function executeDownload() {
     const noteByEmpno = {};
     if (!IS_DEMO) {
       const sr = await apiGet({ action: 'getStaff' });
-      if (sr?.success) sr.data.forEach(s => { noteByEmpno[String(s.empno)] = s.note || ''; });
+      if (sr?.success) sr.data.forEach(s => { noteByEmpno[String(s.empno)] = s.note || ''; setLeave(s.empno, s.leaveStart, s.leaveEnd); });
     } else {
       rawDB.forEach(r => { if (!(String(r.empno) in noteByEmpno)) noteByEmpno[String(r.empno)] = r.note || ''; });
     }
@@ -3173,7 +3248,7 @@ async function executeDownload() {
       deptMap[dept].applied.add(empno);
       deptMap[dept].hrs += rows.reduce((s,r) => s + toMins(r.hours), 0);
       const gradeGroup = resolveGradeGroup(noteByEmpno[empno], dept);
-      if (isFullyCompleted(rows, GRADE_GROUP_TARGETS[gradeGroup])) deptMap[dept].completed.add(empno);
+      if (isFullyCompleted(rows, getTargets(empno, noteByEmpno[empno], dept))) deptMap[dept].completed.add(empno);
     });
     return Object.entries(deptMap).sort(([a],[b])=>a.localeCompare(b)).map(([dept,d]) => [
       dept, d.applied.size, d.completed.size,
@@ -3249,7 +3324,7 @@ async function executeDownload() {
     if (!IS_DEMO) {
       const sr = await apiGet({ action: 'getStaff' });
       if (sr?.success) {
-        staffList = sr.data.filter(s => !isRetiredNote(s.note)).map(s => ({
+        staffList = sr.data.filter(s => !isRetiredNote(s.note, s)).map(s => ({
           empno: String(s.empno), name: s.name,
           dept: normalizeDept(s.dept), jobType: s.jobType || '일반직',
           note: s.note || '' // 비고란(임원/임금피크제 판별용) — Apps Script getStaff가 'note' 필드로 내려줘야 함
@@ -3279,11 +3354,11 @@ async function executeDownload() {
         if (s.jobType === '공무직') {
           // 공무직: 법정의무 기준이므로 시간 조건 대신 총 이수시간만 표기
           const totalMins = rows.reduce((sum, r) => sum + toMins(r.hours), 0);
-          return [String(s.empno||''), s.name, s.dept, s.jobType, '—', minsToStr(totalMins), '—', '—', '—', '—', '—', '—', '공무직(법정의무 기준)'];
+          return [String(s.empno||''), s.name, s.dept, s.jobType, '—', minsToStr(totalMins), '—', '—', '—', '—', '—', '—', '공무직(법정의무 기준)', leaveText(s.empno)];
         }
         // 교육목표 그룹(임원/임금피크제/일반직)별로 다른 목표시간 적용
         const gradeGroup = resolveGradeGroup(s.note, s.dept);
-        const targets = GRADE_GROUP_TARGETS[gradeGroup];
+        const targets = getTargets(s.empno, s.note, s.dept); // 그룹 기준 × 휴직 안분
         const c = checkCompleted(rows, targets);
         const allOk = Object.values(c).every(v => v.ok);
         return [
@@ -3293,11 +3368,12 @@ async function executeDownload() {
           c.disaster.ok ? '이수' : '미이수',
           c.ethics.ok ? '이수' : '미이수',
           c.digital.ok ? '이수' : '미이수',
-          allOk ? '완료' : '미완료'
+          allOk ? '완료' : '미완료',
+          leaveText(s.empno)
         ];
       });
   };
-  const PERSONAL_HEADERS = ['사번','이름','부서','직군','교육그룹','총 이수시간','기관지정','집합교육','CDP 직무교육','재난·산업안전','공직윤리(청렴)','디지털역량','이수완료여부'];
+  const PERSONAL_HEADERS = ['사번','이름','부서','직군','교육그룹','총 이수시간','기관지정','집합교육','CDP 직무교육','재난·산업안전','공직윤리(청렴)','디지털역량','이수완료여부','휴직 안분'];
   const personalData = dlPersonal ? await getPersonalData() : null;
   const deptData = dlDept ? await getDeptData() : null;
 
@@ -3363,7 +3439,14 @@ function drillDept(dept) {
   panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
 
   const LEGAL_LIST_DRILL = LEGAL_TYPES; // 법정의무 목록 단일화
-  const COND_LABELS = ['전체 50h','기관지정 20h','집합 35h','CDP 1회','재난안전 2h','공직윤리 2h','디지털 2h'];
+  // 뱃지 라벨: 직원별 실제 목표(임원·임금피크제·휴직 안분 반영)로 표시
+  const COND_NAMES = ['전체','기관지정','집합','CDP','재난안전','공직윤리','디지털'];
+  const fmtGoal = m => (m % 60 === 0) ? (m / 60) + 'h' : minsToStr(m);
+  const condLabel = (i, val) => {
+    if (i === 3) return 'CDP ' + (val?.detail === '해당없음' ? '면제' : '1회');
+    if (val?.goal === 1) return COND_NAMES[i] + ' 해당없음';
+    return COND_NAMES[i] + ' ' + fmtGoal(val?.goal || 0);
+  };
 
   // 직원별 승인내역 맵
   const empRowsMap = {};
@@ -3404,7 +3487,7 @@ function drillDept(dept) {
   const generalRows = generalStaff.map(s=>{
     const rows = empRowsMap[s.empno] || [];
     const gradeGroup = resolveGradeGroup(s.note, s.dept);
-    const conds = checkCompleted(rows, GRADE_GROUP_TARGETS[gradeGroup]);
+    const conds = checkCompleted(rows, getTargets(s.empno, s.note, s.dept));
     const completed = Object.values(conds).every(v=>v.ok);
     const hrs = rows.reduce((sum,r)=>sum+toMins(r.hours),0);
     return { ...s, completed, applied:rows.length>0, hrs, conds };
@@ -3432,12 +3515,12 @@ function drillDept(dept) {
         ? ''
         : (val?.mins>0 ? minsToStr(val.mins) : '0분');
       return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;background:'+(ok?'var(--gm)':'var(--gray)')+';color:'+(ok?'var(--gd)':'var(--muted)')+';margin:1px;">'
-        +(ok?'✓':'✗')+' '+COND_LABELS[i]+(dispVal?' '+dispVal:'')+'</span>';
+        +(ok?'✓':'✗')+' '+condLabel(i, val)+(dispVal?' '+dispVal:'')+'</span>';
     }).join('') : '';
     return '<div style="padding:8px 10px;border-radius:var(--r);background:'+bg+';margin-bottom:5px;">'
       + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:'+(s.conds&&!s.completed?'5px':'0')+';">'
       + '<span style="font-size:13px;font-weight:700;flex:0 0 58px;">'+s.name+'</span>'
-      + '<span style="font-size:11px;color:var(--muted);flex:1;">'+(s.hrs>0?minsToStr(s.hrs)+' 이수':'미신청')+'</span>'
+      + '<span style="font-size:11px;color:var(--muted);flex:1;">'+(s.hrs>0?minsToStr(s.hrs)+' 이수':'미신청')+(leaveText(s.empno)?' · '+leaveText(s.empno):'')+'</span>'
       + '<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:'+badge+';color:'+color+';">'+status+'</span>'
       + '</div>'
       + (s.conds&&s.applied ? '<div style="padding:2px 0;">' + condChecks + '</div>' : '')
@@ -3730,13 +3813,13 @@ function renderCommonTab() {
   const commonDoneMap = {};
   COMMON_LIST.forEach(c => {
     commonDoneMap[c.key] = new Set(
-      generalStaffList.filter(s => (empCommonMins[s.empno]?.[c.key] || 0) >= c.goalMins).map(s => String(s.empno))
+      generalStaffList.filter(s => (empCommonMins[s.empno]?.[c.key] || 0) >= getTargets(s.empno, s.note, s.dept).COMMON_MINS).map(s => String(s.empno))
     );
   });
 
   // 전체 3종 모두 이수한 직원 수
   const commonAllDone = generalStaffList.filter(s =>
-    COMMON_LIST.every(c => (empCommonMins[s.empno]?.[c.key] || 0) >= c.goalMins)
+    COMMON_LIST.every(c => (empCommonMins[s.empno]?.[c.key] || 0) >= getTargets(s.empno, s.note, s.dept).COMMON_MINS)
   ).length;
 
   // 전체 완료율 배너
@@ -3862,7 +3945,7 @@ async function renderStats(){
     const sr = await apiGet({action:'getStaff'});
     if (sr?.success) {
       sr.data.forEach(s=>{
-        if (isRetiredNote(s.note)) return; // ★ 퇴직·휴직자는 인원(분모)에서도 제외
+        if (isRetiredNote(s.note, s)) return; // ★ 퇴직·휴직자는 인원(분모)에서도 제외
         const nd = normalizeDept(s.dept);
         if(s.jobType==='일반직') staffByDept[nd] = (staffByDept[nd]||0)+1;
         if(!allStaffByDept[nd]) allStaffByDept[nd]=[];
@@ -3895,7 +3978,7 @@ async function renderStats(){
     if (!doneByDept[dept]) doneByDept[dept] = { empnos:new Set(), completedEmpnos:new Set(), hrs:0, members:[] };
     // 교육목표 그룹(임원/임금피크제/일반직)별 목표시간 적용
     const gradeGroup = resolveGradeGroup(noteByEmpno[empno], dept);
-    const completed = isFullyCompleted(rows, GRADE_GROUP_TARGETS[gradeGroup]);
+    const completed = isFullyCompleted(rows, getTargets(empno, noteByEmpno[empno], dept));
     doneByDept[dept].empnos.add(empno);
     doneByDept[dept].hrs += rows.reduce((s,r)=>s+toMins(r.hours),0);
     if (completed) doneByDept[dept].completedEmpnos.add(empno);
