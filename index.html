@@ -3100,6 +3100,22 @@ function downloadBlob(blob, filename) {
 }
 
 // Excel 시트 생성 (SheetJS)
+// ════════════════════════════════════════════════
+// 퇴직자·휴직자 통계 제외
+// 직원명단 '비고'란에 '퇴직' 또는 '휴직'이 들어간 직원은 모든 통계(통계 화면·엑셀 통계 시트)에서 제외한다.
+// 이수 자료 자체는 그대로 보존 → 신청내역·전체이수이력에는 계속 표시됨.
+// ※ '퇴직연금' 같은 단어와 헷갈리지 않도록 비고란에는 '퇴직'만 적는 것을 권장
+// ════════════════════════════════════════════════
+let RETIRED_EMPNOS = new Set();
+const STAT_EXCLUDE_KEYWORDS = ['퇴직', '휴직']; // 비고란에 이 단어가 있으면 통계 제외
+function isRetiredNote(note) { const n = String(note || ''); return STAT_EXCLUDE_KEYWORDS.some(k => n.includes(k)); }
+async function loadRetiredEmpnos() {
+  if (IS_DEMO) { RETIRED_EMPNOS = new Set(); return; }
+  const sr = await apiGet({ action: 'getStaff' });
+  if (sr?.success) RETIRED_EMPNOS = new Set(sr.data.filter(x => isRetiredNote(x.note)).map(x => String(x.empno)));
+}
+function excludeRetired(rows) { return (rows || []).filter(r => !RETIRED_EMPNOS.has(String(r.empno))); }
+
 function makeXlsxSheet(headers, rows) {
   const ws = {};
   const encode = (r, c) => XLSX.utils.encode_cell({ r, c });
@@ -3128,9 +3144,11 @@ async function executeDownload() {
     showToast('다운로드할 항목을 선택하세요.', 'amber'); return;
   }
 
-  // 데이터 준비
-  const done   = DB.filter(r => r.status === '승인');
-  const rawDB  = DB;
+  // 데이터 준비 — 통계용(rawDB/done)은 퇴직자 제외, 전체이수이력(allDB)은 전체 자료
+  await loadRetiredEmpnos();
+  const allDB  = DB;
+  const rawDB  = excludeRetired(DB);
+  const done   = rawDB.filter(r => r.status === '승인');
   const today  = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const LEGAL_LIST = LEGAL_TYPES; // 법정의무 목록 단일화
 
@@ -3212,7 +3230,7 @@ async function executeDownload() {
   const crossOf = r => (r.cross_categories || [])
     .map(c => c.cat + ' ' + (c.commonType || c.legalType || '')).join(', ');
   const getAllData = () =>
-    rawDB.map(r => {
+    allDB.map(r => { // 자료 보존용: 퇴직자 포함
       const tc = Number(r.train_cost) || 0, tv = Number(r.travel_cost) || 0;
       return [
         r.apply_date||'', String(r.empno||''), r.name, r.dept,
@@ -3231,7 +3249,7 @@ async function executeDownload() {
     if (!IS_DEMO) {
       const sr = await apiGet({ action: 'getStaff' });
       if (sr?.success) {
-        staffList = sr.data.map(s => ({
+        staffList = sr.data.filter(s => !isRetiredNote(s.note)).map(s => ({
           empno: String(s.empno), name: s.name,
           dept: normalizeDept(s.dept), jobType: s.jobType || '일반직',
           note: s.note || '' // 비고란(임원/임금피크제 판별용) — Apps Script getStaff가 'note' 필드로 내려줘야 함
@@ -3801,12 +3819,17 @@ async function renderStats(){
 
   if(!IS_DEMO){
     showLoad('통계 로드 중...');
-    const r=await apiGet({action:'getStats'});
-    hideLoad();
-    if(r?.success){ sm=r.summary; byDept=r.by_dept; byCat=r.by_category; }
-    // 예산/법정의무 상세용 전체 데이터 로드
+    await loadRetiredEmpnos();
+    // 전체 데이터 로드 (요약 카드도 퇴직자 제외 기준으로 아래에서 직접 계산)
     const r2=await apiGet({action:'getApply'});
+    hideLoad();
     if(r2?.success) rawDB=r2.data.map(x=>migrateHours({...x,hours:Number(x.hours),train_cost:Number(x.train_cost)||0,travel_cost:Number(x.travel_cost)||0,legal_types:Array.isArray(x.legal_types)?x.legal_types:(x.legal_types||'').split(',').filter(Boolean),cdp_yn:x.cdp_yn===true||x.cdp_yn==='TRUE'}));
+    rawDB = excludeRetired(rawDB); // ★ 퇴직·휴직자 통계 제외
+    sm={total:rawDB.length,done:rawDB.filter(r=>r.status==='승인').length,wait:rawDB.filter(r=>r.status==='대기').length,rej:rawDB.filter(r=>r.status==='반려').length,total_hours:rawDB.filter(r=>r.status==='승인').reduce((s,r)=>s+toMins(r.hours),0)};
+    const dm={},cm={};
+    rawDB.forEach(r=>{ dm[r.dept]=(dm[r.dept]||{total:0,done:0}); cm[r.edu_category]=(cm[r.edu_category]||{total:0,done:0}); dm[r.dept].total++;cm[r.edu_category].total++;if(r.status==='승인'){dm[r.dept].done++;cm[r.edu_category].done++;} });
+    byDept=Object.keys(dm).sort().map(d=>({dept:d,...dm[d]}));
+    byCat=Object.keys(cm).map(c=>({edu_category:c,...cm[c]}));
   } else {
     sm={total:DB.length,done:DB.filter(r=>r.status==='승인').length,wait:DB.filter(r=>r.status==='대기').length,rej:DB.filter(r=>r.status==='반려').length,total_hours:DB.filter(r=>r.status==='승인').reduce((s,r)=>s+toMins(r.hours),0)};
     const dm={},cm={};
@@ -3823,8 +3846,7 @@ async function renderStats(){
   // ── 요약 카드 ──
   document.getElementById('s-tot').textContent=sm.total;
   document.getElementById('s-don').textContent=sm.done;
-  const totalStatMins=IS_DEMO?sm.total_hours:toMins(sm.total_hours||0);
-  document.getElementById('s-hrs').textContent=minsToStr(IS_DEMO?sm.total_hours:totalStatMins);
+  document.getElementById('s-hrs').textContent=minsToStr(sm.total_hours||0); // 분 단위 (클라이언트 집계)
   // 의무학습 이수율: 7조건 충족 직원 / 일반직 전체
   // empDoneMap은 아래에서 구성되므로 여기선 placeholder, 탭1 렌더 후 업데이트
   document.getElementById('s-rat').textContent = '계산 중...';
@@ -3840,6 +3862,7 @@ async function renderStats(){
     const sr = await apiGet({action:'getStaff'});
     if (sr?.success) {
       sr.data.forEach(s=>{
+        if (isRetiredNote(s.note)) return; // ★ 퇴직·휴직자는 인원(분모)에서도 제외
         const nd = normalizeDept(s.dept);
         if(s.jobType==='일반직') staffByDept[nd] = (staffByDept[nd]||0)+1;
         if(!allStaffByDept[nd]) allStaffByDept[nd]=[];
