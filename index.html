@@ -3199,14 +3199,25 @@ async function executeDownload() {
 
   // 전체 이수 이력 데이터
   // 교육기관 + 예산사용 내역(교육훈련비/출장비/합계/사용여부/비용상세) 포함
-  const ALL_HEADERS = ['이수일','사번','이름','부서','과정명','교육기관','방법','구분','시간',
+  const ALL_HEADERS = ['이수일','사번','이름','부서','과정명','교육기관','방법','구분','세부유형','중복분류','시간',
                        '교육훈련비','출장비','예산합계','예산사용','비용상세','상태','반려사유'];
+  // 구분별 세부유형: 법정의무 → 법정의무 유형(복수는 쉼표), 공통필수 → 공통필수 유형, 기관지정 → CDP 직무트랙
+  const subTypeOf = r => {
+    if (r.edu_category === '법정의무') return (r.legal_types || []).join(', ');
+    if (r.edu_category === '공통필수') return r.common_type || '';
+    if (r.edu_category === '기관지정') return r.cdp_yn ? ('CDP ' + (r.job_track || '')).trim() : '';
+    return '';
+  };
+  // 기관지정 교육의 공통필수·법정의무 중복분류 (예: 공통필수 재난·산업안전, 법정의무 4대폭력예방)
+  const crossOf = r => (r.cross_categories || [])
+    .map(c => c.cat + ' ' + (c.commonType || c.legalType || '')).join(', ');
   const getAllData = () =>
     rawDB.map(r => {
       const tc = Number(r.train_cost) || 0, tv = Number(r.travel_cost) || 0;
       return [
         r.apply_date||'', r.empno, r.name, r.dept,
         r.course_name||'', r.org||'', r.edu_method, r.edu_category,
+        subTypeOf(r), crossOf(r),
         minsToStr(toMins(r.hours)),
         tc, tv, tc + tv, (tc + tv) > 0 ? '사용' : '미사용', r.cost_detail||'',
         r.status, r.reject_reason||''
