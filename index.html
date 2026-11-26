@@ -95,6 +95,13 @@ nav button.active{
 .bd-done{background:var(--gl);color:var(--gd);border:1px solid var(--gm);}
 .bd-rej{background:var(--rl);color:var(--rd);border:1px solid var(--rm);}
 .bd-inst{background:var(--al);color:var(--ad);}
+/* [2026.11] CDP 체크 / 중복의심 표시 */
+.bd-cdp{background:#E1F5EE;color:#0F6E56;border:0.5px solid #9FE1CB;}
+.cdp-trk{display:block;font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;}
+.dup-tag{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;background:#FAEEDA;color:#854F0B;border:0.5px solid #FAC775;margin-top:2px;cursor:help;}
+.dup-row td{background:#FFFBF2;}
+.dup-tg{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#854F0B;background:#FAEEDA;border:1px solid #FAC775;border-radius:var(--r);padding:5px 10px;cursor:pointer;white-space:nowrap;}
+.dup-cnt{font-size:11px;background:#fff;border-radius:20px;padding:0 6px;}
 .bd-legal{background:var(--rl);color:var(--rd);}
 .bd-common{background:var(--pl);color:var(--pd);}
 .bd-etc{background:var(--gray);color:var(--muted);}
@@ -1292,7 +1299,11 @@ function updateTimePreview(hId, mId, previewId) {
           <select id="a-st" onchange="aPageReset()"><option value="all">전체 상태</option><option value="대기">승인 대기</option><option value="승인">승인 완료</option><option value="반려">반려</option></select>
           <select id="a-dp" onchange="aPageReset()"><option value="all">전체 부서</option></select>
           <select id="a-ct" onchange="aPageReset()"><option value="all">전체 구분</option><option value="기관지정">기관지정</option><option value="법정의무">법정의무</option><option value="공통필수">공통필수</option><option value="기타">기타</option></select>
+          <!-- [2026.11] CDP 체크 여부 필터 -->
+          <select id="a-cdp" onchange="aPageReset()"><option value="all">CDP 전체</option><option value="Y">CDP 체크</option><option value="N">CDP 미체크</option></select>
           <input id="a-q" type="text" placeholder="이름 또는 과정명" oninput="aPageReset()">
+          <!-- [2026.11] 중복의심 건만 보기 (자동 삭제 없음 — 관리자가 직접 확인 후 [삭제]) -->
+          <label class="dup-tg" title="같은 사번·같은 연도에 과정명이 같거나 비슷한 신청 건"><input type="checkbox" id="a-dup" onchange="aPageReset()"> 중복의심만 <span class="dup-cnt" id="a-dup-cnt">0</span></label>
           <div class="spacer"></div>
           <span class="sel-badge" id="sel-count-badge">
             <svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1316,7 +1327,7 @@ function updateTimePreview(hId, mId, previewId) {
               <th class="sortable" data-tbl="a" data-key="apply_date" style="width:72px;" onclick="setSort('a','apply_date')">이수일<span class="sort-ic"></span></th><th class="sortable" data-tbl="a" data-key="empno" style="width:90px;" onclick="setSort('a','empno')">사번<span class="sort-ic"></span></th>
               <th class="sortable" data-tbl="a" data-key="name" style="width:80px;" onclick="setSort('a','name')">이름<span class="sort-ic"></span></th><th class="sortable" data-tbl="a" data-key="dept" style="width:100px;" onclick="setSort('a','dept')">부서<span class="sort-ic"></span></th>
               <th class="sortable" data-tbl="a" data-key="course_name" style="" onclick="setSort('a','course_name')">과정명<span class="sort-ic"></span></th><th class="sortable" data-tbl="a" data-key="edu_method" style="width:60px;" onclick="setSort('a','edu_method')">방법<span class="sort-ic"></span></th>
-              <th class="sortable" data-tbl="a" data-key="edu_category" style="width:72px;" onclick="setSort('a','edu_category')">구분<span class="sort-ic"></span></th><th class="sortable" data-tbl="a" data-key="hours" style="width:80px;" onclick="setSort('a','hours')">시간<span class="sort-ic"></span></th>
+              <th class="sortable" data-tbl="a" data-key="edu_category" style="width:72px;" onclick="setSort('a','edu_category')">구분<span class="sort-ic"></span></th><th class="sortable" data-tbl="a" data-key="cdp_yn" style="width:84px;" onclick="setSort('a','cdp_yn')">CDP<span class="sort-ic"></span></th><th class="sortable" data-tbl="a" data-key="hours" style="width:80px;" onclick="setSort('a','hours')">시간<span class="sort-ic"></span></th>
               <th class="sortable" data-tbl="a" data-key="status" style="width:80px;" onclick="setSort('a','status')">상태<span class="sort-ic"></span></th><th style="width:220px;">처리</th>
             </tr></thead>
             <tbody id="a-tbody"></tbody>
@@ -2618,10 +2629,71 @@ function mBadge(m){ return m==='집합'?'<span class="badge bd-gb">집합</span>
 // ════════════════════════════════════════════════
 // 승인 처리
 // ════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+// [2026.11] CDP 체크 여부 / 중복의심 탐지
+// - CDP: 기관지정 + cdp_yn 체크 건만 'CDP'로 인정 (실적 판정 로직과 동일 기준)
+// - 중복의심: 같은 사번 · 같은 연도에서 반려 건을 뺀 신청끼리 비교
+//     ① 과정명이 같음 (공백·기호·괄호 표기 무시)
+//     ② 또는 과정명 한쪽이 다른 쪽을 포함 + 이수일 또는 이수시간이 같음
+// - 표시만 하고 자동 삭제하지 않음 → 관리자가 [상세]로 증빙 확인 후 [삭제]
+// ════════════════════════════════════════════════
+// HTML 속성/텍스트에 넣을 값 이스케이프 (툴팁에 과정명이 들어가므로)
+function escAttr(v){ return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function isCdp(r){ return r.edu_category==='기관지정' && (r.cdp_yn===true || r.cdp_yn==='TRUE'); }
+function normCourse(n){ return String(n||'').toLowerCase().replace(/[\s\-_·,.()\[\]{}<>「」『』"'‘’“”:;~!?/]/g,''); }
+let DUP_MAP = new Map();   // id → { gid, others:[행...] }
+function buildDupMap(){
+  const m = new Map();
+  const byKey = {};
+  DB.forEach(r=>{
+    if(r.status==='반려') return;
+    const k = String(r.empno)+'|'+String(r.apply_date||'').slice(0,4);
+    (byKey[k] = byKey[k] || []).push(r);
+  });
+  Object.values(byKey).forEach(list=>{
+    if(list.length<2) return;
+    // 서로 연결된 신청 건을 한 묶음(gid)으로 — 간단한 union-find
+    const par = list.map((_,i)=>i);
+    const find = i => par[i]===i ? i : (par[i]=find(par[i]));
+    const linked = new Set();
+    for(let i=0;i<list.length;i++) for(let j=i+1;j<list.length;j++){
+      const a=list[i], b=list[j];
+      const na=normCourse(a.course_name), nb=normCourse(b.course_name);
+      if(!na||!nb) continue;
+      const same = na===nb;
+      const similar = (na.length>=4 && nb.length>=4) && (na.includes(nb)||nb.includes(na)) &&
+        (String(a.apply_date).slice(0,10)===String(b.apply_date).slice(0,10) || toMins(a.hours)===toMins(b.hours));
+      if(same||similar){ par[find(i)]=find(j); linked.add(i); linked.add(j); }
+    }
+    linked.forEach(i=>{
+      const g = find(i);
+      const gid = String(list[g].id);
+      const others = [...linked].filter(j=>j!==i && find(j)===g).map(j=>list[j]);
+      m.set(String(list[i].id), { gid, others });
+    });
+  });
+  DUP_MAP = m;
+  const cnt=document.getElementById('a-dup-cnt'); if(cnt) cnt.textContent=m.size;
+}
+function dupTagHtml(r){
+  const d = DUP_MAP.get(String(r.id)); if(!d) return '';
+  const tip = d.others.map(o=>`${fmtDate(o.apply_date,true)} ${o.course_name||''} (${minsToStr(toMins(o.hours))}, ${o.status})`).join('\n');
+  return `<div><span class="dup-tag" title="${escAttr('비슷한 신청 건:\n'+tip)}">⚠ 중복의심 ${d.others.length+1}건</span></div>`;
+}
+function cdpCellHtml(r){
+  if(!isCdp(r)) return '<span style="color:var(--muted);font-size:12px;">—</span>';
+  return `<span class="badge bd-cdp">CDP ✓</span>${r.job_track?`<span class="cdp-trk">${escAttr(r.job_track)}</span>`:''}`;
+}
+
 function getFlt(){
   const st=document.getElementById('a-st').value,dp=document.getElementById('a-dp').value;
   const ct=document.getElementById('a-ct').value,q=document.getElementById('a-q').value.toLowerCase();
-  return DB.filter(r=>{ if(st!=='all'&&r.status!==st)return false; if(dp!=='all'&&r.dept!==dp)return false; if(ct!=='all'&&r.edu_category!==ct)return false; if(q&&!r.name.includes(q)&&!(r.course_name||'').toLowerCase().includes(q))return false; return true; });
+  const cdp=document.getElementById('a-cdp')?.value||'all';          // [2026.11] CDP 필터
+  const dupOnly=document.getElementById('a-dup')?.checked||false;     // [2026.11] 중복의심만
+  const dupMap=DUP_MAP;
+  return DB.filter(r=>{ if(st!=='all'&&r.status!==st)return false;
+    if(cdp==='Y'&&!isCdp(r))return false; if(cdp==='N'&&isCdp(r))return false;
+    if(dupOnly&&!dupMap.has(String(r.id)))return false; if(dp!=='all'&&r.dept!==dp)return false; if(ct!=='all'&&r.edu_category!==ct)return false; if(q&&!r.name.includes(q)&&!(r.course_name||'').toLowerCase().includes(q))return false; return true; });
 }
 // ════════════════════════════════════════════════
 // 표 정렬 (a: 신청 승인 처리 / h: 전체 이수 이력)
@@ -2634,6 +2706,7 @@ const STATUS_ORDER = { '대기':0, '승인':1, '반려':2 };
 function sortVal(r, key){
   switch(key){
     case 'hours':  return toMins(r.hours);
+    case 'cdp_yn': return isCdp(r) ? 0 : 1;   // [2026.11] 오름차순 = CDP 체크 건 먼저
     case 'empno':  return Number(r.empno) || String(r.empno||'');
     case 'dept':   { const i = DEPTS.indexOf(r.dept); return i >= 0 ? i : 999; }
     case 'status': return STATUS_ORDER[r.status] ?? 9;
@@ -2673,7 +2746,15 @@ function aPageReset(){ aCurrentPage = 1; aRender(); }
 
 function aRender(){
   const perPage = parseInt(document.getElementById('a-per-page')?.value||'20');
-  const allRows = sortRows(getFlt(), 'a');
+  buildDupMap();   // [2026.11] 렌더링마다 중복의심 다시 계산 (삭제·수정 즉시 반영)
+  let allRows = sortRows(getFlt(), 'a');
+  // [2026.11] '중복의심만' 켜면 같은 묶음끼리 붙여서 보여줌 (사번 → 묶음 → 이수일)
+  if (document.getElementById('a-dup')?.checked) {
+    allRows = [...allRows].sort((x,y)=>
+      cmpVal(sortVal(x,'empno'),sortVal(y,'empno')) ||
+      cmpVal(DUP_MAP.get(String(x.id)).gid, DUP_MAP.get(String(y.id)).gid) ||
+      cmpVal(sortVal(x,'apply_date'),sortVal(y,'apply_date')));
+  }
   paintSortHeaders('a');
   const total = allRows.length;
   const totalPages = Math.max(1, Math.ceil(total / perPage));
@@ -2681,14 +2762,15 @@ function aRender(){
   const start = (aCurrentPage - 1) * perPage;
   const pageRows = allRows.slice(start, start + perPage);
 
-  document.getElementById('a-tbody').innerHTML=pageRows.map(r=>`<tr>
+  document.getElementById('a-tbody').innerHTML=pageRows.map(r=>`<tr class="${DUP_MAP.has(String(r.id))?'dup-row':''}">
     <td><input type="checkbox" class="chk row-chk" data-id="${r.id}" onchange="updateSelCount()"></td>
     <td style="color:var(--muted);font-size:12px;">${fmtDate(r.apply_date)}</td>
     <td style="color:var(--muted);font-size:12px;">${r.empno}</td>
     <td style="font-weight:500;white-space:nowrap;">${r.name}</td>
     <td style="color:var(--muted);font-size:12px;">${r.dept}</td>
-    <td style="font-size:12px;white-space:normal;">${r.bulk?'<span style="font-size:10px;font-weight:700;background:#EEEDFE;color:#3C3489;padding:1px 6px;border-radius:20px;margin-right:4px;">단체</span>':''}${r.course_name||''}${renderCrossInline(r.cross_categories||[])}</td>
+    <td style="font-size:12px;white-space:normal;">${r.bulk?'<span style="font-size:10px;font-weight:700;background:#EEEDFE;color:#3C3489;padding:1px 6px;border-radius:20px;margin-right:4px;">단체</span>':''}${r.course_name||''}${renderCrossInline(r.cross_categories||[])}${dupTagHtml(r)}</td>
     <td>${mBadge(r.edu_method)}</td><td>${cBadge(r.edu_category)}</td>
+    <td style="text-align:center;">${cdpCellHtml(r)}</td>
     <td style="text-align:center;">${minsToStr(toMins(r.hours))}</td><td>${sBadge(r.status)}</td>
     <td>
       <button class="act act-v" onclick="openDetail('${r.id}')">상세</button>
